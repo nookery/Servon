@@ -121,7 +121,7 @@ function getMemoryUsage(memory?: { total: number; used: number }) {
 
 // 获取CPU颜色
 function getCpuColor(load?: number) {
-    if (!load) return 'gray';
+    if (!load) return 'primary';
     if (load > 90) return 'red';
     if (load > 70) return 'orange';
     return 'green';
