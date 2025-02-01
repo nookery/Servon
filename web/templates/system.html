@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="text-xl font-bold">Servon</span>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="/"
+                            class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            首页
+                        </a>
+                        <a href="/system"
+                            class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            系统信息
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- CPU使用率 -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">CPU 使用率</h3>
+                        <div class="mt-5">
+                            <canvas id="cpuChart" class="w-full h-64"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 内存使用情况 -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">内存使用情况</h3>
+                        <div class="mt-5">
+                            <canvas id="memoryChart" class="w-full h-64"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统信息 -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">系统信息</h3>
+                        <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            <div class="px-4 py-5 bg-gray-50 shadow rounded-lg overflow-hidden sm:p-6">
+                                <dt class="text-sm font-medium text-gray-500 truncate">主机名</dt>
+                                <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ .info.Hostname }}</dd>
+                            </div>
+                            <div class="px-4 py-5 bg-gray-50 shadow rounded-lg overflow-hidden sm:p-6">
+                                <dt class="text-sm font-medium text-gray-500 truncate">平台</dt>
+                                <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ .info.Platform }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- 磁盘使用情况 -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">磁盘使用情况</h3>
+                        <div class="mt-5">
+                            <canvas id="diskChart" class="w-full h-64"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 更新系统信息的函数
+        function updateSystemInfo() {
+            fetch('/api/system/info')
+                .then(response => response.json())
+                .then(data => {
+                    // 更新图表数据
+                    updateCharts(data);
+                });
+        }
+
+        // 初始化图表
+        function initCharts() {
+            // CPU使用率图表
+            window.cpuChart = new Chart(document.getElementById('cpuChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'CPU使用率',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // 内存使用情况图表
+            window.memoryChart = new Chart(document.getElementById('memoryChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['已使用', '可用'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgb(255, 99, 132)',
+                            'rgb(54, 162, 235)'
+                        ]
+                    }]
+                }
+            });
+
+            // 磁盘使用情况图表
+            window.diskChart = new Chart(document.getElementById('diskChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['已使用', '可用'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgb(255, 205, 86)',
+                            'rgb(75, 192, 192)'
+                        ]
+                    }]
+                }
+            });
+        }
+
+        // 更新图表数据
+        function updateCharts(data) {
+            // 更新CPU图表
+            const cpuChart = window.cpuChart;
+            if (cpuChart.data.labels.length > 10) {
+                cpuChart.data.labels.shift();
+                cpuChart.data.datasets[0].data.shift();
+            }
+            cpuChart.data.labels.push(new Date().toLocaleTimeString());
+            cpuChart.data.datasets[0].data.push(data.cpu_usage);
+            cpuChart.update();
+
+            // 更新内存图表
+            const memoryChart = window.memoryChart;
+            const usedMemory = data.memory_used;
+            const freeMemory = data.memory_total - data.memory_used;
+            memoryChart.data.datasets[0].data = [usedMemory, freeMemory];
+            memoryChart.update();
+
+            // 更新磁盘图表
+            const diskChart = window.diskChart;
+            const usedDisk = data.disk_used;
+            const freeDisk = data.disk_total - data.disk_used;
+            diskChart.data.datasets[0].data = [usedDisk, freeDisk];
+            diskChart.update();
+        }
+
+        // 初始化图表并开始定时更新
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            updateSystemInfo(); // 立即更新一次
+            setInterval(updateSystemInfo, 5000); // 每5秒更新一次
+        });
+    </script>
+</body>
+
+</html>

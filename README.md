@@ -1,73 +1,42 @@
-# Servon
+# Servon - 服务器管理面板
 
-一个简单的服务器监控面板，基于 Nuxt 3 开发。
+Servon 是一个轻量级的服务器管理面板，提供了直观的 Web 界面来管理您的服务器。
 
-## 功能特点
+## 功能特性
 
-- 实时监控系统资源使用情况
-- CPU 使用率显示
-- 内存使用情况
-- 磁盘使用状态
-- 系统基本信息
+- 系统资源监控（CPU、内存、磁盘使用情况）
+- 网站管理（创建、配置、部署）
+- Docker 容器管理
+- 可视化的 Web 界面
+- 命令行工具
 
-## 快速安装
+## 快速开始
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | sudo bash
-```
+1. 下载可执行文件
+2. 运行命令：
+   ```bash
+   ./servon serve
+   ```
+3. 在浏览器中访问：`http://localhost:8080`
 
-安装完成后，访问 `http://your-server-ip:3000` 即可使用。
+## 使用方法
 
-## 手动安装
+### 命令行界面
 
-1. 克隆项目：
+- 启动服务：`servon serve`
+- 查看系统信息：`servon info`
+- 查看版本：`servon version`
 
-```bash
-git clone https://github.com/nookery/servon.git
-cd servon
-```
+### Web 界面
 
-2. 安装依赖：
+访问 `http://localhost:8080` 即可使用 Web 管理界面。
 
-```bash
-pnpm install
-```
+## 系统要求
 
-3. 构建项目：
-
-```bash
-pnpm build
-```
-
-4. 启动服务：
-
-```bash
-pnpm start
-```
-
-## 开发
-
-1. 克隆项目并安装依赖：
-
-```bash
-git clone https://github.com/nookery/servon.git
-cd servon
-pnpm install
-```
-
-2. 启动开发服务器：
-
-```bash
-pnpm dev
-```
-
-## 技术栈
-
-- Nuxt 3
-- Vue 3
-- Nuxt UI
-- systeminformation
+- 操作系统：Linux、macOS、Windows
+- 建议内存：>= 512MB
+- 磁盘空间：>= 200MB
 
 ## 许可证
 
-MIT
+MIT License
