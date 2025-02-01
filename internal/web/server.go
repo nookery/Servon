@@ -42,7 +42,6 @@ func (s *Server) setupRoutes() {
 	// API 路由
 	api := s.router.Group("/api")
 	{
-		api.GET("/system/info", s.handleSystemInfo)
 		api.GET("/system/basic", s.handleBasicInfo) // 新增基本信息接口
 		// TODO: 添加更多API路由
 	}

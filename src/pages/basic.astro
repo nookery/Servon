@@ -1,0 +1,127 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../app.css';
+---
+
+<Layout title="系统基本信息">
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6">系统基本信息</h1>
+
+        <div id="loading" class="text-gray-600">加载中...</div>
+
+        <div id="error" class="text-red-600 hidden"></div>
+
+        <div id="info" class="hidden">
+            <div class="bg-white shadow rounded-lg p-6">
+                <dl class="grid grid-cols-1 gap-4">
+                    <div class="flex flex-col">
+                        <dt class="text-sm font-medium text-gray-500">
+                            操作系统
+                        </dt>
+                        <dd id="os" class="mt-1 text-lg text-gray-900"></dd>
+                    </div>
+                    <div class="flex flex-col">
+                        <dt class="text-sm font-medium text-gray-500">
+                            系统架构
+                        </dt>
+                        <dd id="arch" class="mt-1 text-lg text-gray-900"></dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="mt-4">
+                <button
+                    id="toggleRaw"
+                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm"
+                    onclick="toggleRawJson()">
+                    显示原始响应
+                </button>
+                <pre
+                    id="rawJson"
+                    class="mt-4 p-4 bg-gray-50 rounded-md overflow-auto hidden">
+                </pre>
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<script is:inline>
+    function toggleRawJson() {
+        const toggleBtn = document.getElementById('toggleRaw');
+        const rawJson = document.getElementById('rawJson');
+        if (!toggleBtn || !rawJson) return;
+
+        const isHidden = rawJson.classList.contains('hidden');
+        rawJson.classList.toggle('hidden');
+        toggleBtn.textContent = isHidden ? '隐藏原始响应' : '显示原始响应';
+    }
+
+    async function fetchSystemInfo() {
+        try {
+            const response = await fetch('/api/system/basic');
+            if (!response.ok) {
+                throw new Error('获取系统信息失败');
+            }
+            const data = await response.json();
+
+            // 隐藏加载提示
+            document.getElementById('loading')?.classList.add('hidden');
+
+            // 显示信息区域
+            const infoDiv = document.getElementById('info');
+            if (infoDiv) {
+                infoDiv.classList.remove('hidden');
+            }
+
+            // 更新信息
+            const osElement = document.getElementById('os');
+            const archElement = document.getElementById('arch');
+            if (osElement) osElement.textContent = data.os || '未知';
+            if (archElement) archElement.textContent = data.arch || '未知';
+
+            // 设置原始JSON
+            const rawJson = document.getElementById('rawJson');
+            if (rawJson) {
+                rawJson.textContent = JSON.stringify(data, null, 2);
+            }
+
+            // 动态添加其他系统信息
+            const dl = infoDiv?.querySelector('dl');
+            if (dl) {
+                for (const [key, value] of Object.entries(data)) {
+                    if (key !== 'os' && key !== 'arch') {
+                        const div = document.createElement('div');
+                        div.className = 'flex flex-col';
+                        div.innerHTML = `
+                            <dt class="text-sm font-medium text-gray-500">${key}</dt>
+                            <dd class="mt-1 text-lg text-gray-900">${value}</dd>
+                        `;
+                        dl.appendChild(div);
+                    }
+                }
+            }
+        } catch (error) {
+            const loading = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            if (loading) {
+                loading.classList.add('hidden');
+            }
+            if (errorDiv) {
+                errorDiv.classList.remove('hidden');
+                errorDiv.textContent =
+                    error && error instanceof Error
+                        ? error.message
+                        : '未知错误';
+            }
+        }
+    }
+
+    // 页面加载完成后获取系统信息
+    document.addEventListener('DOMContentLoaded', fetchSystemInfo);
+</script>
+
+<style>
+    .container {
+        max-width: 800px;
+    }
+</style>
