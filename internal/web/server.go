@@ -18,11 +18,19 @@ func NewServer(port int) *Server {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	// 加载HTML模板
-	router.LoadHTMLGlob("web/templates/*")
+	// 配置 CORS
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-	// 设置静态文件目录
-	router.Static("/static", "./web/static")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
 
 	return &Server{
 		router: router,
@@ -35,12 +43,9 @@ func (s *Server) setupRoutes() {
 	api := s.router.Group("/api")
 	{
 		api.GET("/system/info", s.handleSystemInfo)
+		api.GET("/system/basic", s.handleBasicInfo) // 新增基本信息接口
 		// TODO: 添加更多API路由
 	}
-
-	// Web页面路由
-	s.router.GET("/", s.handleHome)
-	s.router.GET("/system", s.handleSystemPage)
 }
 
 func (s *Server) Start() error {
@@ -58,17 +63,12 @@ func (s *Server) handleSystemInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, info)
 }
 
-// 页面处理函数
-func (s *Server) handleHome(c *gin.Context) {
-	c.HTML(http.StatusOK, "index.html", gin.H{
-		"title": "Servon - 服务器管理面板",
-	})
-}
-
-func (s *Server) handleSystemPage(c *gin.Context) {
-	info, _ := system.GetSystemInfo()
-	c.HTML(http.StatusOK, "system.html", gin.H{
-		"title": "系统信息",
-		"info":  info,
-	})
+// 新增：处理基本系统信息的接口
+func (s *Server) handleBasicInfo(c *gin.Context) {
+	info, err := system.GetBasicSystemInfo()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, info)
 }
