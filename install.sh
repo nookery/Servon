@@ -22,13 +22,22 @@ error() {
     exit 1
 }
 
+# 检查命令是否可用
+check_command() {
+    if command -v $1 >/dev/null 2>&1 || type $1 >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # 总步骤数
 TOTAL_STEPS=6
 
 # 步骤 1: 检查系统要求
 step 1 "检查系统要求..."
 
-if ! command -v node &> /dev/null; then
+if ! check_command node; then
     printf "  • 未检测到 Node.js，正在安装...\n"
     curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
     sudo apt-get install -y nodejs
@@ -37,7 +46,7 @@ else
     success "Node.js 已安装"
 fi
 
-if ! command -v pnpm &> /dev/null; then
+if ! check_command pnpm; then
     printf "  • 未检测到 pnpm，正在安装...\n"
     curl -fsSL https://get.pnpm.io/install.sh | sh -
     success "pnpm 安装完成"
