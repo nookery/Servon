@@ -64,8 +64,13 @@ sudo mv servon-linux-amd64 /usr/local/bin/servon
 
 如果您想参与开发，需要安装以下依赖：
 
+### 后端
 - Go >= 1.21
 - Git
+
+### 前端
+- Node.js >= 16
+- pnpm >= 8.0
 
 1. 克隆仓库：
 
@@ -74,21 +79,38 @@ sudo mv servon-linux-amd64 /usr/local/bin/servon
    cd servon
    ```
 
-2. 安装依赖：
+2. 安装后端依赖：
 
    ```bash
    go mod download
    ```
 
-3. 运行测试：
+3. 安装前端依赖：
 
    ```bash
-   go test ./...
+   cd web
+   pnpm install
    ```
 
-4. 构建项目：
+4. 启动开发服务器：
+
    ```bash
+   # 后端开发服务器
+   go run main.go serve
+
+   # 前端开发服务器
+   cd web
+   pnpm dev
+   ```
+
+5. 构建项目：
+   ```bash
+   # 构建后端
    go build -o servon
+
+   # 构建前端
+   cd web
+   pnpm build
    ```
 
 ## 发布流程
