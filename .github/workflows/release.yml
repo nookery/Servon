@@ -1,0 +1,113 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*' # 当推送 v 开头的 tag 时触发
+
+permissions:
+  contents: write # 需要写入权限来创建 release
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          check-latest: true
+
+      - name: Run tests
+        run: go test -v ./...
+
+  build:
+    name: Build and Release
+    needs: test # 等待测试完成
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+          - os: linux
+            arch: arm64
+          - os: darwin
+            arch: amd64
+          - os: darwin
+            arch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          check-latest: true
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          go build -o "servon-${{ matrix.os }}-${{ matrix.arch }}"
+          sha256sum "servon-${{ matrix.os }}-${{ matrix.arch }}" > "servon-${{ matrix.os }}-${{ matrix.arch }}.sha256"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: servon-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            servon-${{ matrix.os }}-${{ matrix.arch }}
+            servon-${{ matrix.os }}-${{ matrix.arch }}.sha256
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 获取版本号
+          VERSION=${GITHUB_REF#refs/tags/}
+
+          # 创建 release notes
+          echo "# Servon ${VERSION}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "## 安装方法" >> release_notes.md
+          echo "" >> release_notes.md
+          echo '```bash' >> release_notes.md
+          echo 'curl -fsSL https://raw.githubusercontent.com/angel/servon/main/install.sh | bash' >> release_notes.md
+          echo '```' >> release_notes.md
+          echo "" >> release_notes.md
+          echo "## SHA256 校验和" >> release_notes.md
+          echo "" >> release_notes.md
+          echo '```' >> release_notes.md
+          cat */servon-*.sha256 >> release_notes.md
+          echo '```' >> release_notes.md
+
+          # 创建 release
+          gh release create "${VERSION}" \
+            --title "Servon ${VERSION}" \
+            --notes-file release_notes.md \
+            */servon-*
+
+  cleanup:
+    name: Cleanup Artifacts
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: |
+            servon-*
