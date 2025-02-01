@@ -13,5 +13,5 @@ globs:
 
 Web 界面部分的源码在 ui 目录，它的主要特点：
 
-- 基于 Vite、Vue 的前端项目
+- 基于 Vite、Vue、TailwindCSS 的前端项目
 - 调用 Golang 提供的 API 来展示和操作服务器
