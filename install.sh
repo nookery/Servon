@@ -15,7 +15,7 @@ fi
 
 # 克隆项目
 echo "Cloning Servon..."
-git clone https://github.com/your-username/servon.git
+git clone https://github.com/nookery/servon.git
 cd servon
 
 # 安装依赖

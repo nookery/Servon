@@ -13,7 +13,7 @@
 ## 快速安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/your-username/servon/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | sudo bash
 ```
 
 安装完成后，访问 `http://your-server-ip:3000` 即可使用。
@@ -23,7 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/your-username/servon/main/install.s
 1. 克隆项目：
 
 ```bash
-git clone https://github.com/your-username/servon.git
+git clone https://github.com/nookery/servon.git
 cd servon
 ```
 
@@ -50,7 +50,7 @@ pnpm start
 1. 克隆项目并安装依赖：
 
 ```bash
-git clone https://github.com/your-username/servon.git
+git clone https://github.com/nookery/servon.git
 cd servon
 pnpm install
 ```
