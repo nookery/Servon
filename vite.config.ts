@@ -7,11 +7,16 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     proxy: {
-      '/api': {
+      '/web_api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (path) => path.replace(/^\/web_api/, '/web_api'),
       },
     },
+  },
+  build: {
+    outDir: 'internal/web/dist',
+    assetsDir: 'assets',
+    emptyOutDir: true,
   },
 })

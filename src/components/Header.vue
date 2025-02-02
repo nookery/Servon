@@ -12,7 +12,7 @@ const diskUsage = ref(0)
 // 获取系统资源使用情况
 const fetchSystemResources = async () => {
     try {
-        const res = await axios.get('http://localhost:8080/api/system/resources')
+        const res = await axios.get('/web_api/system/resources')
         cpuUsage.value = res.data.cpu_usage
         memoryUsage.value = res.data.memory_usage
         diskUsage.value = res.data.disk_usage
@@ -23,7 +23,7 @@ const fetchSystemResources = async () => {
 
 onMounted(async () => {
     try {
-        const res = await axios.get('http://localhost:8080/api/system/user')
+        const res = await axios.get('/web_api/system/user')
         currentUser.value = res.data.username
     } catch (error) {
         console.error('获取用户信息失败:', error)

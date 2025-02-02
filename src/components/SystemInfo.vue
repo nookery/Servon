@@ -10,8 +10,8 @@ const message = useMessage()
 onMounted(async () => {
     try {
         const [infoRes, userRes] = await Promise.all([
-            axios.get('http://localhost:8080/api/system/basic'),
-            axios.get('http://localhost:8080/api/system/user')
+            axios.get('/web_api/system/basic'),
+            axios.get('/web_api/system/user')
         ])
         systemInfo.value = infoRes.data
         currentUser.value = userRes.data.username

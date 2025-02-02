@@ -2,10 +2,6 @@ package web
 
 import (
 	"fmt"
-	"net/http"
-	"strings"
-
-	"servon/internal/system"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +14,13 @@ type Server struct {
 
 func NewServer(port int, withUI bool) *Server {
 	gin.SetMode(gin.ReleaseMode)
-	router := gin.Default()
+	router := gin.New()
+	router.RedirectTrailingSlash = false
+	router.RedirectFixedPath = false
+	router.HandleMethodNotAllowed = false
+	router.SetTrustedProxies(nil)
+	router.Use(gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/favicon.ico"}}))
+	router.Use(gin.Recovery())
 
 	// 配置 CORS
 	router.Use(func(c *gin.Context) {
@@ -34,6 +36,12 @@ func NewServer(port int, withUI bool) *Server {
 		c.Next()
 	})
 
+	// 添加请求日志
+	router.Use(func(c *gin.Context) {
+		fmt.Printf("[%s] %s\n", c.Request.Method, c.Request.URL.Path)
+		c.Next()
+	})
+
 	return &Server{
 		router: router,
 		port:   port,
@@ -42,213 +50,23 @@ func NewServer(port int, withUI bool) *Server {
 }
 
 func (s *Server) setupRoutes() {
-	// API 路由组
-	api := s.router.Group("/api")
-	{
-		api.GET("/system/resources", s.handleSystemResources)
-		api.GET("/system/user", s.handleCurrentUser)
-		api.GET("/system/basic", s.handleBasicInfo)
-		api.GET("/system/software", s.handleSoftwareList)
-		api.GET("/system/software/:name/install", s.handleSoftwareInstall)
-		api.GET("/system/software/:name/uninstall", s.handleSoftwareUninstall)
-		api.POST("/system/software/:name/stop", s.handleSoftwareStop)
-		api.GET("/system/software/:name/status", s.handleSoftwareStatus)
-		api.GET("/system/processes", s.handleProcessList)
-		api.GET("/system/files", s.handleFileList)
-		api.GET("/system/ports", s.handlePortList)
-	}
+	// 设置API路由
+	s.setupAPIRoutes()
 
-	// 如果启用了UI，提供静态文件服务
+	// 如果启用了UI，设置UI路由
 	if s.withUI {
-		// 先处理具体的静态文件
-		s.router.Static("/assets", "./dist/assets")
-		s.router.StaticFile("/favicon.ico", "./dist/favicon.ico")
-
-		// 其他所有非 API 路由都返回 index.html
-		s.router.NoRoute(func(c *gin.Context) {
-			// 如果请求的不是 API 路径，则返回 index.html
-			if !strings.HasPrefix(c.Request.URL.Path, "/api/") {
-				c.File("./dist/index.html")
-			}
-		})
-
+		s.setupUIRoutes()
 		fmt.Printf("Web UI is available at http://localhost:%d\n", s.port)
 	}
 }
 
 func (s *Server) Start() error {
 	s.setupRoutes()
-	fmt.Printf("API server is running on http://localhost:%d/api\n", s.port)
+	fmt.Printf("Web UI available at:\n")
+	fmt.Printf("  http://localhost:%d\n", s.port)
+	fmt.Printf("Static assets served from:\n")
+	fmt.Printf("  /assets/* => embedded dist directory\n")
+	fmt.Printf("API endpoints available at:\n")
+	fmt.Printf("  http://localhost:%d/web_api\n", s.port)
 	return s.router.Run(fmt.Sprintf(":%d", s.port))
-}
-
-// API处理函数
-func (s *Server) handleSystemInfo(c *gin.Context) {
-	info, err := system.GetSystemInfo()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, info)
-}
-
-// 新增：处理基本系统信息的接口
-func (s *Server) handleBasicInfo(c *gin.Context) {
-	info, err := system.GetBasicSystemInfo()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, info)
-}
-
-// 新增：处理软件列表的接口
-func (s *Server) handleSoftwareList(c *gin.Context) {
-	names := system.GetSoftwareList()
-	c.JSON(http.StatusOK, names)
-}
-
-// 处理软件安装请求
-func (s *Server) handleSoftwareInstall(c *gin.Context) {
-	name := c.Param("name")
-
-	// 设置 SSE 头
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("Transfer-Encoding", "chunked")
-
-	// 获取输出通道
-	outputChan, err := system.InstallSoftware(name)
-	if err != nil {
-		// 发送错误消息
-		c.SSEvent("message", fmt.Sprintf("Error: %s", err.Error()))
-		return
-	}
-
-	// 清空缓冲区
-	if f, ok := c.Writer.(http.Flusher); ok {
-		f.Flush()
-	}
-
-	// 发送输出
-	for msg := range outputChan {
-		c.SSEvent("message", msg)
-		if f, ok := c.Writer.(http.Flusher); ok {
-			f.Flush()
-		}
-	}
-}
-
-// 处理软件卸载请求
-func (s *Server) handleSoftwareUninstall(c *gin.Context) {
-	name := c.Param("name")
-
-	// 设置 SSE 头
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("Transfer-Encoding", "chunked")
-
-	// 获取输出通道
-	outputChan, err := system.UninstallSoftware(name)
-	if err != nil {
-		// 发送错误消息
-		c.SSEvent("message", fmt.Sprintf("Error: %s", err.Error()))
-		return
-	}
-
-	// 清空缓冲区
-	if f, ok := c.Writer.(http.Flusher); ok {
-		f.Flush()
-	}
-
-	// 发送输出
-	for msg := range outputChan {
-		c.SSEvent("message", msg)
-		if f, ok := c.Writer.(http.Flusher); ok {
-			f.Flush()
-		}
-	}
-}
-
-// 处理软件服务停止请求
-func (s *Server) handleSoftwareStop(c *gin.Context) {
-	name := c.Param("name")
-	if err := system.StopSoftware(name); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "服务已停止"})
-}
-
-// 处理获取当前用户的请求
-func (s *Server) handleCurrentUser(c *gin.Context) {
-	user, err := system.GetCurrentUser()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"username": user})
-}
-
-// 处理获取软件状态的请求
-func (s *Server) handleSoftwareStatus(c *gin.Context) {
-	name := c.Param("name")
-	status, err := system.GetSoftwareStatus(name)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, status)
-}
-
-// 处理获取进程列表的请求
-func (s *Server) handleProcessList(c *gin.Context) {
-	processes, err := system.GetProcessList()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, processes)
-}
-
-// handleFileList 处理获取文件列表的请求
-func (s *Server) handleFileList(c *gin.Context) {
-	path := c.Query("path")
-	if path == "" {
-		path = "/"
-	}
-
-	files, err := system.GetFileList(path)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "获取文件列表失败: " + err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, files)
-}
-
-// handlePortList 处理获取端口列表的请求
-func (s *Server) handlePortList(c *gin.Context) {
-	ports, err := system.GetPortList()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "获取端口列表失败: " + err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, ports)
-}
-
-// 新增：处理系统资源监控的接口
-func (s *Server) handleSystemResources(c *gin.Context) {
-	resources, err := system.GetSystemResources()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, resources)
 }

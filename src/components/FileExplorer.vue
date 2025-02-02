@@ -16,7 +16,7 @@ const columns = [
 
 async function loadFiles(path: string) {
     try {
-        const res = await axios.get(`http://localhost:8080/api/system/files?path=${path}`)
+        const res = await axios.get(`/web_api/system/files?path=${path}`)
         files.value = res.data
     } catch (error) {
         message.error('获取文件列表失败')

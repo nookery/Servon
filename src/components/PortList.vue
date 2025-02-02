@@ -15,7 +15,7 @@ const columns = [
 
 async function loadPorts() {
     try {
-        const res = await axios.get('http://localhost:8080/api/system/ports')
+        const res = await axios.get('/web_api/system/ports')
         ports.value = res.data
     } catch (error) {
         message.error('获取端口列表失败')

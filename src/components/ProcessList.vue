@@ -15,7 +15,7 @@ const columns = [
 
 async function loadProcesses() {
     try {
-        const res = await axios.get('http://localhost:8080/api/system/processes')
+        const res = await axios.get('/web_api/system/processes')
         processes.value = res.data
     } catch (error) {
         message.error('获取进程列表失败')

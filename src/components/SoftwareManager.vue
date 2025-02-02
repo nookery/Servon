@@ -53,7 +53,7 @@ async function handleAction(software: any) {
     installing.value = true
 
     const eventSource = new EventSource(
-        `http://localhost:8080/api/system/software/${software.name}/${software.status === 'not_installed' ? 'install' : 'uninstall'}`
+        `/web_api/system/software/${software.name}/${software.status === 'not_installed' ? 'install' : 'uninstall'}`
     )
 
     eventSource.onmessage = (event) => {
@@ -79,7 +79,7 @@ async function handleAction(software: any) {
 
 async function handleStop(name: string) {
     try {
-        await axios.post(`http://localhost:8080/api/system/software/${name}/stop`)
+        await axios.post(`/web_api/system/software/${name}/stop`)
         message.success('服务已停止')
         loadSoftwareList()
     } catch (error) {
@@ -90,13 +90,13 @@ async function handleStop(name: string) {
 async function loadSoftwareList() {
     try {
         loading.value = true
-        const res = await axios.get('http://localhost:8080/api/system/software')
+        const res = await axios.get('/web_api/system/software')
         software.value = res.data.map((name: string) => ({ name }))
 
         // 获取每个软件的状态
         for (const item of software.value) {
             try {
-                const statusRes = await axios.get(`http://localhost:8080/api/system/software/${item.name}/status`)
+                const statusRes = await axios.get(`/web_api/system/software/${item.name}/status`)
                 item.status = statusRes.data.status
             } catch (error) {
                 item.status = 'not_installed'
