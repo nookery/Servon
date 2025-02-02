@@ -10,23 +10,23 @@
                     {{ software.name }}
                 </h3>
                 <p class="text-sm text-gray-500 mt-1">
-                    {{ software.version || '未知版本' }}
+                    {{ currentVersion || '未知版本' }}
                 </p>
                 <p v-if="software.description" class="text-gray-700 mt-2">
                     {{ software.description }}
                 </p>
             </div>
             <div class="flex flex-col items-end gap-2">
-                <span class="px-2 py-1 text-sm rounded-full" :class="getStatusClass(software.status)">
-                    {{ getStatusText(software.status) }}
+                <span class="px-2 py-1 text-sm rounded-full" :class="getStatusClass(currentStatus)">
+                    {{ getStatusText(currentStatus) }}
                 </span>
                 <button class="px-3 py-1 text-sm rounded-md text-white" :class="[
-                    software.status === 'not_installed' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-red-500 hover:bg-red-600',
+                    currentStatus === 'not_installed' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-red-500 hover:bg-red-600',
                     installing ? 'opacity-50 cursor-not-allowed' : ''
                 ]" :disabled="installing" @click="handleAction">
                     {{
                         installing ? '安装中...' :
-                            software.status === 'not_installed' ? '安装' : '卸载'
+                            currentStatus === 'not_installed' ? '安装' : '卸载'
                     }}
                 </button>
             </div>
@@ -145,6 +145,8 @@ const showUninstallDialog = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
+const currentStatus = ref(props.software.status)
+const currentVersion = ref(props.software.version)
 
 function getStatusClass(status: string): string {
     switch (status) {
@@ -168,6 +170,20 @@ function getStatusText(status: string): string {
     }
 }
 
+async function updateSoftwareStatus() {
+    try {
+        const response = await fetch(`/api/system/software/${props.software.name}/status`)
+        if (!response.ok) {
+            throw new Error('获取软件状态失败')
+        }
+        const data = await response.json()
+        currentStatus.value = data.status
+        currentVersion.value = data.version
+    } catch (err) {
+        console.error('获取软件状态失败:', err)
+    }
+}
+
 function install() {
     installing.value = true
     installFailed.value = false // 重置失败状态
@@ -180,6 +196,7 @@ function install() {
             eventSource.close()
             installing.value = false
             installSuccess.value = true
+            updateSoftwareStatus() // 更新软件状态
             setTimeout(() => {
                 installSuccess.value = false
             }, 3000)
@@ -192,13 +209,13 @@ function install() {
         const lastLog = logs.value[logs.value.length - 1]
         if (lastLog === '安装完成') {
             installSuccess.value = true
+            updateSoftwareStatus() // 更新软件状态
             setTimeout(() => {
                 installSuccess.value = false
             }, 3000)
         } else {
             installFailed.value = true
             logs.value.push('连接已关闭，安装可能未完成')
-            // 移除失败状态的自动清除
         }
     }
 }
@@ -211,7 +228,7 @@ async function confirmUninstall() {
     showUninstallDialog.value = false
     installing.value = true
     installFailed.value = false // 重置失败状态
-    logs.value.push(`开始卸载 ${props.software.name}...`)
+    logs.value = [] // 清空之前的日志
 
     try {
         // 先停止服务
@@ -225,31 +242,47 @@ async function confirmUninstall() {
         }
         logs.value.push('服务已停止')
 
-        // 执行卸载
-        logs.value.push('正在卸载软件...')
-        const response = await fetch(`/api/system/software/${props.software.name}/uninstall`, {
-            method: 'POST'
-        })
-        if (!response.ok) {
-            const data = await response.json()
-            throw new Error(data.error || '卸载失败')
+        // 执行卸载，使用 SSE 接收实时输出
+        const eventSource = new EventSource(`/api/system/software/${props.software.name}/uninstall`)
+
+        eventSource.onmessage = (event) => {
+            logs.value.push(event.data)
+
+            if (event.data === '卸载完成') {
+                eventSource.close()
+                installing.value = false
+                installSuccess.value = true
+                updateSoftwareStatus() // 更新软件状态
+                setTimeout(() => {
+                    installSuccess.value = false
+                }, 3000)
+            }
         }
-        logs.value.push('卸载完成')
-        installSuccess.value = true
-        setTimeout(() => {
-            installSuccess.value = false
-        }, 3000)
+
+        eventSource.onerror = () => {
+            eventSource.close()
+            installing.value = false
+            const lastLog = logs.value[logs.value.length - 1]
+            if (lastLog === '卸载完成') {
+                installSuccess.value = true
+                updateSoftwareStatus() // 更新软件状态
+                setTimeout(() => {
+                    installSuccess.value = false
+                }, 3000)
+            } else {
+                installFailed.value = true
+                logs.value.push('连接已关闭，卸载可能未完成')
+            }
+        }
     } catch (err) {
         installFailed.value = true
         logs.value.push(`错误: ${err instanceof Error ? err.message : '未知错误'}`)
-        // 移除失败状态的自动清除
-    } finally {
         installing.value = false
     }
 }
 
 function handleAction() {
-    if (props.software.status === 'not_installed') {
+    if (currentStatus.value === 'not_installed') {
         install()
     } else {
         showUninstallDialog.value = true
