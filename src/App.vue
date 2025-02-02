@@ -2,10 +2,8 @@
 import { NConfigProvider, NMessageProvider, NLayout, NLayoutSider, NLayoutContent, NMenu, NIcon } from 'naive-ui'
 import { ref, h } from 'vue'
 import {
-  ServerOutline,
   AppsOutline,
   FolderOutline,
-  PersonOutline,
   ListOutline,
   HardwareChipOutline,
   GitNetworkOutline
