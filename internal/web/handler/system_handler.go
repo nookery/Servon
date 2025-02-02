@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"servon/internal/system"
 
@@ -34,84 +33,6 @@ func (h *Handler) HandleBasicInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, info)
 }
 
-// HandleSoftwareList 处理软件列表的请求
-func (h *Handler) HandleSoftwareList(c *gin.Context) {
-	names := system.GetSoftwareList()
-	c.JSON(http.StatusOK, names)
-}
-
-// HandleSoftwareInstall 处理软件安装请求
-func (h *Handler) HandleSoftwareInstall(c *gin.Context) {
-	name := c.Param("name")
-
-	// 设置 SSE 头
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("Transfer-Encoding", "chunked")
-
-	// 获取输出通道
-	outputChan, err := system.InstallSoftware(name)
-	if err != nil {
-		c.SSEvent("message", fmt.Sprintf("Error: %s", err.Error()))
-		return
-	}
-
-	// 清空缓冲区
-	if f, ok := c.Writer.(http.Flusher); ok {
-		f.Flush()
-	}
-
-	// 发送输出
-	for msg := range outputChan {
-		c.SSEvent("message", msg)
-		if f, ok := c.Writer.(http.Flusher); ok {
-			f.Flush()
-		}
-	}
-}
-
-// HandleSoftwareUninstall 处理软件卸载请求
-func (h *Handler) HandleSoftwareUninstall(c *gin.Context) {
-	name := c.Param("name")
-
-	// 设置 SSE 头
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("Transfer-Encoding", "chunked")
-
-	// 获取输出通道
-	outputChan, err := system.UninstallSoftware(name)
-	if err != nil {
-		c.SSEvent("message", fmt.Sprintf("Error: %s", err.Error()))
-		return
-	}
-
-	// 清空缓冲区
-	if f, ok := c.Writer.(http.Flusher); ok {
-		f.Flush()
-	}
-
-	// 发送输出
-	for msg := range outputChan {
-		c.SSEvent("message", msg)
-		if f, ok := c.Writer.(http.Flusher); ok {
-			f.Flush()
-		}
-	}
-}
-
-// HandleSoftwareStop 处理软件停止请求
-func (h *Handler) HandleSoftwareStop(c *gin.Context) {
-	name := c.Param("name")
-	if err := system.StopSoftware(name); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "服务已停止"})
-}
-
 // HandleCurrentUser 处理获取当前用户的请求
 func (h *Handler) HandleCurrentUser(c *gin.Context) {
 	user, err := system.GetCurrentUser()
@@ -120,17 +41,6 @@ func (h *Handler) HandleCurrentUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"username": user})
-}
-
-// HandleSoftwareStatus 处理获取软件状态的请求
-func (h *Handler) HandleSoftwareStatus(c *gin.Context) {
-	name := c.Param("name")
-	status, err := system.GetSoftwareStatus(name)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, status)
 }
 
 // HandleProcessList 处理获取进程列表的请求

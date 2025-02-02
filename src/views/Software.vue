@@ -10,6 +10,8 @@ const showLogModal = ref(false)
 const currentLogs = ref<string[]>([])
 const installing = ref(false)
 const currentSoftware = ref<string>('')
+const showRawData = ref(false)
+const rawSoftwareData = ref<any>(null)
 
 const columns = [
     { title: '软件名称', key: 'name' },
@@ -57,10 +59,12 @@ async function handleAction(software: any) {
     )
 
     eventSource.onmessage = (event) => {
+        // 收到第一条消息时隐藏 loading
+        installing.value = false
         currentLogs.value.push(event.data)
+        currentLogs.value = [...currentLogs.value]
         if (event.data.includes('完成')) {
             eventSource.close()
-            installing.value = false
             loadSoftwareList()
             message.success(`${software.status === 'not_installed' ? '安装' : '卸载'}完成`)
         }
@@ -71,6 +75,7 @@ async function handleAction(software: any) {
         installing.value = false
         if (!currentLogs.value[currentLogs.value.length - 1]?.includes('完成')) {
             currentLogs.value.push('操作异常终止')
+            currentLogs.value = [...currentLogs.value]
             message.error('操作失败')
         }
         loadSoftwareList()
@@ -92,6 +97,7 @@ async function loadSoftwareList() {
         loading.value = true
         const res = await axios.get('/web_api/system/software')
         software.value = res.data.map((name: string) => ({ name }))
+        rawSoftwareData.value = res.data  // 存储原始数据
 
         // 获取每个软件的状态
         for (const item of software.value) {
@@ -114,6 +120,15 @@ function closeLogModal() {
     currentLogs.value = []
 }
 
+function copyLogs() {
+    try {
+        navigator.clipboard.writeText(currentLogs.value.join('\n'))
+        message.success('日志已复制到剪贴板')
+    } catch (error) {
+        message.error('复制失败')
+    }
+}
+
 onMounted(() => {
     loadSoftwareList()
 })
@@ -121,15 +136,32 @@ onMounted(() => {
 
 <template>
     <n-card title="软件管理">
-        <n-data-table :columns="columns" :data="software" :loading="loading" />
+        <n-space vertical>
+            <n-space justify="end">
+                <n-button @click="showRawData = !showRawData" :disabled="loading">
+                    {{ showRawData ? '显示软件列表' : '显示原始数据' }}
+                </n-button>
+            </n-space>
+
+            <n-data-table v-if="!showRawData" :columns="columns" :data="software" :loading="loading" />
+
+            <pre v-else
+                style="background: #f5f5f5; padding: 10px; border-radius: 4px; max-height: 300px; overflow: auto">
+{{ JSON.stringify(rawSoftwareData, null, 2) }}
+            </pre>
+        </n-space>
 
         <n-modal v-model:show="showLogModal" style="width: 600px" :mask-closable="false" preset="card"
             :title="`${currentSoftware} ${installing ? '操作执行中' : '操作日志'}`" :bordered="false">
             <n-spin :show="installing">
-                <n-log :lines="currentLogs" :rows="15" :loading="installing" />
+                <n-log :lines="currentLogs" :rows="15" :font-family="'JetBrains Mono, Menlo, Consolas, monospace'"
+                    :line-height="1.25" trim style="white-space: pre" />
             </n-spin>
             <template #footer>
-                <n-button @click="closeLogModal" :disabled="installing">关闭</n-button>
+                <n-space>
+                    <n-button @click="copyLogs" :disabled="installing">复制日志</n-button>
+                    <n-button @click="closeLogModal" :disabled="installing">关闭</n-button>
+                </n-space>
             </template>
         </n-modal>
     </n-card>
