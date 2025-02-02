@@ -21,23 +21,18 @@ func NewMySQL() *MySQL {
 
 func (m *MySQL) Install() (chan string, error) {
 	outputChan := make(chan string, 100)
+	apt := NewApt(outputChan)
 
 	go func() {
 		defer close(outputChan)
 
 		// 更新软件包索引
-		outputChan <- "更新软件包索引..."
-		updateCmd := exec.Command("sudo", "apt-get", "update")
-		if output, err := updateCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("更新索引失败:\n%s", string(output))
+		if err := apt.Update(); err != nil {
 			return
 		}
 
 		// 安装 MySQL
-		outputChan <- "安装 MySQL..."
-		installCmd := exec.Command("sudo", "apt-get", "install", "-y", "mysql-server")
-		if output, err := installCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("安装失败:\n%s", string(output))
+		if err := apt.Install("mysql-server"); err != nil {
 			return
 		}
 
@@ -57,36 +52,27 @@ func (m *MySQL) Install() (chan string, error) {
 
 func (m *MySQL) Uninstall() (chan string, error) {
 	outputChan := make(chan string, 100)
+	apt := NewApt(outputChan)
 
 	go func() {
 		defer close(outputChan)
 
 		// 停止服务
 		outputChan <- "停止 MySQL 服务..."
-		stopCmd := exec.Command("sudo", "systemctl", "stop", "mysql")
-		output, err := stopCmd.CombinedOutput()
-		if err != nil {
+		stopCmd := exec.Command("sudo", "service", "mysql", "stop")
+		if output, err := stopCmd.CombinedOutput(); err != nil {
 			outputChan <- fmt.Sprintf("停止服务失败:\n%s", string(output))
 		}
-		outputChan <- string(output)
 
 		// 卸载软件
-		outputChan <- "卸载 MySQL..."
-		removeCmd := exec.Command("sudo", "apt-get", "remove", "-y", "mysql-server*")
-		if output, err := removeCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("卸载失败:\n%s", string(output))
+		if err := apt.Remove("mysql-server*"); err != nil {
 			return
 		}
-		outputChan <- string(output)
 
 		// 清理配置文件
-		outputChan <- "清理配置文件..."
-		purgeCmd := exec.Command("sudo", "apt-get", "purge", "-y", "mysql-server*")
-		if output, err := purgeCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("清理失败:\n%s", string(output))
+		if err := apt.Purge("mysql-server*"); err != nil {
 			return
 		}
-		outputChan <- string(output)
 
 		outputChan <- "MySQL 卸载完成"
 	}()
@@ -95,9 +81,10 @@ func (m *MySQL) Uninstall() (chan string, error) {
 }
 
 func (m *MySQL) GetStatus() (map[string]string, error) {
+	dpkg := NewDpkg(nil)
+
 	// 检查是否安装
-	cmd := exec.Command("dpkg", "-l", "mysql-server")
-	if err := cmd.Run(); err != nil {
+	if !dpkg.IsInstalled("mysql-server") {
 		return map[string]string{
 			"status":  "not_installed",
 			"version": "",
@@ -105,10 +92,9 @@ func (m *MySQL) GetStatus() (map[string]string, error) {
 	}
 
 	// 检查服务状态
-	statusCmd := exec.Command("systemctl", "status", "mysql")
-	output, err := statusCmd.CombinedOutput()
+	cmd := exec.Command("service", "mysql", "status")
 	status := "stopped"
-	if err == nil && strings.Contains(string(output), "Active: active (running)") {
+	if err := cmd.Run(); err == nil {
 		status = "running"
 	}
 
@@ -126,7 +112,7 @@ func (m *MySQL) GetStatus() (map[string]string, error) {
 }
 
 func (m *MySQL) Stop() error {
-	cmd := exec.Command("sudo", "systemctl", "stop", "mysql")
+	cmd := exec.Command("sudo", "service", "mysql", "stop")
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("停止服务失败: %v\n%s", err, string(output))
 	}

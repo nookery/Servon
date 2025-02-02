@@ -89,13 +89,10 @@ func (n *Nginx) Uninstall() (chan string, error) {
 }
 
 func (n *Nginx) GetStatus() (map[string]string, error) {
-	// 检查是否安装 - 使用更准确的检查方式
-	checkCmd := exec.Command("dpkg", "-l", "nginx")
-	output, err := checkCmd.CombinedOutput()
-	outputStr := string(output)
+	dpkg := NewDpkg(nil)
 
-	// dpkg -l 的输出中，如果包已安装会显示 "ii  nginx"
-	if err != nil || !strings.Contains(outputStr, "ii  nginx") {
+	// 检查是否安装
+	if !dpkg.IsInstalled("nginx") {
 		return map[string]string{
 			"status":  "not_installed",
 			"version": "",

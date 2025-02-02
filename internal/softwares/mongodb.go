@@ -21,6 +21,7 @@ func NewMongoDB() *MongoDB {
 
 func (m *MongoDB) Install() (chan string, error) {
 	outputChan := make(chan string, 100)
+	apt := NewApt(outputChan)
 
 	go func() {
 		defer close(outputChan)
@@ -42,18 +43,12 @@ func (m *MongoDB) Install() (chan string, error) {
 		}
 
 		// 更新软件包索引
-		outputChan <- "更新软件包索引..."
-		updateCmd := exec.Command("sudo", "apt-get", "update")
-		if output, err := updateCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("更新索引失败:\n%s", string(output))
+		if err := apt.Update(); err != nil {
 			return
 		}
 
 		// 安装 MongoDB
-		outputChan <- "安装 MongoDB..."
-		installCmd := exec.Command("sudo", "apt-get", "install", "-y", "mongodb-org")
-		if output, err := installCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("安装失败:\n%s", string(output))
+		if err := apt.Install("mongodb-org"); err != nil {
 			return
 		}
 
@@ -65,30 +60,25 @@ func (m *MongoDB) Install() (chan string, error) {
 
 func (m *MongoDB) Uninstall() (chan string, error) {
 	outputChan := make(chan string, 100)
+	apt := NewApt(outputChan)
 
 	go func() {
 		defer close(outputChan)
 
 		// 停止服务
 		outputChan <- "停止 MongoDB 服务..."
-		stopCmd := exec.Command("sudo", "systemctl", "stop", "mongod")
+		stopCmd := exec.Command("sudo", "service", "mongod", "stop")
 		if output, err := stopCmd.CombinedOutput(); err != nil {
 			outputChan <- fmt.Sprintf("停止服务失败:\n%s", string(output))
 		}
 
 		// 卸载软件
-		outputChan <- "卸载 MongoDB..."
-		removeCmd := exec.Command("sudo", "apt-get", "remove", "-y", "mongodb-org*")
-		if output, err := removeCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("卸载失败:\n%s", string(output))
+		if err := apt.Remove("mongodb-org*"); err != nil {
 			return
 		}
 
 		// 清理配置文件
-		outputChan <- "清理配置文件..."
-		purgeCmd := exec.Command("sudo", "apt-get", "purge", "-y", "mongodb-org*")
-		if output, err := purgeCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("清理失败:\n%s", string(output))
+		if err := apt.Purge("mongodb-org*"); err != nil {
 			return
 		}
 
@@ -99,9 +89,10 @@ func (m *MongoDB) Uninstall() (chan string, error) {
 }
 
 func (m *MongoDB) GetStatus() (map[string]string, error) {
+	dpkg := NewDpkg(nil)
+
 	// 检查是否安装
-	cmd := exec.Command("dpkg", "-l", "mongodb-org")
-	if err := cmd.Run(); err != nil {
+	if !dpkg.IsInstalled("mongodb-org") {
 		return map[string]string{
 			"status":  "not_installed",
 			"version": "",
@@ -109,10 +100,9 @@ func (m *MongoDB) GetStatus() (map[string]string, error) {
 	}
 
 	// 检查服务状态
-	statusCmd := exec.Command("systemctl", "status", "mongod")
-	output, err := statusCmd.CombinedOutput()
+	cmd := exec.Command("service", "mongod", "status")
 	status := "stopped"
-	if err == nil && strings.Contains(string(output), "Active: active (running)") {
+	if err := cmd.Run(); err == nil {
 		status = "running"
 	}
 

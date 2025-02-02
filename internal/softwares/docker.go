@@ -21,23 +21,18 @@ func NewDocker() *Docker {
 
 func (d *Docker) Install() (chan string, error) {
 	outputChan := make(chan string, 100)
+	apt := NewApt(outputChan)
 
 	go func() {
 		defer close(outputChan)
 
 		// 更新软件包索引
-		outputChan <- "更新软件包索引..."
-		updateCmd := exec.Command("sudo", "apt-get", "update")
-		if output, err := updateCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("更新索引失败:\n%s", string(output))
+		if err := apt.Update(); err != nil {
 			return
 		}
 
 		// 安装必要的依赖
-		outputChan <- "安装依赖包..."
-		depsCmd := exec.Command("sudo", "apt-get", "install", "-y", "ca-certificates", "curl", "gnupg")
-		if output, err := depsCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("安装依赖失败:\n%s", string(output))
+		if err := apt.Install("ca-certificates", "curl", "gnupg"); err != nil {
 			return
 		}
 
@@ -62,18 +57,12 @@ func (d *Docker) Install() (chan string, error) {
 		}
 
 		// 再次更新软件包索引
-		outputChan <- "更新软件包索引..."
-		updateCmd = exec.Command("sudo", "apt-get", "update")
-		if output, err := updateCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("更新索引失败:\n%s", string(output))
+		if err := apt.Update(); err != nil {
 			return
 		}
 
 		// 安装 Docker
-		outputChan <- "安装 Docker..."
-		installCmd := exec.Command("sudo", "apt-get", "install", "-y", "docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin")
-		if output, err := installCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("安装失败:\n%s", string(output))
+		if err := apt.Install("docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin"); err != nil {
 			return
 		}
 
@@ -93,26 +82,29 @@ func (d *Docker) Install() (chan string, error) {
 
 func (d *Docker) Uninstall() (chan string, error) {
 	outputChan := make(chan string, 100)
+	apt := NewApt(outputChan)
 
 	go func() {
 		defer close(outputChan)
 
 		// 停止服务
 		outputChan <- "停止 Docker 服务..."
-		stopCmd := exec.Command("sudo", "systemctl", "stop", "docker")
+		stopCmd := exec.Command("sudo", "service", "docker", "stop")
 		if output, err := stopCmd.CombinedOutput(); err != nil {
 			outputChan <- fmt.Sprintf("停止服务失败:\n%s", string(output))
 		}
 
-		// 卸载软件包
-		outputChan <- "卸载 Docker..."
-		removeCmd := exec.Command("sudo", "apt-get", "remove", "-y", "docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin")
-		if output, err := removeCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("卸载失败:\n%s", string(output))
+		// 卸载 Docker 包
+		if err := apt.Remove("docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin"); err != nil {
 			return
 		}
 
-		// 清理配置和数据
+		// 清理配置文件
+		if err := apt.Purge("docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin"); err != nil {
+			return
+		}
+
+		// 清理数据目录
 		outputChan <- "清理 Docker 数据..."
 		purgeCmd := exec.Command("sudo", "rm", "-rf", "/var/lib/docker", "/etc/docker", "/var/run/docker.sock")
 		if output, err := purgeCmd.CombinedOutput(); err != nil {
@@ -127,9 +119,10 @@ func (d *Docker) Uninstall() (chan string, error) {
 }
 
 func (d *Docker) GetStatus() (map[string]string, error) {
+	dpkg := NewDpkg(nil)
+
 	// 检查是否安装
-	cmd := exec.Command("dpkg", "-l", "docker-ce")
-	if err := cmd.Run(); err != nil {
+	if !dpkg.IsInstalled("docker-ce") {
 		return map[string]string{
 			"status":  "not_installed",
 			"version": "",
@@ -137,10 +130,9 @@ func (d *Docker) GetStatus() (map[string]string, error) {
 	}
 
 	// 检查服务状态
-	statusCmd := exec.Command("systemctl", "status", "docker")
-	output, err := statusCmd.CombinedOutput()
+	cmd := exec.Command("service", "docker", "status")
 	status := "stopped"
-	if err == nil && strings.Contains(string(output), "Active: active (running)") {
+	if err := cmd.Run(); err == nil {
 		status = "running"
 	}
 
