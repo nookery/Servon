@@ -42,7 +42,8 @@ func (s *Server) setupRoutes() {
 	// API 路由
 	api := s.router.Group("/api")
 	{
-		api.GET("/system/basic", s.handleBasicInfo) // 新增基本信息接口
+		api.GET("/system/basic", s.handleBasicInfo)       // 新增基本信息接口
+		api.GET("/system/software", s.handleSoftwareList) // 新增软件列表接口
 		// TODO: 添加更多API路由
 	}
 }
@@ -65,6 +66,16 @@ func (s *Server) handleSystemInfo(c *gin.Context) {
 // 新增：处理基本系统信息的接口
 func (s *Server) handleBasicInfo(c *gin.Context) {
 	info, err := system.GetBasicSystemInfo()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, info)
+}
+
+// 新增：处理软件列表的接口
+func (s *Server) handleSoftwareList(c *gin.Context) {
+	info, err := system.GetSoftwareList()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -8,7 +8,10 @@ const { title } = Astro.props;
 const menuItems = [
     {
         label: '系统信息',
-        items: [{ label: '基本信息', href: '/' }],
+        items: [
+            { label: '基本信息', href: '/' },
+            { label: '软件列表', href: '/software' },
+        ],
     },
     {
         label: '文档',
