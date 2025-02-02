@@ -4,21 +4,17 @@ interface Props {
 }
 
 const { title } = Astro.props;
+import { Image } from 'astro:assets';
+import Logo from '../assets/logo.svg?raw';
 
 const menuItems = [
-    {
-        label: '系统信息',
-        items: [
-            { label: '基本信息', href: '/' },
-            { label: '软件列表', href: '/software' },
-            { label: '进程列表', href: '/processes' },
-        ],
-    },
-    {
-        label: '文档',
-        items: [{ label: 'Web API', href: '/web_api/basic' }],
-    },
+    { label: '仪表盘', href: '/' },
+    { label: '软件管理', href: '/software' },
+    { label: '进程列表', href: '/processes' },
 ];
+
+// 获取当前路径
+const currentPath = Astro.url.pathname;
 ---
 
 <!doctype html>
@@ -33,29 +29,42 @@ const menuItems = [
             <!-- 侧边栏 -->
             <aside class="w-64 bg-white shadow-md">
                 <div class="p-4 border-b">
-                    <h1 class="text-xl font-bold">Servon</h1>
+                    <div class="flex items-center gap-2">
+                        <div class="h-8 w-8 text-blue-600" set:html={Logo} />
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900">
+                                Servon
+                            </h1>
+                            <div class="text-xs text-gray-500">
+                                服务器管理系统
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <nav class="p-4">
-                    {
-                        menuItems.map((section) => (
-                            <div class="mb-6">
-                                <h2 class="text-sm font-semibold text-gray-600 mb-2">
-                                    {section.label}
-                                </h2>
-                                <ul class="space-y-2">
-                                    {section.items.map((item) => (
-                                        <li>
-                                            <a
-                                                href={item.href}
-                                                class="block px-2 py-1 text-gray-700 hover:bg-gray-100 rounded-md text-sm">
-                                                {item.label}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))
-                    }
+                    <ul class="space-y-2">
+                        {
+                            menuItems.map((item) => (
+                                <li>
+                                    <a
+                                        href={item.href}
+                                        class:list={[
+                                            'flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100',
+                                            {
+                                                'bg-blue-50 text-blue-700':
+                                                    currentPath === item.href ||
+                                                    (item.href !== '/' &&
+                                                        currentPath.startsWith(
+                                                            item.href,
+                                                        )),
+                                            },
+                                        ]}>
+                                        {item.label}
+                                    </a>
+                                </li>
+                            ))
+                        }
+                    </ul>
                 </nav>
             </aside>
 
