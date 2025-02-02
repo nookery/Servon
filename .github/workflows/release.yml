@@ -78,10 +78,11 @@ jobs:
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
+          VERSION: ${{ steps.version.outputs.current-version }}
         run: |
           # 确保前端资源被正确嵌入
           cp -r internal/web/dist/ internal/web/dist_build/
-          go build -o "servon-${{ matrix.os }}-${{ matrix.arch }}"
+          go build -ldflags="-X 'servon/internal/version.Version=$VERSION'" -o "servon-${{ matrix.os }}-${{ matrix.arch }}"
           sha256sum "servon-${{ matrix.os }}-${{ matrix.arch }}" > "servon-${{ matrix.os }}-${{ matrix.arch }}.sha256"
 
       - name: Upload artifacts

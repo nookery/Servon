@@ -15,16 +15,16 @@ Servon 是一个轻量级的服务器管理面板，提供了直观的 Web 界�
 ### 方法 1：一键安装（推荐）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | bash
 ```
 
 ### 方法 2：手动安装
 
-从 [GitHub Releases](https://github.com/angel/servon/releases) 页面下载适合您系统的预编译二进制文件：
+从 [GitHub Releases](https://github.com/nookery/servon/releases) 页面下载适合您系统的预编译二进制文件：
 
 ```bash
 # 下载二进制文件（以 Linux amd64 为例）
-curl -LO https://github.com/angel/servon/releases/latest/download/servon-linux-amd64
+curl -LO https://github.com/nookery/servon/releases/latest/download/servon-linux-amd64
 chmod +x servon-linux-amd64
 sudo mv servon-linux-amd64 /usr/local/bin/servon
 ```
@@ -75,7 +75,7 @@ sudo mv servon-linux-amd64 /usr/local/bin/servon
 1. 克隆仓库：
 
    ```bash
-   git clone https://github.com/angel/servon.git
+   git clone https://github.com/nookery/servon.git
    cd servon
    ```
 

@@ -38,7 +38,7 @@ jobs:
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           
           # 增加补丁版本号
-          npm version patch -m "chore: bump version to %s"
+          npm version patch -m "👷 CI: bump version to %s"
           
           # 获取新版本
           NEW_VERSION=$(node -p "require('./package.json').version")

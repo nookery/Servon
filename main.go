@@ -24,7 +24,9 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	// 注册所有子命令
-	cmd.RegisterCommands(RootCmd)
+	RootCmd.AddCommand(cmd.ServeCmd)
+	RootCmd.AddCommand(cmd.VersionCmd)
+	RootCmd.AddCommand(cmd.UpgradeCmd)
 
 	// 设置彩色模板
 	usageTemplate := titleColor.Sprintf("Usage:\n") +

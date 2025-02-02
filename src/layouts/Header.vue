@@ -8,6 +8,7 @@ const currentUser = ref('')
 const cpuUsage = ref(0)
 const memoryUsage = ref(0)
 const diskUsage = ref(0)
+const osInfo = ref('')
 
 // 获取系统资源使用情况
 const fetchSystemResources = async () => {
@@ -21,6 +22,16 @@ const fetchSystemResources = async () => {
     }
 }
 
+// 获取操作系统信息
+const fetchOSInfo = async () => {
+    try {
+        const res = await axios.get('/web_api/system/os')
+        osInfo.value = res.data.os_info
+    } catch (error) {
+        console.error('获取操作系统信息失败:', error)
+    }
+}
+
 onMounted(async () => {
     try {
         const res = await axios.get('/web_api/system/user')
@@ -29,8 +40,9 @@ onMounted(async () => {
         console.error('获取用户信息失败:', error)
     }
 
-    // 初始获取系统资源信息
+    // 初始获取系统信息
     fetchSystemResources()
+    fetchOSInfo()
 
     // 每5秒更新一次系统资源信息
     setInterval(fetchSystemResources, 5000)
@@ -38,11 +50,14 @@ onMounted(async () => {
 </script>
 
 <template>
-    <n-layout-header bordered style="height: 64px; padding: 0 24px">
+    <n-layout-header bordered style="height: 64px; padding: 0 24px; width: 100%">
         <div class="header-content">
             <div class="header-title">
                 <n-icon size="24" :component="ServerOutline" class="header-icon" />
-                服务器管理面板
+                <div class="title-info">
+                    <div>服务器管理面板</div>
+                    <div class="os-info">{{ osInfo }}</div>
+                </div>
             </div>
             <n-space align="center" :size="24">
                 <div class="resource-info">
@@ -72,6 +87,13 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.n-layout-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+}
+
 .header-content {
     height: 100%;
     display: flex;
@@ -98,5 +120,17 @@ onMounted(async () => {
 .resource-info span {
     font-size: 12px;
     color: #666;
+}
+
+.title-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.os-info {
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
 }
 </style>
