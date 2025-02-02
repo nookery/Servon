@@ -15,7 +15,7 @@ Servon 是一个轻量级的服务器管理面板，提供了直观的 Web 界�
 ### 方法 1：一键安装（推荐）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | bash
 ```
 
 ### 方法 2：手动安装
