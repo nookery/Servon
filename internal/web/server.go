@@ -12,9 +12,10 @@ import (
 type Server struct {
 	router *gin.Engine
 	port   int
+	withUI bool
 }
 
-func NewServer(port int) *Server {
+func NewServer(port int, withUI bool) *Server {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
@@ -35,30 +36,40 @@ func NewServer(port int) *Server {
 	return &Server{
 		router: router,
 		port:   port,
+		withUI: withUI,
 	}
 }
 
 func (s *Server) setupRoutes() {
-	// API 路由
+	// API 路由组
 	api := s.router.Group("/api")
 	{
-		api.GET("/system/basic", s.handleBasicInfo)                            // 新增基本信息接口
-		api.GET("/system/software", s.handleSoftwareList)                      // 新增软件列表接口
-		api.GET("/system/software/:name/install", s.handleSoftwareInstall)     // 改为 GET 方法以支持 SSE
-		api.GET("/system/software/:name/uninstall", s.handleSoftwareUninstall) // 改为 GET 方法以支持 SSE
-		api.POST("/system/software/:name/stop", s.handleSoftwareStop)          // 新增停止服务接口
-		api.GET("/system/software/:name/status", s.handleSoftwareStatus)       // 新增获取软件状态接口
-		api.GET("/system/user", s.handleCurrentUser)                           // 新增获取当前用户接口
-		api.GET("/system/processes", s.handleProcessList)                      // 新增获取进程列表接口
+		api.GET("/system/resources", s.handleSystemResources)
+		api.GET("/system/user", s.handleCurrentUser)
+		api.GET("/system/basic", s.handleBasicInfo)
+		api.GET("/system/software", s.handleSoftwareList)
+		api.GET("/system/software/:name/install", s.handleSoftwareInstall)
+		api.GET("/system/software/:name/uninstall", s.handleSoftwareUninstall)
+		api.POST("/system/software/:name/stop", s.handleSoftwareStop)
+		api.GET("/system/software/:name/status", s.handleSoftwareStatus)
+		api.GET("/system/processes", s.handleProcessList)
 		api.GET("/system/files", s.handleFileList)
 		api.GET("/system/ports", s.handlePortList)
-		api.GET("/system/resources", s.handleSystemResources) // 新增系统资源监控接口
-		// TODO: 添加更多API路由
+	}
+
+	// 如果启用了UI，提供静态文件服务
+	if s.withUI {
+		s.router.Static("/", "./dist")
+		s.router.NoRoute(func(c *gin.Context) {
+			c.File("./dist/index.html")
+		})
+		fmt.Printf("Web UI is available at http://localhost:%d\n", s.port)
 	}
 }
 
 func (s *Server) Start() error {
 	s.setupRoutes()
+	fmt.Printf("API server is running on http://localhost:%d/api\n", s.port)
 	return s.router.Run(fmt.Sprintf(":%d", s.port))
 }
 
