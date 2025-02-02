@@ -44,6 +44,8 @@ func (s *Server) setupRoutes() {
 	{
 		api.GET("/system/basic", s.handleBasicInfo)       // 新增基本信息接口
 		api.GET("/system/software", s.handleSoftwareList) // 新增软件列表接口
+		api.POST("/system/software/:name/install", s.handleSoftwareInstall)
+		api.POST("/system/software/:name/uninstall", s.handleSoftwareUninstall)
 		// TODO: 添加更多API路由
 	}
 }
@@ -81,4 +83,24 @@ func (s *Server) handleSoftwareList(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, info)
+}
+
+// 处理软件安装请求
+func (s *Server) handleSoftwareInstall(c *gin.Context) {
+	name := c.Param("name")
+	if err := system.InstallSoftware(name); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "安装成功"})
+}
+
+// 处理软件卸载请求
+func (s *Server) handleSoftwareUninstall(c *gin.Context) {
+	name := c.Param("name")
+	if err := system.UninstallSoftware(name); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "卸载成功"})
 }

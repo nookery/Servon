@@ -1,114 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import SoftwareList from '../components/SoftwareList.vue';
 import '../app.css';
 ---
 
 <Layout title="软件列表">
     <main class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-6">软件列表</h1>
-
-        <div id="loading" class="text-gray-600">加载中...</div>
-        <div id="error" class="text-red-600 hidden"></div>
-
-        <div id="software-list" class="hidden">
-            <div class="space-y-4">
-                <!-- 软件列表将通过 JavaScript 动态填充 -->
-            </div>
-
-            <div class="mt-4">
-                <button
-                    id="toggleRaw"
-                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm"
-                    onclick="toggleRawJson()">
-                    显示原始响应
-                </button>
-                <pre
-                    id="rawJson"
-                    class="mt-4 p-4 bg-gray-50 rounded-md overflow-auto hidden">
-                </pre>
-            </div>
-        </div>
+        <SoftwareList client:load />
     </main>
 </Layout>
-
-<script is:inline>
-    function toggleRawJson() {
-        const toggleBtn = document.getElementById('toggleRaw');
-        const rawJson = document.getElementById('rawJson');
-        if (!toggleBtn || !rawJson) return;
-
-        const isHidden = rawJson.classList.contains('hidden');
-        rawJson.classList.toggle('hidden');
-        toggleBtn.textContent = isHidden ? '隐藏原始响应' : '显示原始响应';
-    }
-
-    async function fetchSoftwareList() {
-        try {
-            const response = await fetch('/api/system/software');
-            if (!response.ok) {
-                throw new Error('获取软件列表失败');
-            }
-            const data = await response.json();
-
-            document.getElementById('loading')?.classList.add('hidden');
-            const listDiv = document.getElementById('software-list');
-            if (!listDiv) return;
-
-            listDiv.classList.remove('hidden');
-
-            // 设置原始JSON
-            const rawJson = document.getElementById('rawJson');
-            if (rawJson) {
-                rawJson.textContent = JSON.stringify(data, null, 2);
-            }
-
-            // 渲染软件列表
-            const listContainer = listDiv.querySelector('div');
-            if (!listContainer) return;
-
-            data.forEach((software) => {
-                const card = document.createElement('div');
-                card.className = 'bg-white shadow rounded-lg p-6';
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">${software.name}</h3>
-                            <p class="text-sm text-gray-500 mt-1">${software.version || '未知版本'}</p>
-                            ${software.description ? `<p class="text-gray-700 mt-2">${software.description}</p>` : ''}
-                        </div>
-                        <span class="px-2 py-1 text-sm rounded-full ${
-                            software.status === 'running'
-                                ? 'bg-green-100 text-green-800'
-                                : software.status === 'stopped'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-gray-100 text-gray-800'
-                        }">
-                            ${
-                                software.status === 'running'
-                                    ? '运行中'
-                                    : software.status === 'stopped'
-                                      ? '已停止'
-                                      : '未知状态'
-                            }
-                        </span>
-                    </div>
-                    ${software.path ? `<p class="text-sm text-gray-500 mt-2">路径: ${software.path}</p>` : ''}
-                `;
-                listContainer.appendChild(card);
-            });
-        } catch (error) {
-            document.getElementById('loading')?.classList.add('hidden');
-            const errorDiv = document.getElementById('error');
-            if (errorDiv) {
-                errorDiv.classList.remove('hidden');
-                errorDiv.textContent =
-                    error instanceof Error ? error.message : '未知错误';
-            }
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', fetchSoftwareList);
-</script>
 
 <style>
     .container {
