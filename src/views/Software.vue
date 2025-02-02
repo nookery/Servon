@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
-import { NCard, NDataTable, NButton, NSpace, useMessage, NModal, NLog, NSpin, NCode } from 'naive-ui'
+import { NCard, NDataTable, NButton, NSpace, useMessage, NModal, NLog, NSpin } from 'naive-ui'
 import axios from 'axios'
 
 const message = useMessage()
@@ -127,25 +127,6 @@ function copyLogs() {
         message.success('日志已复制到剪贴板')
     } catch (error) {
         message.error('复制失败')
-    }
-}
-
-async function handleUninstall(name: string) {
-    try {
-        const res = await axios.post(`/web_api/system/software/${name}/uninstall`)
-        const logChan = new WebSocket(`ws://${window.location.host}/web_api/system/software/${res.data.id}/log`)
-
-        showLogModal.value = true
-        logChan.onmessage = (event) => {
-            currentLogs.value.push(event.data)
-        }
-
-        logChan.onclose = async () => {
-            // 卸载完成后重新加载软件状态
-            await loadSoftwareList()
-        }
-    } catch (error) {
-        message.error('卸载失败')
     }
 }
 
