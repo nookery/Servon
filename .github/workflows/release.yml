@@ -4,12 +4,20 @@ on:
   push:
     tags:
       - 'v*'  # 只响应 v 开头的标签
+  workflow_run:
+    workflows:
+      - 'Version Bump'  # 这里要匹配 version-bump.yml 中的 name
+    types:
+      - completed
+    branches:
+      - main
 
 permissions:
   contents: write # 需要写入权限来创建 release
 
 jobs:
   build:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
     name: Build and Release
     runs-on: ubuntu-latest
     strategy:
