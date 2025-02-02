@@ -52,6 +52,7 @@ func (s *Server) setupRoutes() {
 		api.GET("/system/processes", s.handleProcessList)                      // 新增获取进程列表接口
 		api.GET("/system/files", s.handleFileList)
 		api.GET("/system/ports", s.handlePortList)
+		api.GET("/system/resources", s.handleSystemResources) // 新增系统资源监控接口
 		// TODO: 添加更多API路由
 	}
 }
@@ -220,4 +221,14 @@ func (s *Server) handlePortList(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, ports)
+}
+
+// 新增：处理系统资源监控的接口
+func (s *Server) handleSystemResources(c *gin.Context) {
+	resources, err := system.GetSystemResources()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resources)
 }
