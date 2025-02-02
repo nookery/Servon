@@ -313,7 +313,7 @@ func UninstallSoftware(name string) error {
 	}
 
 	// 停止服务
-	stopCmd := exec.Command("systemctl", "stop", name)
+	stopCmd := exec.Command("sudo", "systemctl", "stop", name)
 	if err := stopCmd.Run(); err != nil {
 		return fmt.Errorf("停止服务失败: %v", err)
 	}
@@ -322,15 +322,15 @@ func UninstallSoftware(name string) error {
 	var cmd *exec.Cmd
 	switch name {
 	case "nginx":
-		cmd = exec.Command("apt-get", "remove", "-y", "nginx")
+		cmd = exec.Command("sudo", "apt-get", "remove", "-y", "nginx")
 	case "mysql":
-		cmd = exec.Command("apt-get", "remove", "-y", "mysql-server")
+		cmd = exec.Command("sudo", "apt-get", "remove", "-y", "mysql-server")
 	case "redis":
-		cmd = exec.Command("apt-get", "remove", "-y", "redis-server")
+		cmd = exec.Command("sudo", "apt-get", "remove", "-y", "redis-server")
 	case "docker":
-		cmd = exec.Command("apt-get", "remove", "-y", "docker.io")
+		cmd = exec.Command("sudo", "apt-get", "remove", "-y", "docker.io")
 	case "postgresql":
-		cmd = exec.Command("apt-get", "remove", "-y", "postgresql")
+		cmd = exec.Command("sudo", "apt-get", "remove", "-y", "postgresql")
 	default:
 		return fmt.Errorf("未知的软件: %s", name)
 	}
@@ -338,6 +338,29 @@ func UninstallSoftware(name string) error {
 	// 执行卸载命令
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("卸载失败: %v, 输出: %s", err, string(output))
+	}
+
+	return nil
+}
+
+// StopSoftware 停止指定的软件服务
+func StopSoftware(name string) error {
+	// 检查软件是否在支持列表中
+	var targetSoftware *Software
+	for _, sw := range supportedSoftware {
+		if sw.Name == name {
+			targetSoftware = &sw
+			break
+		}
+	}
+	if targetSoftware == nil {
+		return fmt.Errorf("不支持的软件: %s", name)
+	}
+
+	// 停止服务
+	cmd := exec.Command("sudo", "systemctl", "stop", name)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("停止服务失败: %v\n%s", err, string(output))
 	}
 
 	return nil

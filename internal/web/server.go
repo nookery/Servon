@@ -46,6 +46,7 @@ func (s *Server) setupRoutes() {
 		api.GET("/system/software", s.handleSoftwareList)                  // 新增软件列表接口
 		api.GET("/system/software/:name/install", s.handleSoftwareInstall) // 改为 GET 方法以支持 SSE
 		api.POST("/system/software/:name/uninstall", s.handleSoftwareUninstall)
+		api.POST("/system/software/:name/stop", s.handleSoftwareStop) // 新增停止服务接口
 		// TODO: 添加更多API路由
 	}
 }
@@ -125,4 +126,14 @@ func (s *Server) handleSoftwareUninstall(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "卸载成功"})
+}
+
+// 处理软件服务停止请求
+func (s *Server) handleSoftwareStop(c *gin.Context) {
+	name := c.Param("name")
+	if err := system.StopSoftware(name); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "服务已停止"})
 }

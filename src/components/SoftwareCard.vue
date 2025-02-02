@@ -36,7 +36,12 @@
         </p>
         <!-- 安装状态提示 -->
         <div v-if="installFailed" class="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
-            <p class="text-sm text-red-600">安装过程中断</p>
+            <div class="flex justify-between items-center">
+                <p class="text-sm text-red-600">安装过程中断</p>
+                <button @click="clearError" class="text-sm text-red-500 hover:text-red-700" title="关闭错误提示">
+                    <XMarkIcon class="h-5 w-5" />
+                </button>
+            </div>
         </div>
         <!-- 安装日志 -->
         <TransitionRoot v-if="logs.length > 0" as="template" show>
@@ -103,6 +108,8 @@
                 </div>
             </Dialog>
         </TransitionRoot>
+        <!-- Toast 消息 -->
+        <Toast :show="showToast" :message="toastMessage" :type="toastType" @close="showToast = false" />
     </div>
 </template>
 
@@ -115,6 +122,8 @@ import {
     DialogPanel,
     DialogTitle
 } from '@headlessui/vue'
+import Toast from './Toast.vue'
+import { XMarkIcon } from '@heroicons/vue/24/outline'
 
 interface Software {
     name: string
@@ -133,6 +142,9 @@ const installFailed = ref(false)
 const installSuccess = ref(false)
 const logs = ref<string[]>([])
 const showUninstallDialog = ref(false)
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
 
 function getStatusClass(status: string): string {
     switch (status) {
@@ -158,6 +170,7 @@ function getStatusText(status: string): string {
 
 function install() {
     installing.value = true
+    installFailed.value = false // 重置失败状态
     const eventSource = new EventSource(`/api/system/software/${props.software.name}/install`)
 
     eventSource.onmessage = (event) => {
@@ -183,7 +196,9 @@ function install() {
                 installSuccess.value = false
             }, 3000)
         } else {
+            installFailed.value = true
             logs.value.push('连接已关闭，安装可能未完成')
+            // 移除失败状态的自动清除
         }
     }
 }
@@ -194,7 +209,24 @@ function clearLogs() {
 
 async function confirmUninstall() {
     showUninstallDialog.value = false
+    installing.value = true
+    installFailed.value = false // 重置失败状态
+    logs.value.push(`开始卸载 ${props.software.name}...`)
+
     try {
+        // 先停止服务
+        logs.value.push('正在停止服务...')
+        const stopResponse = await fetch(`/api/system/software/${props.software.name}/stop`, {
+            method: 'POST'
+        })
+        if (!stopResponse.ok) {
+            const data = await stopResponse.json()
+            throw new Error(data.error || '停止服务失败')
+        }
+        logs.value.push('服务已停止')
+
+        // 执行卸载
+        logs.value.push('正在卸载软件...')
         const response = await fetch(`/api/system/software/${props.software.name}/uninstall`, {
             method: 'POST'
         })
@@ -202,10 +234,17 @@ async function confirmUninstall() {
             const data = await response.json()
             throw new Error(data.error || '卸载失败')
         }
-        // 使用原生 alert，或者你可以添加一个自定义的提示组件
-        alert('卸载成功！')
+        logs.value.push('卸载完成')
+        installSuccess.value = true
+        setTimeout(() => {
+            installSuccess.value = false
+        }, 3000)
     } catch (err) {
-        alert(err instanceof Error ? err.message : '未知错误')
+        installFailed.value = true
+        logs.value.push(`错误: ${err instanceof Error ? err.message : '未知错误'}`)
+        // 移除失败状态的自动清除
+    } finally {
+        installing.value = false
     }
 }
 
@@ -217,14 +256,37 @@ function handleAction() {
     }
 }
 
+function showSuccessToast(message: string) {
+    toastMessage.value = message
+    toastType.value = 'success'
+    showToast.value = true
+    setTimeout(() => {
+        showToast.value = false
+    }, 3000)
+}
+
+function showErrorToast(message: string) {
+    toastMessage.value = message
+    toastType.value = 'error'
+    showToast.value = true
+    setTimeout(() => {
+        showToast.value = false
+    }, 3000)
+}
+
 function copyLogs() {
     const logText = logs.value.join('\n')
     navigator.clipboard.writeText(logText).then(() => {
-        alert('日志已复制到剪贴板')
+        showSuccessToast('日志已复制到剪贴板')
     }).catch(err => {
         console.error('复制失败:', err)
-        alert('复制失败，请手动复制')
+        showErrorToast('复制失败，请手动复制')
     })
+}
+
+// 添加清除错误状态的函数
+function clearError() {
+    installFailed.value = false
 }
 
 // 组件卸载时清理
