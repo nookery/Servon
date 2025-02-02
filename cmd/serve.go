@@ -35,6 +35,9 @@ var serveCmd = &cobra.Command{
 		color.Cyan("Starting Servon server on port %d...\n", port)
 		if withUI {
 			color.Cyan("Web UI enabled\n")
+		} else {
+			color.Yellow("Web UI is not enabled. To enable it, run with --ui flag:\n")
+			color.Yellow("  servon serve --ui\n")
 		}
 
 		server := web.NewServer(port, withUI)

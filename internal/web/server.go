@@ -3,6 +3,7 @@ package web
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"servon/internal/system"
 
@@ -59,10 +60,18 @@ func (s *Server) setupRoutes() {
 
 	// 如果启用了UI，提供静态文件服务
 	if s.withUI {
-		s.router.Static("/", "./dist")
+		// 先处理具体的静态文件
+		s.router.Static("/assets", "./dist/assets")
+		s.router.StaticFile("/favicon.ico", "./dist/favicon.ico")
+
+		// 其他所有非 API 路由都返回 index.html
 		s.router.NoRoute(func(c *gin.Context) {
-			c.File("./dist/index.html")
+			// 如果请求的不是 API 路径，则返回 index.html
+			if !strings.HasPrefix(c.Request.URL.Path, "/api/") {
+				c.File("./dist/index.html")
+			}
 		})
+
 		fmt.Printf("Web UI is available at http://localhost:%d\n", s.port)
 	}
 }
