@@ -2,8 +2,10 @@ name: Release
 
 on:
   push:
+    branches:
+      - dev
     tags:
-      - 'v*' # 当推送 v 开头的 tag 时触发
+      - '*'  # 现在使用任意tag，实际版本号从package.json获取
 
 permissions:
   contents: write # 需要写入权限来创建 release
@@ -14,6 +16,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -43,6 +56,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get version from package.json
+        id: version
+        uses: martinbeentjes/npm-get-version-action@v1.3.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -54,6 +82,8 @@ jobs:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
         run: |
+          # 确保前端资源被正确嵌入
+          cp -r internal/web/dist/ internal/web/dist_build/
           go build -o "servon-${{ matrix.os }}-${{ matrix.arch }}"
           sha256sum "servon-${{ matrix.os }}-${{ matrix.arch }}" > "servon-${{ matrix.os }}-${{ matrix.arch }}.sha256"
 
@@ -73,12 +103,15 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
+      - name: Get version from package.json
+        id: version
+        uses: martinbeentjes/npm-get-version-action@v1.3.0
+
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 获取版本号
-          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${{ steps.version.outputs.current-version }}
 
           # 创建 release notes
           echo "# Servon ${VERSION}" > release_notes.md
