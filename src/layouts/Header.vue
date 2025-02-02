@@ -3,6 +3,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import ThemeSwitcher from '../components/ThemeSwitcher.vue'
+import pkg from '../../package.json'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
@@ -65,7 +66,7 @@ onMounted(async () => {
             <div class="flex items-center gap-2">
                 <i class="ri-server-line text-2xl text-primary"></i>
                 <div class="flex flex-col">
-                    <span class="text-lg font-bold">服务器管理面板</span>
+                    <span class="text-lg font-bold">{{ pkg.name.charAt(0).toUpperCase() + pkg.name.slice(1) }}</span>
                     <span class="text-xs text-base-content/60">{{ osInfo }}</span>
                 </div>
             </div>
