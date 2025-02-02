@@ -57,13 +57,22 @@ check_system() {
     
     # 检查操作系统
     OS=$(uname -s)
-    case "$OS" in
-        Linux|Darwin) ;;
-        *)
-            print_error "This script only supports Linux and macOS"
+    if [ "$OS" != "Linux" ]; then
+        print_error "This script only supports Linux"
+        exit 1
+    fi
+
+    # 检查是否为 Ubuntu
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        if [ "$ID" != "ubuntu" ]; then
+            print_error "This script only supports Ubuntu. Your system ($ID) is not supported."
             exit 1
-            ;;
-    esac
+        fi
+    else
+        print_error "Cannot determine Linux distribution. This script only supports Ubuntu."
+        exit 1
+    fi
 
     # 检查必要的命令
     for cmd in curl sudo; do
@@ -108,11 +117,11 @@ detect_arch() {
 detect_os() {
     local os
     os=$(uname -s | tr '[:upper:]' '[:lower:]')
-    case $os in
-        linux)  echo "linux" ;;
-        darwin) echo "darwin" ;;
-        *)      echo "unsupported" ;;
-    esac
+    if [ "$os" != "linux" ]; then
+        print_error "Unsupported operating system: $os"
+        exit 1
+    fi
+    echo "linux"
 }
 
 # 获取最新版本
