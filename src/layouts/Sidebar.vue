@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { NLayoutSider, NMenu, NIcon } from 'naive-ui'
-import { h, ref } from 'vue'
+import { NMenu, NIcon } from 'naive-ui'
+import { h } from 'vue'
 import { useRouter } from 'vue-router'
 import {
     ServerOutline,
