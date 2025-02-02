@@ -50,6 +50,7 @@ func (s *Server) setupRoutes() {
 		api.GET("/system/software/:name/status", s.handleSoftwareStatus)       // 新增获取软件状态接口
 		api.GET("/system/user", s.handleCurrentUser)                           // 新增获取当前用户接口
 		api.GET("/system/processes", s.handleProcessList)                      // 新增获取进程列表接口
+		api.GET("/system/files", s.handleFileList)
 		// TODO: 添加更多API路由
 	}
 }
@@ -188,4 +189,22 @@ func (s *Server) handleProcessList(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, processes)
+}
+
+// handleFileList 处理获取文件列表的请求
+func (s *Server) handleFileList(c *gin.Context) {
+	path := c.Query("path")
+	if path == "" {
+		path = "/"
+	}
+
+	files, err := system.GetFileList(path)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "获取文件列表失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, files)
 }
