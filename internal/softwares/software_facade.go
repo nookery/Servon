@@ -4,6 +4,7 @@ import "fmt"
 
 // SoftwareRegistry 存储所有已注册的软件
 var registry = map[string]func() Software{
+	"caddy":   func() Software { return NewCaddy() },
 	"nginx":   func() Software { return NewNginx() },
 	"mongodb": func() Software { return NewMongoDB() },
 	"redis":   func() Software { return NewRedis() },
