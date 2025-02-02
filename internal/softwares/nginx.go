@@ -21,23 +21,18 @@ func NewNginx() *Nginx {
 
 func (n *Nginx) Install() (chan string, error) {
 	outputChan := make(chan string, 100)
+	apt := NewApt(outputChan)
 
 	go func() {
 		defer close(outputChan)
 
 		// 更新软件包索引
-		outputChan <- "更新软件包索引..."
-		updateCmd := exec.Command("sudo", "apt-get", "update")
-		if output, err := updateCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("更新索引失败:\n%s", string(output))
+		if err := apt.Update(); err != nil {
 			return
 		}
 
 		// 安装 Nginx
-		outputChan <- "安装 Nginx..."
-		installCmd := exec.Command("sudo", "apt-get", "install", "-y", "nginx")
-		if output, err := installCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("安装失败:\n%s", string(output))
+		if err := apt.Install("nginx"); err != nil {
 			return
 		}
 
@@ -57,30 +52,33 @@ func (n *Nginx) Install() (chan string, error) {
 
 func (n *Nginx) Uninstall() (chan string, error) {
 	outputChan := make(chan string, 100)
+	apt := NewApt(outputChan)
 
 	go func() {
 		defer close(outputChan)
 
 		// 停止服务
 		outputChan <- "停止 Nginx 服务..."
-		stopCmd := exec.Command("sudo", "systemctl", "stop", "nginx")
-		if output, err := stopCmd.CombinedOutput(); err != nil {
+		stopCmd := exec.Command("sudo", "service", "nginx", "stop")
+		output, err := stopCmd.CombinedOutput()
+		if err != nil {
 			outputChan <- fmt.Sprintf("停止服务失败:\n%s", string(output))
 		}
 
-		// 卸载软件
-		outputChan <- "卸载 Nginx..."
-		removeCmd := exec.Command("sudo", "apt-get", "remove", "-y", "nginx", "nginx-common")
-		if output, err := removeCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("卸载失败:\n%s", string(output))
+		// 卸载软件包及其依赖
+		if err := apt.Remove("nginx*"); err != nil {
 			return
 		}
 
 		// 清理配置文件
-		outputChan <- "清理配置文件..."
-		purgeCmd := exec.Command("sudo", "apt-get", "purge", "-y", "nginx", "nginx-common")
-		if output, err := purgeCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("清理失败:\n%s", string(output))
+		if err := apt.Purge("nginx*"); err != nil {
+			return
+		}
+
+		// 清理自动安装的依赖
+		cleanCmd := exec.Command("sudo", "apt-get", "autoremove", "-y")
+		if output, err := cleanCmd.CombinedOutput(); err != nil {
+			outputChan <- fmt.Sprintf("清理依赖失败:\n%s", string(output))
 			return
 		}
 
@@ -91,9 +89,13 @@ func (n *Nginx) Uninstall() (chan string, error) {
 }
 
 func (n *Nginx) GetStatus() (map[string]string, error) {
-	// 检查是否安装
-	cmd := exec.Command("dpkg", "-l", "nginx")
-	if err := cmd.Run(); err != nil {
+	// 检查是否安装 - 使用更准确的检查方式
+	checkCmd := exec.Command("dpkg", "-l", "nginx")
+	output, err := checkCmd.CombinedOutput()
+	outputStr := string(output)
+
+	// dpkg -l 的输出中，如果包已安装会显示 "ii  nginx"
+	if err != nil || !strings.Contains(outputStr, "ii  nginx") {
 		return map[string]string{
 			"status":  "not_installed",
 			"version": "",
@@ -101,10 +103,9 @@ func (n *Nginx) GetStatus() (map[string]string, error) {
 	}
 
 	// 检查服务状态
-	statusCmd := exec.Command("systemctl", "status", "nginx")
-	output, err := statusCmd.CombinedOutput()
+	cmd := exec.Command("service", "nginx", "status")
 	status := "stopped"
-	if err == nil && strings.Contains(string(output), "Active: active (running)") {
+	if err := cmd.Run(); err == nil {
 		status = "running"
 	}
 

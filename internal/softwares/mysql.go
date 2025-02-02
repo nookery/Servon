@@ -64,9 +64,11 @@ func (m *MySQL) Uninstall() (chan string, error) {
 		// 停止服务
 		outputChan <- "停止 MySQL 服务..."
 		stopCmd := exec.Command("sudo", "systemctl", "stop", "mysql")
-		if output, err := stopCmd.CombinedOutput(); err != nil {
+		output, err := stopCmd.CombinedOutput()
+		if err != nil {
 			outputChan <- fmt.Sprintf("停止服务失败:\n%s", string(output))
 		}
+		outputChan <- string(output)
 
 		// 卸载软件
 		outputChan <- "卸载 MySQL..."
@@ -75,6 +77,7 @@ func (m *MySQL) Uninstall() (chan string, error) {
 			outputChan <- fmt.Sprintf("卸载失败:\n%s", string(output))
 			return
 		}
+		outputChan <- string(output)
 
 		// 清理配置文件
 		outputChan <- "清理配置文件..."
@@ -83,6 +86,7 @@ func (m *MySQL) Uninstall() (chan string, error) {
 			outputChan <- fmt.Sprintf("清理失败:\n%s", string(output))
 			return
 		}
+		outputChan <- string(output)
 
 		outputChan <- "MySQL 卸载完成"
 	}()

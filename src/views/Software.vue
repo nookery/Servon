@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
-import { NCard, NDataTable, NButton, NSpace, useMessage, NModal, NLog, NSpin } from 'naive-ui'
+import { NCard, NDataTable, NButton, NSpace, useMessage, NModal, NLog, NSpin, NCode } from 'naive-ui'
 import axios from 'axios'
 
 const message = useMessage()
@@ -97,15 +97,16 @@ async function loadSoftwareList() {
         loading.value = true
         const res = await axios.get('/web_api/system/software')
         software.value = res.data.map((name: string) => ({ name }))
-        rawSoftwareData.value = res.data  // 存储原始数据
+        rawSoftwareData.value = res.data
 
         // 获取每个软件的状态
         for (const item of software.value) {
             try {
                 const statusRes = await axios.get(`/web_api/system/software/${item.name}/status`)
                 item.status = statusRes.data.status
-            } catch (error) {
-                item.status = 'not_installed'
+            } catch (error: any) {
+                item.status = 'error'
+                message.error(`获取 ${item.name} 状态失败: ${error.response?.data?.message || error.message}`)
             }
         }
     } catch (error) {
@@ -129,6 +130,25 @@ function copyLogs() {
     }
 }
 
+async function handleUninstall(name: string) {
+    try {
+        const res = await axios.post(`/web_api/system/software/${name}/uninstall`)
+        const logChan = new WebSocket(`ws://${window.location.host}/web_api/system/software/${res.data.id}/log`)
+
+        showLogModal.value = true
+        logChan.onmessage = (event) => {
+            currentLogs.value.push(event.data)
+        }
+
+        logChan.onclose = async () => {
+            // 卸载完成后重新加载软件状态
+            await loadSoftwareList()
+        }
+    } catch (error) {
+        message.error('卸载失败')
+    }
+}
+
 onMounted(() => {
     loadSoftwareList()
 })
@@ -146,9 +166,7 @@ onMounted(() => {
             <n-data-table v-if="!showRawData" :columns="columns" :data="software" :loading="loading" />
 
             <pre v-else
-                style="background: #f5f5f5; padding: 10px; border-radius: 4px; max-height: 300px; overflow: auto">
-{{ JSON.stringify(rawSoftwareData, null, 2) }}
-            </pre>
+                style="width: 100%; padding: 16px; background: #f9f9f9; border-radius: 6px; overflow: auto; font-family: monospace; text-align: left; white-space: pre">{{ JSON.stringify(rawSoftwareData, null, 2) }}</pre>
         </n-space>
 
         <n-modal v-model:show="showLogModal" style="width: 600px" :mask-closable="false" preset="card"
