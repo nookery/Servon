@@ -59,12 +59,59 @@ const menuItems = [
             </aside>
 
             <!-- 主内容区 -->
-            <main class="flex-1 overflow-auto">
-                <slot />
-            </main>
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- 顶部导航栏 -->
+                <header class="bg-white shadow-sm">
+                    <div class="flex justify-between items-center px-6 py-4">
+                        <h2 class="text-xl font-semibold text-gray-800">
+                            {title}
+                        </h2>
+                        <div id="userInfo" class="flex items-center gap-3">
+                            <span class="text-gray-600">加载中...</span>
+                        </div>
+                    </div>
+                </header>
+                <!-- 内容区域 -->
+                <main class="flex-1 overflow-auto p-6">
+                    <slot />
+                </main>
+            </div>
         </div>
     </body>
 </html>
+
+<script>
+    // 获取用户信息
+    async function fetchUserInfo() {
+        try {
+            const response = await fetch('/api/system/user');
+            if (!response.ok) {
+                throw new Error('获取用户信息失败');
+            }
+            const data = await response.json();
+            const userInfoElement = document.getElementById('userInfo');
+            if (userInfoElement) {
+                userInfoElement.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-gray-700">${data.username}</span>
+                `;
+            }
+        } catch (error) {
+            console.error('获取用户信息失败:', error);
+            const userInfoElement = document.getElementById('userInfo');
+            if (userInfoElement) {
+                userInfoElement.innerHTML = `
+                    <span class="text-red-500">获取用户信息失败</span>
+                `;
+            }
+        }
+    }
+
+    // 页面加载完成后获取用户信息
+    document.addEventListener('DOMContentLoaded', fetchUserInfo);
+</script>
 
 <style>
     body {

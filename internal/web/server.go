@@ -47,6 +47,7 @@ func (s *Server) setupRoutes() {
 		api.GET("/system/software/:name/install", s.handleSoftwareInstall) // 改为 GET 方法以支持 SSE
 		api.POST("/system/software/:name/uninstall", s.handleSoftwareUninstall)
 		api.POST("/system/software/:name/stop", s.handleSoftwareStop) // 新增停止服务接口
+		api.GET("/system/user", s.handleCurrentUser)                  // 新增获取当前用户接口
 		// TODO: 添加更多API路由
 	}
 }
@@ -136,4 +137,14 @@ func (s *Server) handleSoftwareStop(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "服务已停止"})
+}
+
+// 处理获取当前用户的请求
+func (s *Server) handleCurrentUser(c *gin.Context) {
+	user, err := system.GetCurrentUser()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"username": user})
 }
