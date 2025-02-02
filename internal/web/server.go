@@ -51,6 +51,7 @@ func (s *Server) setupRoutes() {
 		api.GET("/system/user", s.handleCurrentUser)                           // 新增获取当前用户接口
 		api.GET("/system/processes", s.handleProcessList)                      // 新增获取进程列表接口
 		api.GET("/system/files", s.handleFileList)
+		api.GET("/system/ports", s.handlePortList)
 		// TODO: 添加更多API路由
 	}
 }
@@ -207,4 +208,16 @@ func (s *Server) handleFileList(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, files)
+}
+
+// handlePortList 处理获取端口列表的请求
+func (s *Server) handlePortList(c *gin.Context) {
+	ports, err := system.GetPortList()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "获取端口列表失败: " + err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, ports)
 }
