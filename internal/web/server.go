@@ -42,9 +42,9 @@ func (s *Server) setupRoutes() {
 	// API 路由
 	api := s.router.Group("/api")
 	{
-		api.GET("/system/basic", s.handleBasicInfo)       // 新增基本信息接口
-		api.GET("/system/software", s.handleSoftwareList) // 新增软件列表接口
-		api.POST("/system/software/:name/install", s.handleSoftwareInstall)
+		api.GET("/system/basic", s.handleBasicInfo)                        // 新增基本信息接口
+		api.GET("/system/software", s.handleSoftwareList)                  // 新增软件列表接口
+		api.GET("/system/software/:name/install", s.handleSoftwareInstall) // 改为 GET 方法以支持 SSE
 		api.POST("/system/software/:name/uninstall", s.handleSoftwareUninstall)
 		// TODO: 添加更多API路由
 	}
@@ -88,11 +88,33 @@ func (s *Server) handleSoftwareList(c *gin.Context) {
 // 处理软件安装请求
 func (s *Server) handleSoftwareInstall(c *gin.Context) {
 	name := c.Param("name")
-	if err := system.InstallSoftware(name); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
+	// 设置 SSE 头
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("Transfer-Encoding", "chunked")
+
+	// 获取输出通道
+	outputChan, err := system.InstallSoftware(name)
+	if err != nil {
+		// 发送错误消息
+		c.SSEvent("message", fmt.Sprintf("Error: %s", err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "安装成功"})
+
+	// 清空缓冲区
+	if f, ok := c.Writer.(http.Flusher); ok {
+		f.Flush()
+	}
+
+	// 发送输出
+	for msg := range outputChan {
+		c.SSEvent("message", msg)
+		if f, ok := c.Writer.(http.Flusher); ok {
+			f.Flush()
+		}
+	}
 }
 
 // 处理软件卸载请求
