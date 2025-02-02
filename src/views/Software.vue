@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, h } from 'vue'
-import { NCard, NDataTable, NButton, NSpace, useMessage, NModal, NLog, NSpin } from 'naive-ui'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-const message = useMessage()
 const software = ref<any[]>([])
 const loading = ref(false)
 const showLogModal = ref(false)
@@ -12,41 +10,6 @@ const installing = ref(false)
 const currentSoftware = ref<string>('')
 const showRawData = ref(false)
 const rawSoftwareData = ref<any>(null)
-
-const columns = [
-    { title: '软件名称', key: 'name' },
-    { title: '状态', key: 'status' },
-    {
-        title: '操作',
-        key: 'actions',
-        render: (row: any) => h(
-            NSpace,
-            null,
-            {
-                default: () => [
-                    h(
-                        NButton,
-                        {
-                            size: 'small',
-                            type: row.status === 'not_installed' ? 'primary' : 'error',
-                            disabled: installing.value && currentSoftware.value === row.name,
-                            onClick: () => handleAction(row)
-                        },
-                        { default: () => row.status === 'not_installed' ? '安装' : '卸载' }
-                    ),
-                    row.status === 'running' && h(
-                        NButton,
-                        {
-                            size: 'small',
-                            onClick: () => handleStop(row.name)
-                        },
-                        { default: () => '停止' }
-                    )
-                ]
-            }
-        )
-    }
-]
 
 async function handleAction(software: any) {
     currentSoftware.value = software.name
@@ -59,14 +22,13 @@ async function handleAction(software: any) {
     )
 
     eventSource.onmessage = (event) => {
-        // 收到第一条消息时隐藏 loading
         installing.value = false
         currentLogs.value.push(event.data)
         currentLogs.value = [...currentLogs.value]
         if (event.data.includes('完成')) {
             eventSource.close()
             loadSoftwareList()
-            message.success(`${software.status === 'not_installed' ? '安装' : '卸载'}完成`)
+            showToast(`${software.status === 'not_installed' ? '安装' : '卸载'}完成`, 'success')
         }
     }
 
@@ -76,7 +38,7 @@ async function handleAction(software: any) {
         if (!currentLogs.value[currentLogs.value.length - 1]?.includes('完成')) {
             currentLogs.value.push('操作异常终止')
             currentLogs.value = [...currentLogs.value]
-            message.error('操作失败')
+            showToast('操作失败', 'error')
         }
         loadSoftwareList()
     }
@@ -85,10 +47,10 @@ async function handleAction(software: any) {
 async function handleStop(name: string) {
     try {
         await axios.post(`/web_api/system/software/${name}/stop`)
-        message.success('服务已停止')
+        showToast('服务已停止', 'success')
         loadSoftwareList()
     } catch (error) {
-        message.error('停止服务失败')
+        showToast('停止服务失败', 'error')
     }
 }
 
@@ -99,18 +61,17 @@ async function loadSoftwareList() {
         software.value = res.data.map((name: string) => ({ name }))
         rawSoftwareData.value = res.data
 
-        // 获取每个软件的状态
         for (const item of software.value) {
             try {
                 const statusRes = await axios.get(`/web_api/system/software/${item.name}/status`)
                 item.status = statusRes.data.status
             } catch (error: any) {
                 item.status = 'error'
-                message.error(`获取 ${item.name} 状态失败: ${error.response?.data?.message || error.message}`)
+                showToast(`获取 ${item.name} 状态失败: ${error.response?.data?.message || error.message}`, 'error')
             }
         }
     } catch (error) {
-        message.error('获取软件列表失败')
+        showToast('获取软件列表失败', 'error')
     } finally {
         loading.value = false
     }
@@ -124,9 +85,21 @@ function closeLogModal() {
 function copyLogs() {
     try {
         navigator.clipboard.writeText(currentLogs.value.join('\n'))
-        message.success('日志已复制到剪贴板')
+        showToast('日志已复制到剪贴板', 'success')
     } catch (error) {
-        message.error('复制失败')
+        showToast('复制失败', 'error')
+    }
+}
+
+// 简单的 toast 实现
+function showToast(message: string, type: 'success' | 'error') {
+    const toast = document.getElementById('toast') as HTMLDivElement
+    if (toast) {
+        toast.textContent = message
+        toast.className = `toast toast-${type}`
+        setTimeout(() => {
+            toast.className = 'toast hidden'
+        }, 3000)
     }
 }
 
@@ -136,32 +109,90 @@ onMounted(() => {
 </script>
 
 <template>
-    <n-card title="软件管理">
-        <n-space vertical>
-            <n-space justify="end">
-                <n-button @click="showRawData = !showRawData" :disabled="loading">
-                    {{ showRawData ? '显示软件列表' : '显示原始数据' }}
-                </n-button>
-            </n-space>
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">软件管理</h2>
 
-            <n-data-table v-if="!showRawData" :columns="columns" :data="software" :loading="loading" />
+            <div class="flex justify-end mb-4">
+                <button class="btn btn-primary" @click="showRawData = !showRawData" :disabled="loading">
+                    {{ showRawData ? '显示软件列表' : '显示原始数据' }}
+                </button>
+            </div>
+
+            <div v-if="!showRawData" class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>软件名称</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in software" :key="item.name">
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.status }}</td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <button class="btn btn-sm"
+                                        :class="item.status === 'not_installed' ? 'btn-primary' : 'btn-error'"
+                                        :disabled="installing && currentSoftware === item.name"
+                                        @click="handleAction(item)">
+                                        {{ item.status === 'not_installed' ? '安装' : '卸载' }}
+                                    </button>
+                                    <button v-if="item.status === 'running'" class="btn btn-sm"
+                                        @click="handleStop(item.name)">
+                                        停止
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <pre v-else
-                style="width: 100%; padding: 16px; background: #f9f9f9; border-radius: 6px; overflow: auto; font-family: monospace; text-align: left; white-space: pre">{{ JSON.stringify(rawSoftwareData, null, 2) }}</pre>
-        </n-space>
+                class="bg-base-200 p-4 rounded-lg overflow-auto font-mono text-left whitespace-pre">{{ JSON.stringify(rawSoftwareData, null, 2) }}</pre>
+        </div>
 
-        <n-modal v-model:show="showLogModal" style="width: 600px" :mask-closable="false" preset="card"
-            :title="`${currentSoftware} ${installing ? '操作执行中' : '操作日志'}`" :bordered="false">
-            <n-spin :show="installing">
-                <n-log :lines="currentLogs" :rows="15" :font-family="'JetBrains Mono, Menlo, Consolas, monospace'"
-                    :line-height="1.25" trim style="white-space: pre" />
-            </n-spin>
-            <template #footer>
-                <n-space>
-                    <n-button @click="copyLogs" :disabled="installing">复制日志</n-button>
-                    <n-button @click="closeLogModal" :disabled="installing">关闭</n-button>
-                </n-space>
-            </template>
-        </n-modal>
-    </n-card>
+        <!-- Modal -->
+        <dialog :open="showLogModal" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg">
+                    {{ currentSoftware }} {{ installing ? '操作执行中' : '操作日志' }}
+                </h3>
+
+                <div class="py-4">
+                    <div v-if="installing" class="loading loading-spinner loading-lg"></div>
+                    <div class="bg-base-200 p-4 rounded-lg font-mono text-sm h-[300px] overflow-auto">
+                        <div v-for="(log, index) in currentLogs" :key="index">
+                            {{ log }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-action">
+                    <button class="btn" @click="copyLogs" :disabled="installing">复制日志</button>
+                    <button class="btn" @click="closeLogModal" :disabled="installing">关闭</button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button :disabled="installing">关闭</button>
+            </form>
+        </dialog>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
 </template>
+
+<style scoped>
+.toast {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    z-index: 1000;
+}
+</style>

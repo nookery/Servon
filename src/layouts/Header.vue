@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { NLayoutHeader, NSpace, NAvatar, NIcon, NProgress } from 'naive-ui'
-import { ServerOutline } from '@vicons/ionicons5'
+/// <reference lib="es2015" />
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import ThemeSwitcher from '../components/ThemeSwitcher.vue'
+import pkg from '../../package.json'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
 const memoryUsage = ref(0)
 const diskUsage = ref(0)
 const osInfo = ref('')
+const currentTheme = ref(localStorage.getItem('theme') || 'light')
 
 // 获取系统资源使用情况
 const fetchSystemResources = async () => {
@@ -32,6 +34,12 @@ const fetchOSInfo = async () => {
     }
 }
 
+function changeTheme(theme: string) {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+    currentTheme.value = theme
+}
+
 onMounted(async () => {
     try {
         const res = await axios.get('/web_api/system/user')
@@ -40,97 +48,75 @@ onMounted(async () => {
         console.error('获取用户信息失败:', error)
     }
 
-    // 初始获取系统信息
     fetchSystemResources()
     fetchOSInfo()
-
-    // 每5秒更新一次系统资源信息
     setInterval(fetchSystemResources, 5000)
+
+    // 初始化主题
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme) {
+        changeTheme(savedTheme)
+    }
 })
 </script>
 
 <template>
-    <n-layout-header bordered style="height: 64px; padding: 0 24px; width: 100%">
-        <div class="header-content">
-            <div class="header-title">
-                <n-icon size="24" :component="ServerOutline" class="header-icon" />
-                <div class="title-info">
-                    <div>服务器管理面板</div>
-                    <div class="os-info">{{ osInfo }}</div>
+    <div class="navbar bg-base-100 fixed top-0 left-0 z-50 h-16 px-6 shadow-sm">
+        <div class="flex-1">
+            <div class="flex items-center gap-2">
+                <i class="ri-server-line text-2xl text-primary"></i>
+                <div class="flex flex-col">
+                    <span class="text-lg font-bold">{{ pkg.name.charAt(0).toUpperCase() + pkg.name.slice(1) }}</span>
+                    <span class="text-xs text-base-content/60">{{ osInfo }}</span>
                 </div>
             </div>
-            <n-space align="center" :size="24">
-                <div class="resource-info">
-                    <span>CPU: {{ cpuUsage.toFixed(1) }}%</span>
-                    <n-progress type="line" :percentage="cpuUsage" :height="8" :border-radius="4"
-                        :show-indicator="false" />
-                </div>
-                <div class="resource-info">
-                    <span>内存: {{ memoryUsage.toFixed(1) }}%</span>
-                    <n-progress type="line" :percentage="memoryUsage" :height="8" :border-radius="4"
-                        :show-indicator="false" />
-                </div>
-                <div class="resource-info">
-                    <span>磁盘: {{ diskUsage.toFixed(1) }}%</span>
-                    <n-progress type="line" :percentage="diskUsage" :height="8" :border-radius="4"
-                        :show-indicator="false" />
-                </div>
-                <n-space align="center">
-                    <n-avatar round size="small" :style="{ background: '#2080f0' }">
-                        {{ currentUser.charAt(0).toUpperCase() }}
-                    </n-avatar>
-                    <span>{{ currentUser }}</span>
-                </n-space>
-            </n-space>
         </div>
-    </n-layout-header>
+
+        <div class="flex-none gap-6">
+            <div class="flex items-center gap-6">
+                <!-- CPU Usage -->
+                <div class="w-36">
+                    <div class="text-xs text-base-content/70 mb-1">
+                        CPU: {{ cpuUsage.toFixed(1) }}%
+                    </div>
+                    <progress class="progress progress-primary h-2" :value="cpuUsage" max="100"></progress>
+                </div>
+
+                <!-- Memory Usage -->
+                <div class="w-36">
+                    <div class="text-xs text-base-content/70 mb-1">
+                        内存: {{ memoryUsage.toFixed(1) }}%
+                    </div>
+                    <progress class="progress progress-primary h-2" :value="memoryUsage" max="100"></progress>
+                </div>
+
+                <!-- Disk Usage -->
+                <div class="w-36">
+                    <div class="text-xs text-base-content/70 mb-1">
+                        磁盘: {{ diskUsage.toFixed(1) }}%
+                    </div>
+                    <progress class="progress progress-primary h-2" :value="diskUsage" max="100"></progress>
+                </div>
+
+                <!-- Theme Switcher Component -->
+                <ThemeSwitcher />
+
+                <!-- User Avatar -->
+                <div class="flex items-center gap-2">
+                    <div class="avatar placeholder">
+                        <div class="bg-primary text-primary-content rounded-full w-8">
+                            <span class="text-xs">{{ currentUser.charAt(0).toUpperCase() }}</span>
+                        </div>
+                    </div>
+                    <span class="text-sm">{{ currentUser }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
-.n-layout-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 999;
-}
-
-.header-content {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.header-title {
-    font-size: 18px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.header-icon {
-    color: #2080f0;
-}
-
-.resource-info {
-    width: 150px;
-}
-
-.resource-info span {
-    font-size: 12px;
-    color: #666;
-}
-
-.title-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.os-info {
-    font-size: 12px;
-    color: #666;
-    font-weight: normal;
+.dropdown-content {
+    max-height: 300px;
 }
 </style>

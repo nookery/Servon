@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { NCard, NDescriptions, NDescriptionsItem, useMessage } from 'naive-ui'
 import axios from 'axios'
 
 const systemInfo = ref<any>(null)
 const currentUser = ref<string>('')
-const message = useMessage()
 
 onMounted(async () => {
     try {
@@ -16,26 +14,39 @@ onMounted(async () => {
         systemInfo.value = infoRes.data
         currentUser.value = userRes.data.username
     } catch (error) {
-        message.error('获取系统信息失败')
+        // 使用原生 alert 或其他提示方式，也可以集成 toast 库
+        alert('获取系统信息失败')
     }
 })
 </script>
 
 <template>
-    <n-card title="系统信息">
-        <n-descriptions v-if="systemInfo" bordered>
-            <n-descriptions-item label="主机名">
-                {{ systemInfo.hostname }}
-            </n-descriptions-item>
-            <n-descriptions-item label="操作系统">
-                {{ systemInfo.os }}
-            </n-descriptions-item>
-            <n-descriptions-item label="平台">
-                {{ systemInfo.platform }}
-            </n-descriptions-item>
-            <n-descriptions-item label="当前用户">
-                {{ currentUser }}
-            </n-descriptions-item>
-        </n-descriptions>
-    </n-card>
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">系统信息</h2>
+
+            <div v-if="systemInfo" class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <tbody>
+                        <tr>
+                            <td class="font-bold">主机名</td>
+                            <td>{{ systemInfo.hostname }}</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">操作系统</td>
+                            <td>{{ systemInfo.os }}</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">平台</td>
+                            <td>{{ systemInfo.platform }}</td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">当前用户</td>
+                            <td>{{ currentUser }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </template>
