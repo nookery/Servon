@@ -2,12 +2,14 @@
 /// <reference lib="es2015" />
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import ThemeSwitcher from '../components/ThemeSwitcher.vue'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
 const memoryUsage = ref(0)
 const diskUsage = ref(0)
 const osInfo = ref('')
+const currentTheme = ref(localStorage.getItem('theme') || 'light')
 
 // 获取系统资源使用情况
 const fetchSystemResources = async () => {
@@ -31,6 +33,12 @@ const fetchOSInfo = async () => {
     }
 }
 
+function changeTheme(theme: string) {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+    currentTheme.value = theme
+}
+
 onMounted(async () => {
     try {
         const res = await axios.get('/web_api/system/user')
@@ -42,6 +50,12 @@ onMounted(async () => {
     fetchSystemResources()
     fetchOSInfo()
     setInterval(fetchSystemResources, 5000)
+
+    // 初始化主题
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme) {
+        changeTheme(savedTheme)
+    }
 })
 </script>
 
@@ -83,6 +97,9 @@ onMounted(async () => {
                     <progress class="progress progress-primary h-2" :value="diskUsage" max="100"></progress>
                 </div>
 
+                <!-- Theme Switcher Component -->
+                <ThemeSwitcher />
+
                 <!-- User Avatar -->
                 <div class="flex items-center gap-2">
                     <div class="avatar placeholder">
@@ -96,3 +113,9 @@ onMounted(async () => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.dropdown-content {
+    max-height: 300px;
+}
+</style>
