@@ -75,7 +75,7 @@ sudo mv servon-linux-amd64 /usr/local/bin/servon
 1. 克隆仓库：
 
    ```bash
-   git clone https://github.com/angel/servon.git
+   git clone https://github.com/nookery/servon.git
    cd servon
    ```
 
