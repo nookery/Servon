@@ -20,11 +20,11 @@ curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | ba
 
 ### 方法 2：手动安装
 
-从 [GitHub Releases](https://github.com/angel/servon/releases) 页面下载适合您系统的预编译二进制文件：
+从 [GitHub Releases](https://github.com/nookery/servon/releases) 页面下载适合您系统的预编译二进制文件：
 
 ```bash
 # 下载二进制文件（以 Linux amd64 为例）
-curl -LO https://github.com/angel/servon/releases/latest/download/servon-linux-amd64
+curl -LO https://github.com/nookery/servon/releases/latest/download/servon-linux-amd64
 chmod +x servon-linux-amd64
 sudo mv servon-linux-amd64 /usr/local/bin/servon
 ```
