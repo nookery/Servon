@@ -133,7 +133,7 @@ jobs:
           echo "## 安装方法" >> release_notes.md
           echo "" >> release_notes.md
           echo '```bash' >> release_notes.md
-          echo 'curl -fsSL https://raw.githubusercontent.com/angel/servon/main/install.sh | bash' >> release_notes.md
+          echo 'curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | bash' >> release_notes.md
           echo '```' >> release_notes.md
           echo "" >> release_notes.md
           echo "## SHA256 校验和" >> release_notes.md
