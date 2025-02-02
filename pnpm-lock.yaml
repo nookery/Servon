@@ -14,6 +14,9 @@ importers:
       '@astrojs/vue':
         specifier: ^5.0.6
         version: 5.0.6(astro@5.2.3(jiti@2.4.2)(lightningcss@1.29.1)(rollup@4.34.0)(typescript@5.7.3))(jiti@2.4.2)(lightningcss@1.29.1)(rollup@4.34.0)(vue@3.5.13(typescript@5.7.3))
+      '@headlessui/vue':
+        specifier: ^1.7.23
+        version: 1.7.23(vue@3.5.13(typescript@5.7.3))
       '@tailwindcss/vite':
         specifier: ^4.0.3
         version: 4.0.3(vite@6.0.11(jiti@2.4.2)(lightningcss@1.29.1))
@@ -385,6 +388,12 @@ packages:
 
   '@expressive-code/plugin-text-markers@0.40.1':
     resolution: {integrity: sha512-LsirF7M4F2yWgrFXEocD74F/MaVXsOsHVsRxBLhXQJemSSkWkDp/EZPt//OaqQ8ExnqWZ2lH7E1/KiN46unKjg==}
+
+  '@headlessui/vue@1.7.23':
+    resolution: {integrity: sha512-JzdCNqurrtuu0YW6QaDtR2PIYCKPUWq28csDyMvN4zmGccmE7lz40Is6hc3LA4HFeCI7sekZ/PQMTNmn9I/4Wg==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      vue: ^3.2.0
 
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
@@ -767,6 +776,14 @@ packages:
     resolution: {integrity: sha512-Qj6rSO+EvXnNDymloKZ11D54JJTnDrkRWJBzNHENDxjt0HtrCZJbSLIrcJ/WdaoU4othrel/oFqHpO/doxIS/Q==}
     peerDependencies:
       vite: ^5.2.0 || ^6
+
+  '@tanstack/virtual-core@3.11.3':
+    resolution: {integrity: sha512-v2mrNSnMwnPJtcVqNvV0c5roGCBqeogN8jDtgtuHCphdwBasOZ17x8UV8qpHUh+u0MLfX43c0uUHKje0s+Zb0w==}
+
+  '@tanstack/vue-virtual@3.11.3':
+    resolution: {integrity: sha512-BVZ00i5XBucetRj2doVd32jOPtJthvZSVJvx9GL4gSQsyngliSCtzlP1Op7TFrEtmebRKT8QUQE1tRhOQzWecQ==}
+    peerDependencies:
+      vue: ^2.7.0 || ^3.0.0
 
   '@types/acorn@4.0.6':
     resolution: {integrity: sha512-veQTnWP+1D/xbxVrPC3zHnCZRjSrKfhbMUlEA43iMZLu7EsnTtkJklIuwrCPbOi8YkvDQAiW05VQQFvvz9oieQ==}
@@ -3082,6 +3099,11 @@ snapshots:
     dependencies:
       '@expressive-code/core': 0.40.1
 
+  '@headlessui/vue@1.7.23(vue@3.5.13(typescript@5.7.3))':
+    dependencies:
+      '@tanstack/vue-virtual': 3.11.3(vue@3.5.13(typescript@5.7.3))
+      vue: 3.5.13(typescript@5.7.3)
+
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:
       '@img/sharp-libvips-darwin-arm64': 1.0.4
@@ -3401,6 +3423,13 @@ snapshots:
       lightningcss: 1.29.1
       tailwindcss: 4.0.3
       vite: 6.0.11(jiti@2.4.2)(lightningcss@1.29.1)
+
+  '@tanstack/virtual-core@3.11.3': {}
+
+  '@tanstack/vue-virtual@3.11.3(vue@3.5.13(typescript@5.7.3))':
+    dependencies:
+      '@tanstack/virtual-core': 3.11.3
+      vue: 3.5.13(typescript@5.7.3)
 
   '@types/acorn@4.0.6':
     dependencies:

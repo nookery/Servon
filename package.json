@@ -12,6 +12,7 @@
   "dependencies": {
     "@astrojs/starlight": "^0.31.1",
     "@astrojs/vue": "^5.0.6",
+    "@headlessui/vue": "^1.7.23",
     "@tailwindcss/vite": "^4.0.3",
     "astro": "^5.1.5",
     "sharp": "^0.32.5",
