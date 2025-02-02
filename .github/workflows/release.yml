@@ -6,14 +6,14 @@ on:
       - 'v*'  # 只响应 v 开头的标签
   workflow_run:
     workflows:
-      - 'Version Bump'  # 这里要匹配 version-bump.yml 中的 name
+      - 'Version Bump'
     types:
       - completed
     branches:
       - main
 
 permissions:
-  contents: write # 需要写入权限来创建 release
+  contents: write
 
 jobs:
   build:
@@ -34,6 +34,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整历史以确保能获取到标签
+
+      # 如果是通过 workflow_run 触发，需要获取最新标签
+      - name: Get latest tag
+        if: github.event_name == 'workflow_run'
+        run: |
+          git fetch --tags
+          echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+
+      # 如果是通过 push tag 触发，直接使用触发的标签
+      - name: Set tag from push
+        if: github.event_name == 'push'
+        run: |
+          echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Get version from package.json
         id: version
@@ -82,6 +97,23 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 如果是通过 workflow_run 触发，需要获取最新标签
+      - name: Get latest tag
+        if: github.event_name == 'workflow_run'
+        run: |
+          git fetch --tags
+          echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+
+      # 如果是通过 push tag 触发，直接使用触发的标签
+      - name: Set tag from push
+        if: github.event_name == 'push'
+        run: |
+          echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
@@ -110,8 +142,8 @@ jobs:
           cat */servon-*.sha256 >> release_notes.md
           echo '```' >> release_notes.md
 
-          # 创建 release
-          gh release create "${VERSION}" \
+          # 创建 release，使用环境变量中的标签
+          gh release create "$RELEASE_TAG" \
             --title "Servon ${VERSION}" \
             --notes-file release_notes.md \
             */servon-*
