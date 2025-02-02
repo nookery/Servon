@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NLayout, NLayoutHeader, NLayoutSider, NLayoutContent } from 'naive-ui'
 import Header from './Header.vue'
 import Sidebar from './Sidebar.vue'
 import { ref } from 'vue'
@@ -8,33 +7,42 @@ const collapsed = ref(false)
 </script>
 
 <template>
-    <n-layout position="absolute">
-        <n-layout-header bordered style="height: 64px; padding: 0">
+    <div class="flex flex-col min-h-screen bg-base-200">
+        <!-- Header -->
+        <div class="w-full h-16">
             <Header />
-        </n-layout-header>
-        <n-layout position="absolute" style="top: 64px; bottom: 0" has-sider>
-            <n-layout-sider bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="240"
-                :native-scrollbar="false" :collapsed="collapsed" @collapse="collapsed = true"
-                @expand="collapsed = false">
-                <Sidebar :collapsed="collapsed" />
-            </n-layout-sider>
-            <n-layout>
-                <n-layout-content style="padding: 16px">
-                    <slot></slot>
-                </n-layout-content>
-            </n-layout>
-        </n-layout>
-    </n-layout>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="flex flex-1">
+            <!-- Sidebar -->
+            <div :class="[
+                'transition-all duration-300 border-r border-base-300 h-full bg-base-100 fixed left-0 top-16',
+                collapsed ? 'w-16' : 'w-60'
+            ]">
+                <div class="sticky top-16 border-0 border-red-500 h-full">
+                    <button @click="collapsed = !collapsed"
+                        class="btn btn-ghost btn-sm absolute -right-3 top-3 z-50 rounded-full bg-base-100 border border-base-300">
+                        <i :class="[
+                            collapsed ? 'ri-arrow-right-s-line' : 'ri-arrow-left-s-line',
+                            'text-lg'
+                        ]"></i>
+                    </button>
+                    <Sidebar :collapsed="collapsed" />
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 p-4 ml-60">
+                <slot></slot>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style>
 body {
     margin: 0;
     padding: 0;
-}
-
-.n-layout-content {
-    background: #f5f5f5;
-    min-height: 100%;
 }
 </style>

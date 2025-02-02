@@ -1,43 +1,35 @@
 <script setup lang="ts">
-import { NMenu, NIcon } from 'naive-ui'
-import { h } from 'vue'
-import { useRouter } from 'vue-router'
-import {
-    ServerOutline,
-    AppsOutline,
-    TerminalOutline,
-    FolderOutline,
-    SwapHorizontalOutline
-} from '@vicons/ionicons5'
+import { useRouter, useRoute } from 'vue-router'
+import 'remixicon/fonts/remixicon.css'
 
 const router = useRouter()
-const renderIcon = (icon: any) => () => h(NIcon, null, { default: () => h(icon) })
+const route = useRoute()
 
 const menuOptions = [
     {
         label: '系统概览',
         key: 'dashboard',
-        icon: renderIcon(ServerOutline)
+        icon: 'ri-server-line'
     },
     {
         label: '软件管理',
         key: 'software',
-        icon: renderIcon(AppsOutline)
+        icon: 'ri-apps-line'
     },
     {
         label: '进程管理',
         key: 'processes',
-        icon: renderIcon(TerminalOutline)
+        icon: 'ri-terminal-line'
     },
     {
         label: '文件管理',
         key: 'files',
-        icon: renderIcon(FolderOutline)
+        icon: 'ri-folder-line'
     },
     {
         label: '端口管理',
         key: 'ports',
-        icon: renderIcon(SwapHorizontalOutline)
+        icon: 'ri-swap-line'
     }
 ]
 
@@ -51,8 +43,23 @@ defineProps<{
 </script>
 
 <template>
-    <n-menu :options="menuOptions" :collapsed-icon-size="24" :collapsed="collapsed" :indent="0"
-        @update:value="handleMenuClick" />
+    <ul class="menu bg-base-100 w-full p-2 gap-1">
+        <li v-for="item in menuOptions" :key="item.key">
+            <a @click="handleMenuClick(item.key)" :class="[
+                'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors',
+                route.path.includes(item.key)
+                    ? 'bg-primary text-primary-content'
+                    : 'hover:bg-base-200'
+            ]">
+                <i :class="[
+                    item.icon,
+                    'text-xl',
+                    !collapsed && 'mr-1'
+                ]"></i>
+                <span v-if="!collapsed">{{ item.label }}</span>
+            </a>
+        </li>
+    </ul>
 </template>
 
 <style scoped>
