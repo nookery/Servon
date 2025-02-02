@@ -8,23 +8,7 @@ type SoftwareManager struct {
 // NewSoftwareManager 创建软件管理器实例
 func NewSoftwareManager() *SoftwareManager {
 	return &SoftwareManager{
-		supportedSoftware: []SoftwareInfo{
-			{Name: "nginx", Description: "高性能的 HTTP 和反向代理服务器"},
-			{Name: "mongodb", Description: "流行的 NoSQL 数据库"},
-			{Name: "redis", Description: "内存数据结构存储系统"},
-			{Name: "mysql", Description: "流行的关系型数据库"},
-			{Name: "docker", Description: "应用容器引擎"},
-			{Name: "postgresql", Description: "开源对象关系数据库系统"},
-			{Name: "nodejs", Description: "JavaScript 运行时环境"},
-			{Name: "php", Description: "流行的服务端脚本语言"},
-			{Name: "python3", Description: "Python 编程语言"},
-			{Name: "golang", Description: "Go 编程语言"},
-			{Name: "apache2", Description: "Apache HTTP 服务器"},
-			{Name: "rabbitmq-server", Description: "开源消息队列系统"},
-			{Name: "elasticsearch", Description: "分布式搜索和分析引擎"},
-			{Name: "jenkins", Description: "开源持续集成工具"},
-			{Name: "prometheus", Description: "系统监控和告警工具"},
-		},
+		supportedSoftware: GetSupportedSoftware(),
 	}
 }
 
