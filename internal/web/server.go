@@ -49,6 +49,7 @@ func (s *Server) setupRoutes() {
 		api.POST("/system/software/:name/stop", s.handleSoftwareStop)          // 新增停止服务接口
 		api.GET("/system/software/:name/status", s.handleSoftwareStatus)       // 新增获取软件状态接口
 		api.GET("/system/user", s.handleCurrentUser)                           // 新增获取当前用户接口
+		api.GET("/system/processes", s.handleProcessList)                      // 新增获取进程列表接口
 		// TODO: 添加更多API路由
 	}
 }
@@ -177,4 +178,14 @@ func (s *Server) handleSoftwareStatus(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, status)
+}
+
+// 处理获取进程列表的请求
+func (s *Server) handleProcessList(c *gin.Context) {
+	processes, err := system.GetProcessList()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, processes)
 }
