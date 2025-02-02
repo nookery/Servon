@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+	"servon/internal/version"
 	"servon/internal/web"
 
 	"github.com/fatih/color"
@@ -28,12 +30,34 @@ var ServeCmd = &cobra.Command{
   servon serve -p 3000      # 在3000端口启动完整服务`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		color.Cyan("Starting Servon server on port %d...\n", port)
+		// 清晰的启动横幅
+		fmt.Printf("\n  %s\n\n", color.HiCyanString("SERVON"))
+
+		// 版本和模式信息
+		fmt.Printf("  %s    %s\n",
+			color.HiBlackString("Version:"),
+			color.HiWhiteString(version.GetVersion()))
+		fmt.Printf("  %s    %s\n",
+			color.HiBlackString("Mode:"),
+			color.HiWhiteString(map[bool]string{true: "API Only", false: "Full Stack"}[apiOnly]))
+
+		// 访问信息
+		fmt.Printf("  %s    %s\n",
+			color.HiBlackString("Local:"),
+			color.HiGreenString("http://localhost:%d", port))
+		fmt.Printf("  %s    %s\n\n",
+			color.HiBlackString("Network:"),
+			color.HiGreenString("http://<your-ip>:%d", port))
+
 		if !apiOnly {
-			color.Cyan("Web UI enabled\n")
-		} else {
-			color.Yellow("Running in API-only mode\n")
+			fmt.Printf("  %s\n", color.HiBlackString("Web UI:"))
+			fmt.Printf("    • Dashboard    %s\n", color.HiGreenString("http://localhost:%d", port))
+			fmt.Printf("    • API Docs     %s\n", color.HiGreenString("http://localhost:%d/docs", port))
 		}
+
+		fmt.Printf("\n  %s  %s\n\n",
+			color.YellowString("⚡"),
+			color.HiBlackString("Server is ready"))
 
 		server := web.NewServer(port, !apiOnly)
 		return server.Start()

@@ -23,24 +23,10 @@ func (s *Server) setupUIRoutes() {
 		panic(err)
 	}
 
-	// 创建静态文件处理器
-	// fileServer := http.FileServer(http.FS(subFS))
-
 	// 处理静态资源请求
 	s.router.GET("/assets/*filepath", func(c *gin.Context) {
 		c.FileFromFS(path.Join("assets", c.Param("filepath")), http.FS(subFS))
 	})
-	fmt.Println("Registered static assets route at /assets/*filepath")
-
-	// 在setupUIRoutes开始处添加：
-	fmt.Println("===== Embedded Files =====")
-	fs.WalkDir(subFS, ".", func(path string, d fs.DirEntry, err error) error {
-		if !d.IsDir() {
-			fmt.Printf("|-- %s\n", path)
-		}
-		return nil
-	})
-	fmt.Println("==========================")
 
 	// 2. 确保先注册静态路由再注册通配路由
 	s.router.GET("/", func(c *gin.Context) {

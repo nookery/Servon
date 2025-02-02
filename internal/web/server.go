@@ -56,17 +56,10 @@ func (s *Server) setupRoutes() {
 	// 如果启用了UI，设置UI路由
 	if s.withUI {
 		s.setupUIRoutes()
-		fmt.Printf("Web UI is available at http://localhost:%d\n", s.port)
 	}
 }
 
 func (s *Server) Start() error {
 	s.setupRoutes()
-	fmt.Printf("Web UI available at:\n")
-	fmt.Printf("  http://localhost:%d\n", s.port)
-	fmt.Printf("Static assets served from:\n")
-	fmt.Printf("  /assets/* => embedded dist directory\n")
-	fmt.Printf("API endpoints available at:\n")
-	fmt.Printf("  http://localhost:%d/web_api\n", s.port)
 	return s.router.Run(fmt.Sprintf(":%d", s.port))
 }
