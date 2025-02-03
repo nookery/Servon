@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"servon/internal/system"
 	"strconv"
@@ -49,6 +50,24 @@ func fromSystemTask(t *system.CronTask) *CronTask {
 	}
 }
 
+// 添加一个辅助函数来处理错误响应
+func handleError(c *gin.Context, err error) {
+	if ve, ok := err.(system.ValidationErrors); ok {
+		// 处理验证错误
+		c.JSON(http.StatusBadRequest, ve)
+	} else {
+		// 处理其他错误
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"errors": []system.ValidationError{
+				{
+					Field:   "general",
+					Message: err.Error(),
+				},
+			},
+		})
+	}
+}
+
 // HandleListCronTasks 获取所有定时任务
 func (h *Handler) HandleListCronTasks(c *gin.Context) {
 	tasks, err := system.GetCronTasks()
@@ -69,14 +88,14 @@ func (h *Handler) HandleListCronTasks(c *gin.Context) {
 func (h *Handler) HandleCreateCronTask(c *gin.Context) {
 	var task CronTask
 	if err := c.ShouldBindJSON(&task); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
+		handleError(c, fmt.Errorf("无效的请求数据"))
 		return
 	}
 
 	systemTask := task.toSystemTask()
 	newTask, err := system.CreateCronTask(systemTask)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 	c.JSON(http.StatusCreated, fromSystemTask(newTask))
@@ -86,13 +105,13 @@ func (h *Handler) HandleCreateCronTask(c *gin.Context) {
 func (h *Handler) HandleUpdateCronTask(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的任务ID"})
+		handleError(c, fmt.Errorf("无效的任务ID"))
 		return
 	}
 
 	var task CronTask
 	if err := c.ShouldBindJSON(&task); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
+		handleError(c, fmt.Errorf("无效的请求数据"))
 		return
 	}
 	task.ID = id
@@ -100,7 +119,7 @@ func (h *Handler) HandleUpdateCronTask(c *gin.Context) {
 	systemTask := task.toSystemTask()
 	updatedTask, err := system.UpdateCronTask(systemTask)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, fromSystemTask(updatedTask))
@@ -110,12 +129,12 @@ func (h *Handler) HandleUpdateCronTask(c *gin.Context) {
 func (h *Handler) HandleDeleteCronTask(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的任务ID"})
+		handleError(c, fmt.Errorf("无效的任务ID"))
 		return
 	}
 
 	if err := system.DeleteCronTask(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "任务已删除"})
@@ -125,13 +144,13 @@ func (h *Handler) HandleDeleteCronTask(c *gin.Context) {
 func (h *Handler) HandleToggleCronTask(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的任务ID"})
+		handleError(c, fmt.Errorf("无效的任务ID"))
 		return
 	}
 
 	task, err := system.ToggleCronTask(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, fromSystemTask(task))

@@ -48,8 +48,74 @@ func GetCronTasks() ([]*CronTask, error) {
 	return result, nil
 }
 
+// ValidationError 表示字段验证错误
+type ValidationError struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}
+
+// ValidationErrors 表示多个字段的验证错误
+type ValidationErrors struct {
+	Errors []ValidationError `json:"errors"`
+}
+
+func (ve ValidationErrors) Error() string {
+	if len(ve.Errors) == 0 {
+		return ""
+	}
+	return ve.Errors[0].Message
+}
+
+// validateTask 验证任务的各个字段
+func validateTask(task CronTask) error {
+	var errors []ValidationError
+
+	// 验证名称
+	if task.Name == "" {
+		errors = append(errors, ValidationError{
+			Field:   "name",
+			Message: "任务名称不能为空",
+		})
+	}
+
+	// 验证命令
+	if task.Command == "" {
+		errors = append(errors, ValidationError{
+			Field:   "command",
+			Message: "执行命令不能为空",
+		})
+	}
+
+	// 验证cron表达式
+	if task.Schedule == "" {
+		errors = append(errors, ValidationError{
+			Field:   "schedule",
+			Message: "定时表达式不能为空",
+		})
+	} else {
+		// 使用支持秒的解析器
+		parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+		if _, err := parser.Parse(task.Schedule); err != nil {
+			errors = append(errors, ValidationError{
+				Field:   "schedule",
+				Message: "无效的定时表达式: " + err.Error(),
+			})
+		}
+	}
+
+	if len(errors) > 0 {
+		return ValidationErrors{Errors: errors}
+	}
+	return nil
+}
+
 // CreateCronTask 创建定时任务
 func CreateCronTask(task CronTask) (*CronTask, error) {
+	// 先进行字段验证
+	if err := validateTask(task); err != nil {
+		return nil, err
+	}
+
 	tasksMutex.Lock()
 	defer tasksMutex.Unlock()
 
@@ -57,17 +123,19 @@ func CreateCronTask(task CronTask) (*CronTask, error) {
 	task.ID = lastID
 	task.Enabled = true
 
-	// 验证cron表达式
-	if _, err := cron.ParseStandard(task.Schedule); err != nil {
-		return nil, fmt.Errorf("无效的定时表达式: %v", err)
-	}
-
 	// 添加到cron调度器
 	entryID, err := cronInstance.AddFunc(task.Schedule, func() {
 		executeTask(&task)
 	})
 	if err != nil {
-		return nil, err
+		return nil, ValidationErrors{
+			Errors: []ValidationError{
+				{
+					Field:   "schedule",
+					Message: fmt.Sprintf("添加任务失败: %v", err),
+				},
+			},
+		}
 	}
 
 	task.entryID = entryID
@@ -78,6 +146,11 @@ func CreateCronTask(task CronTask) (*CronTask, error) {
 
 // UpdateCronTask 更新定时任务
 func UpdateCronTask(task CronTask) (*CronTask, error) {
+	// 先进行字段验证
+	if err := validateTask(task); err != nil {
+		return nil, err
+	}
+
 	tasksMutex.Lock()
 	defer tasksMutex.Unlock()
 
@@ -91,18 +164,13 @@ func UpdateCronTask(task CronTask) (*CronTask, error) {
 		cronInstance.Remove(existingTask.entryID)
 	}
 
-	// 验证新的cron表达式
-	if _, err := cron.ParseStandard(task.Schedule); err != nil {
-		return nil, fmt.Errorf("无效的定时表达式: %v", err)
-	}
-
 	// 如果任务需要启用，添加新的调度
 	if task.Enabled {
 		entryID, err := cronInstance.AddFunc(task.Schedule, func() {
 			executeTask(&task)
 		})
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("添加任务失败: %v", err)
 		}
 		task.entryID = entryID
 	}
