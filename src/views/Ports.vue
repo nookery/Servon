@@ -3,24 +3,15 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
 const ports = ref<any[]>([])
-
-function showToast(message: string, type: 'success' | 'error') {
-    const toast = document.getElementById('toast') as HTMLDivElement
-    if (toast) {
-        toast.textContent = message
-        toast.className = `toast toast-${type}`
-        setTimeout(() => {
-            toast.className = 'toast hidden'
-        }, 3000)
-    }
-}
+const error = ref<string | null>(null)
 
 async function loadPorts() {
     try {
         const res = await axios.get('/web_api/system/ports')
         ports.value = res.data
-    } catch (error) {
-        showToast('获取端口列表失败', 'error')
+        error.value = null
+    } catch (err) {
+        error.value = '获取端口列表失败'
     }
 }
 
@@ -34,7 +25,11 @@ onMounted(() => {
         <div class="card-body">
             <h2 class="card-title">端口列表</h2>
 
-            <div class="overflow-x-auto">
+            <div v-if="error" class="alert alert-error">
+                {{ error }}
+            </div>
+
+            <div v-else class="overflow-x-auto">
                 <table class="table table-zebra w-full">
                     <thead>
                         <tr>
@@ -56,18 +51,4 @@ onMounted(() => {
             </div>
         </div>
     </div>
-
-    <!-- Toast -->
-    <div id="toast" class="toast hidden"></div>
 </template>
-
-<style scoped>
-.toast {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    z-index: 1000;
-}
-</style>

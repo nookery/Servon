@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
-import { useToast } from '../composables/useToast'
+import Alert from '../components/Alert.vue'
 
 interface CronTask {
     id: number
@@ -36,40 +36,22 @@ const newTask = ref<CronTask>({
     enabled: true
 })
 
-// 添加表单错误信息的状态
 const formError = ref('')
-
-// 添加字段错误信息的状态
 const fieldErrors = ref<Record<string, string>>({})
-
-// 添加删除确认对话框的状态
 const showDeleteConfirm = ref(false)
 const taskToDelete = ref<number | null>(null)
-
-// 添加 showCronHelp 状态
 const showCronHelp = ref(false)
-
-const toast = useToast()
-
-function showToast(message: string, type: 'success' | 'error') {
-    const toast = document.getElementById('toast') as HTMLDivElement
-    if (toast) {
-        toast.textContent = message
-        toast.className = `toast toast-${type}`
-        setTimeout(() => {
-            toast.className = 'toast hidden'
-        }, 3000)
-    }
-}
+const error = ref<string | null>(null)
 
 // 获取所有定时任务
 const fetchTasks = async () => {
     try {
         const res = await axios.get('/web_api/cron/tasks')
         tasks.value = res.data
+        error.value = null
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || error.message || '未知错误'
-        toast.error('获取定时任务失败: ' + errorMessage)
+        error.value = '获取定时任务失败: ' + errorMessage
     }
 }
 
@@ -86,32 +68,26 @@ const saveTask = async () => {
         const task = editingTask.value || newTask.value
         if (editingTask.value) {
             await axios.put(`/web_api/cron/tasks/${task.id}`, task)
-            toast.success('任务更新成功')
             showModal.value = false
             await fetchTasks()
             resetForm()
         } else {
             await axios.post('/web_api/cron/tasks', task)
-            toast.success('任务创建成功')
             showModal.value = false
             await fetchTasks()
             resetForm()
         }
     } catch (error: any) {
         if (error.response?.data?.errors) {
-            // 处理字段验证错误
             const validationErrors = error.response.data as ValidationErrors
             validationErrors.errors.forEach(err => {
                 if (err.field === 'general') {
-                    // 通用错误显示在表单底部
                     formError.value = err.message
                 } else {
-                    // 字段错误显示在对应字段下方
                     fieldErrors.value[err.field] = err.message
                 }
             })
         } else {
-            // 处理其他错误
             const errorMessage = error.response?.data?.error || error.message || '未知错误'
             formError.value = errorMessage
         }
@@ -129,11 +105,10 @@ const handleDelete = async () => {
 
     try {
         await axios.delete(`/web_api/cron/tasks/${taskToDelete.value}`)
-        toast.success('任务删除成功')
         await fetchTasks()
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || error.message || '未知错误'
-        toast.error('删除任务失败: ' + errorMessage)
+        error.value = '删除任务失败: ' + errorMessage
     } finally {
         showDeleteConfirm.value = false
         taskToDelete.value = null
@@ -147,7 +122,7 @@ const toggleTask = async (id: number) => {
         await fetchTasks()
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || error.message || '未知错误'
-        toast.error('切换任务状态失败: ' + errorMessage)
+        error.value = '切换任务状态失败: ' + errorMessage
     }
 }
 
@@ -192,6 +167,8 @@ onMounted(fetchTasks)
                 <i class="ri-add-line mr-1"></i>新建任务
             </button>
         </div>
+
+        <Alert v-if="error" type="error" :message="error" />
 
         <!-- 任务列表 -->
         <div class="overflow-x-auto">
@@ -297,10 +274,7 @@ onMounted(fetchTasks)
                     </div>
 
                     <!-- 通用错误信息显示区域 -->
-                    <div v-if="formError" class="alert alert-error mb-4">
-                        <i class="ri-error-warning-line"></i>
-                        <span>{{ formError }}</span>
-                    </div>
+                    <Alert v-if="formError" type="error" :message="formError" class="mb-4" />
 
                     <div class="modal-action">
                         <button type="button" class="btn" @click="showModal = false">取消</button>
@@ -346,43 +320,6 @@ onMounted(fetchTasks)
 </template>
 
 <style scoped>
-.toast {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    z-index: 1000;
-}
-
-.toast-success {
-    background-color: #10B981;
-    color: white;
-}
-
-.toast-error {
-    background-color: #EF4444;
-    color: white;
-}
-
-.hidden {
-    display: none;
-}
-
-.alert {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-}
-
-.alert-error {
-    background-color: rgb(254, 242, 242);
-    color: rgb(153, 27, 27);
-    border: 1px solid rgb(252, 165, 165);
-}
-
 .input-error {
     border-color: rgb(252, 165, 165);
 }

@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useToast } from '../composables/useToast'
 import LogViewer from '../components/LogViewer.vue'
+import Modal from '../components/Modal.vue'
 
 const software = ref<any[]>([])
 const loading = ref(false)
@@ -12,6 +13,7 @@ const installing = ref(false)
 const currentSoftware = ref<string>('')
 const showRawData = ref(false)
 const rawSoftwareData = ref<any>(null)
+const operationFailed = ref(false)
 
 const toast = useToast()
 
@@ -20,6 +22,7 @@ async function handleAction(software: any) {
     currentLogs.value = []
     showLogModal.value = true
     installing.value = true
+    operationFailed.value = false
 
     const eventSource = new EventSource(
         `/web_api/system/software/${software.name}/${software.status === 'not_installed' ? 'install' : 'uninstall'}`
@@ -42,7 +45,7 @@ async function handleAction(software: any) {
         if (!currentLogs.value[currentLogs.value.length - 1]?.includes('完成')) {
             currentLogs.value.push('操作异常终止')
             currentLogs.value = [...currentLogs.value]
-            toast.error('操作失败')
+            operationFailed.value = true
         }
         loadSoftwareList()
     }
@@ -78,20 +81,6 @@ async function loadSoftwareList() {
         toast.error('获取软件列表失败')
     } finally {
         loading.value = false
-    }
-}
-
-function closeLogModal() {
-    showLogModal.value = false
-    currentLogs.value = []
-}
-
-function copyLogs() {
-    try {
-        navigator.clipboard.writeText(currentLogs.value.join('\n'))
-        toast.success('日志已复制到剪贴板')
-    } catch (error) {
-        toast.error('复制失败')
     }
 }
 
@@ -147,37 +136,14 @@ onMounted(() => {
                 class="bg-base-200 p-4 rounded-lg overflow-auto font-mono text-left whitespace-pre">{{ JSON.stringify(rawSoftwareData, null, 2) }}</pre>
         </div>
 
-        <!-- Modal -->
-        <dialog :open="showLogModal" class="modal">
-            <div class="modal-box">
-                <h3 class="font-bold text-lg">
-                    {{ currentSoftware }} {{ installing ? '操作执行中' : '操作日志' }}
-                </h3>
-
-                <div class="py-4">
-                    <div v-if="installing" class="loading loading-spinner loading-lg"></div>
-                    <LogViewer :logs="currentLogs" />
-                </div>
-
-                <div class="modal-action">
-                    <button class="btn" @click="copyLogs" :disabled="installing">复制日志</button>
-                    <button class="btn" @click="closeLogModal" :disabled="installing">关闭</button>
-                </div>
-            </div>
-            <form method="dialog" class="modal-backdrop">
-                <button :disabled="installing">关闭</button>
-            </form>
-        </dialog>
+        <!-- 使用 Modal 组件 -->
+        <Modal v-model:show="showLogModal"
+            :title="currentSoftware + (installing ? '操作执行中' : (operationFailed ? '操作失败' : '操作日志'))"
+            :loading="installing" :error="operationFailed">
+            <template #default>
+                <div v-if="installing" class="loading loading-spinner loading-lg"></div>
+                <LogViewer :logs="currentLogs" />
+            </template>
+        </Modal>
     </div>
 </template>
-
-<style scoped>
-.toast {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    z-index: 1000;
-}
-</style>
