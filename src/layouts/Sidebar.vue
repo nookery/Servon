@@ -30,6 +30,11 @@ const menuOptions = [
         label: '端口管理',
         key: 'ports',
         icon: 'ri-swap-line'
+    },
+    {
+        label: '定时任务',
+        key: 'cron',
+        icon: 'ri-time-line'
     }
 ]
 

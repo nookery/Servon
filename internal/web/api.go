@@ -23,5 +23,12 @@ func (s *Server) setupAPIRoutes() {
 		api.GET("/system/processes", h.HandleProcessList)
 		api.GET("/system/files", h.HandleFileList)
 		api.GET("/system/ports", h.HandlePortList)
+
+		// 定时任务相关API
+		api.GET("/cron/tasks", h.HandleListCronTasks)              // 获取所有定时任务
+		api.POST("/cron/tasks", h.HandleCreateCronTask)            // 创建定时任务
+		api.PUT("/cron/tasks/:id", h.HandleUpdateCronTask)         // 更新定时任务
+		api.DELETE("/cron/tasks/:id", h.HandleDeleteCronTask)      // 删除定时任务
+		api.POST("/cron/tasks/:id/toggle", h.HandleToggleCronTask) // 启用/禁用定时任务
 	}
 }

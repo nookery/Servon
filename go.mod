@@ -33,6 +33,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
