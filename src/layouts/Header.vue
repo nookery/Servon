@@ -2,7 +2,7 @@
 /// <reference lib="es2015" />
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import ThemeSwitcher from '../components/ThemeSwitcher.vue'
+import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
 import pkg from '../../package.json'
 
 const currentUser = ref('')

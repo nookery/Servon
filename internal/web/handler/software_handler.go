@@ -2,6 +2,7 @@ package handler
 
 import (
 	"servon/internal/softwares"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,7 @@ func (h *SoftwareHandler) HandleGetSoftwareList(c *gin.Context) {
 	for i, sw := range softwareList {
 		names[i] = sw.Name
 	}
+	sort.Strings(names)
 	c.JSON(200, names)
 }
 

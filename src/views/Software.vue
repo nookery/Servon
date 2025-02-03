@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useToast } from '../composables/useToast'
+import LogViewer from '../components/LogViewer.vue'
 
 const software = ref<any[]>([])
 const loading = ref(false)
@@ -155,10 +156,7 @@ onMounted(() => {
 
                 <div class="py-4">
                     <div v-if="installing" class="loading loading-spinner loading-lg"></div>
-                    <div class="bg-base-200 p-4 rounded-lg font-mono text-sm h-[300px] overflow-auto">
-                        <div v-for="(log, index) in currentLogs" :key="index" v-html="log.replace(/\n/g, '<br>')">
-                        </div>
-                    </div>
+                    <LogViewer :logs="currentLogs" />
                 </div>
 
                 <div class="modal-action">

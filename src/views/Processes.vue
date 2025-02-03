@@ -48,7 +48,7 @@ onMounted(() => {
                     <thead>
                         <tr>
                             <th>PID</th>
-                            <th>名称</th>
+                            <th>Command</th>
                             <th>CPU</th>
                             <th>内存</th>
                         </tr>
@@ -56,7 +56,7 @@ onMounted(() => {
                     <tbody>
                         <tr v-for="process in processes" :key="process.pid">
                             <td>{{ process.pid }}</td>
-                            <td>{{ process.name }}</td>
+                            <td>{{ process.command }}</td>
                             <td>{{ process.cpu }}</td>
                             <td>{{ process.memory }}</td>
                         </tr>

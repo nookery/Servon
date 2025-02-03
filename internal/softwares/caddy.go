@@ -57,14 +57,6 @@ func (c *Caddy) Install() (chan string, error) {
 			return
 		}
 
-		// 启动服务
-		outputChan <- "启动 Caddy 服务..."
-		startCmd := exec.Command("sudo", "systemctl", "start", "caddy")
-		if output, err := startCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("启动服务失败:\n%s", string(output))
-			return
-		}
-
 		outputChan <- "Caddy 安装完成"
 	}()
 
