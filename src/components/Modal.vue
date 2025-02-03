@@ -1,7 +1,9 @@
 <template>
     <dialog class="modal" :open="show">
-        <div class="modal-box p-0 w-11/12 max-w-5xl border-2 border-info"
-            :class="[boxClass, { 'border-error border-2': error }]">
+        <div class="modal-box p-0 w-11/12 max-w-5xl" :class="[boxClass, {
+            'border-2 border-info': !error,
+            'border-2 border-error': error
+        }]">
             <div class="flex justify-between items-center px-4 py-2 bg-base-200">
                 <h3 class="font-bold text-lg" :class="[titleClass, { 'text-error': error }]">{{ title }}</h3>
                 <button class="btn btn-sm btn-circle border border-info" @click="close" :disabled="loading">
