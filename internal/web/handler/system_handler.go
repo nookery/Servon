@@ -93,4 +93,14 @@ func (h *Handler) HandleOSInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"os_info": osInfo})
 }
 
+// HandleNetworkResources 处理网络资源监控的请求
+func (h *Handler) HandleNetworkResources(c *gin.Context) {
+	networkStats, err := system.GetNetworkResources()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, networkStats)
+}
+
 // ... 其他 handler 方法 ...

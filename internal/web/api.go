@@ -11,6 +11,7 @@ func (s *Server) setupAPIRoutes() {
 	api := s.router.Group("/web_api")
 	{
 		api.GET("/system/resources", h.HandleSystemResources)
+		api.GET("/system/network", h.HandleNetworkResources)
 		api.GET("/system/user", h.HandleCurrentUser)
 		api.GET("/system/os", h.HandleOSInfo)
 		api.GET("/system/basic", h.HandleBasicInfo)
