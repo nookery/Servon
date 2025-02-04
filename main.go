@@ -27,6 +27,9 @@ func init() {
 	RootCmd.AddCommand(cmd.ServeCmd)
 	RootCmd.AddCommand(cmd.VersionCmd)
 	RootCmd.AddCommand(cmd.UpgradeCmd)
+	RootCmd.AddCommand(cmd.DeployCmd)
+	RootCmd.AddCommand(cmd.SystemCmd)
+	RootCmd.AddCommand(cmd.SoftwareCmd)
 
 	// 设置彩色模板
 	usageTemplate := titleColor.Sprintf("Usage:\n") +

@@ -1,7 +1,7 @@
 package web
 
 import (
-	"servon/internal/web/handler"
+	"servon/internal/serve/handler"
 )
 
 // setupAPIRoutes 设置所有API路由
@@ -33,12 +33,12 @@ func (s *Server) setupAPIRoutes() {
 		api.POST("/cron/tasks/:id/toggle", h.HandleToggleCronTask) // 启用/禁用定时任务
 
 		// 部署相关API
-		api.GET("/deploy/projects", dh.HandleListProjects)    // 获取所有项目
-		api.POST("/deploy/projects", dh.HandleCreateProject)  // 创建项目
-		api.PUT("/deploy/projects/:id", dh.HandleUpdateProject) // 更新项目
-		api.DELETE("/deploy/projects/:id", dh.HandleDeleteProject) // 删除项目
+		api.GET("/deploy/projects", dh.HandleListProjects)            // 获取所有项目
+		api.POST("/deploy/projects", dh.HandleCreateProject)          // 创建项目
+		api.PUT("/deploy/projects/:id", dh.HandleUpdateProject)       // 更新项目
+		api.DELETE("/deploy/projects/:id", dh.HandleDeleteProject)    // 删除项目
 		api.POST("/deploy/projects/:id/build", dh.HandleBuildProject) // 构建项目
-		api.GET("/deploy/projects/:id/logs", dh.HandleProjectLogs)  // 获取项目日志
-		api.GET("/deploy/domains", dh.HandleListDomains)     // 获取所有域名配置
+		api.GET("/deploy/projects/:id/logs", dh.HandleProjectLogs)    // 获取项目日志
+		api.GET("/deploy/domains", dh.HandleListDomains)              // 获取所有域名配置
 	}
 }
