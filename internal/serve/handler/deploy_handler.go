@@ -135,13 +135,3 @@ func (h *DeployHandler) HandleProjectLogs(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, logs)
 }
-
-// HandleListDomains 获取所有域名配置
-func (h *DeployHandler) HandleListDomains(c *gin.Context) {
-	domains, err := deploy.GetDomains()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, domains)
-} 

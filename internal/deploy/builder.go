@@ -5,10 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"servon/utils"
+	"servon/internal/utils"
 	"strings"
 	"sync"
-	"time"
 )
 
 // 添加日志相关的变量和结构
@@ -70,44 +69,6 @@ func BuildProject(id int, logChan chan<- string) error {
 	project.Status = "building"
 	saveProjects()
 	sendLog("开始部署...")
-
-	// 创建项目目录
-	projectDir := filepath.Join("data", "projects", fmt.Sprintf("%d", id))
-	if err := os.MkdirAll(projectDir, 0755); err != nil {
-		msg := fmt.Sprintf("创建项目目录失败: %v", err)
-		utils.Error(msg)
-		sendLog(msg)
-		return fmt.Errorf(msg)
-	}
-
-	// 克隆或更新代码
-	if err := gitSync(project, projectDir, sendLog); err != nil {
-		project.Status = "failed"
-		saveProjects()
-		utils.Error("Git同步失败: %v", err)
-		return err
-	}
-
-	// 执行构建命令
-	if err := build(project, projectDir, sendLog); err != nil {
-		project.Status = "failed"
-		saveProjects()
-		utils.Error("构建失败: %v", err)
-		return err
-	}
-
-	// 更新 Caddy 配置
-	if err := updateCaddyConfig(project); err != nil {
-		project.Status = "failed"
-		saveProjects()
-		utils.Error("更新 Caddy 配置失败: %v", err)
-		return err
-	}
-
-	// 更新项目状态
-	project.Status = "running"
-	project.LastDeploy = time.Now().Format(time.RFC3339)
-	saveProjects()
 
 	utils.Info("项目构建完成: [%d] %s", id, project.Name)
 	sendLog("部署完成")

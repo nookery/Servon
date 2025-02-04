@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"servon/utils"
+	"servon/internal/softwares"
+	"servon/internal/utils"
 	"sync"
 )
 
@@ -198,4 +199,29 @@ func validateProject(project Project) error {
 func cleanupProject(id int) error {
 	projectDir := filepath.Join("data", "projects", fmt.Sprintf("%d", id))
 	return os.RemoveAll(projectDir)
+}
+
+// ServeStatic 创建静态文件服务
+func ServeStatic(name string, path string, domain string) error {
+	utils.Info("创建静态文件服务: %s -> %s", path, domain)
+
+	// 验证路径是否存在
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("目录不存在: %s", path)
+	}
+
+	// 配置 Caddy
+	caddy := softwares.NewCaddy()
+	err := caddy.UpdateConfig(&softwares.Project{
+		ID:        0, // 静态服务不需要ID
+		Domain:    domain,
+		Type:      "static",
+		OutputDir: path, // 直接使用提供的路径
+	})
+	if err != nil {
+		return fmt.Errorf("配置 Caddy 失败: %v", err)
+	}
+
+	utils.Info("静态文件服务创建成功: %s", domain)
+	return nil
 }

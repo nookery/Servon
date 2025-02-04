@@ -34,7 +34,7 @@ type Logger struct {
 
 var (
 	defaultLogger *Logger
-	once         sync.Once
+	once          sync.Once
 )
 
 // GetLogger 获取默认日志记录器
@@ -183,4 +183,4 @@ func Warn(format string, args ...interface{}) {
 
 func Error(format string, args ...interface{}) {
 	GetLogger().Error(format, args...)
-} 
+}

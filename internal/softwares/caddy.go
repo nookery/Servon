@@ -2,12 +2,35 @@ package softwares
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 type Caddy struct {
 	info SoftwareInfo
+}
+
+// Configuration related constants and types
+const caddyConfigTemplate = `
+{{ .Domain }} {
+	{{ if eq .Type "static" }}
+	root * {{ .OutputPath }}
+	file_server
+	{{ else }}
+	reverse_proxy localhost:{{ .Port }}
+	{{ end }}
+}
+`
+
+type Project struct {
+	ID        int
+	Domain    string
+	Type      string
+	OutputDir string
+	Port      int
 }
 
 func NewCaddy() *Caddy {
@@ -149,4 +172,56 @@ func (c *Caddy) Stop() error {
 
 func (c *Caddy) GetInfo() SoftwareInfo {
 	return c.info
+}
+
+// UpdateConfig updates the Caddy configuration for a project
+func (c *Caddy) UpdateConfig(project *Project) error {
+	// 创建配置目录
+	configDir := filepath.Join("data", "caddy", "conf.d")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %v", err)
+	}
+
+	// 准备模板数据
+	data := struct {
+		Domain     string
+		Type       string
+		OutputPath string
+		Port       int
+	}{
+		Domain:     project.Domain,
+		Type:       project.Type,
+		OutputPath: filepath.Join("data", "projects", fmt.Sprintf("%d", project.ID), project.OutputDir),
+		Port:       project.Port,
+	}
+
+	// 解析并执行模板
+	tmpl, err := template.New("caddy").Parse(caddyConfigTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse config template: %v", err)
+	}
+
+	// 创建配置文件
+	configFile := filepath.Join(configDir, fmt.Sprintf("%d.conf", project.ID))
+	f, err := os.Create(configFile)
+	if err != nil {
+		return fmt.Errorf("failed to create config file: %v", err)
+	}
+	defer f.Close()
+
+	if err := tmpl.Execute(f, data); err != nil {
+		return fmt.Errorf("failed to generate config file: %v", err)
+	}
+
+	// 重载配置
+	return c.Reload()
+}
+
+// Reload reloads the Caddy configuration
+func (c *Caddy) Reload() error {
+	cmd := exec.Command("sudo", "systemctl", "reload", "caddy")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to reload Caddy: %v\n%s", err, string(output))
+	}
+	return nil
 }

@@ -39,6 +39,5 @@ func (s *Server) setupAPIRoutes() {
 		api.DELETE("/deploy/projects/:id", dh.HandleDeleteProject)    // 删除项目
 		api.POST("/deploy/projects/:id/build", dh.HandleBuildProject) // 构建项目
 		api.GET("/deploy/projects/:id/logs", dh.HandleProjectLogs)    // 获取项目日志
-		api.GET("/deploy/domains", dh.HandleListDomains)              // 获取所有域名配置
 	}
 }
