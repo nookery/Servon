@@ -29,6 +29,10 @@ const router = createRouter({
             component: () => import('../views/Ports.vue')
         },
         {
+            path: '/deploy',
+            component: () => import('../views/Deploy.vue')
+        },
+        {
             path: '/cron',
             name: 'cron',
             component: CronTasks,

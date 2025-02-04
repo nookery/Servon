@@ -35,6 +35,11 @@ const menuOptions = [
         label: '定时任务',
         key: 'cron',
         icon: 'ri-time-line'
+    },
+    {
+        label: '项目部署',
+        key: 'deploy',
+        icon: 'ri-rocket-line'
     }
 ]
 

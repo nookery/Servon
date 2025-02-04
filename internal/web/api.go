@@ -8,6 +8,7 @@ import (
 func (s *Server) setupAPIRoutes() {
 	h := handler.New()
 	sh := handler.NewSoftwareHandler()
+	dh := handler.NewDeployHandler()
 	api := s.router.Group("/web_api")
 	{
 		api.GET("/system/resources", h.HandleSystemResources)
@@ -30,5 +31,14 @@ func (s *Server) setupAPIRoutes() {
 		api.PUT("/cron/tasks/:id", h.HandleUpdateCronTask)         // 更新定时任务
 		api.DELETE("/cron/tasks/:id", h.HandleDeleteCronTask)      // 删除定时任务
 		api.POST("/cron/tasks/:id/toggle", h.HandleToggleCronTask) // 启用/禁用定时任务
+
+		// 部署相关API
+		api.GET("/deploy/projects", dh.HandleListProjects)    // 获取所有项目
+		api.POST("/deploy/projects", dh.HandleCreateProject)  // 创建项目
+		api.PUT("/deploy/projects/:id", dh.HandleUpdateProject) // 更新项目
+		api.DELETE("/deploy/projects/:id", dh.HandleDeleteProject) // 删除项目
+		api.POST("/deploy/projects/:id/build", dh.HandleBuildProject) // 构建项目
+		api.GET("/deploy/projects/:id/logs", dh.HandleProjectLogs)  // 获取项目日志
+		api.GET("/deploy/domains", dh.HandleListDomains)     // 获取所有域名配置
 	}
 }

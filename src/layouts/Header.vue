@@ -68,7 +68,7 @@ onMounted(async () => {
         fetchSystemResources()
         fetchOSInfo()
         fetchNetworkResources()
-    }, 5000)
+    }, 50000)
 
     // 初始化主题
     const savedTheme = localStorage.getItem('theme')
