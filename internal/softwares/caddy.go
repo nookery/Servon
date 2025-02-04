@@ -54,60 +54,75 @@ func (c *Caddy) Install() (chan string, error) {
 
 		// 检查操作系统类型
 		osType := utils.GetOSType()
+		utils.Info("检测到操作系统: %s", osType)
 		outputChan <- fmt.Sprintf("检测到操作系统: %s", osType)
 
 		switch osType {
 		case utils.Ubuntu, utils.Debian:
-			// Debian 系的安装方式
+			utils.Info("使用 APT 包管理器安装...")
 			outputChan <- "使用 APT 包管理器安装..."
 
 			// 添加 Caddy 官方源
+			utils.Info("添加 Caddy 官方源...")
 			outputChan <- "添加 Caddy 官方源..."
 
 			// 下载并安装 GPG 密钥
 			curlCmd := exec.Command("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg")
 			if output, err := curlCmd.CombinedOutput(); err != nil {
-				outputChan <- fmt.Sprintf("Error: 下载 GPG 密钥失败:\n%s", string(output))
+				errMsg := fmt.Sprintf("下载 GPG 密钥失败:\n%s", string(output))
+				utils.Error(errMsg)
+				outputChan <- "Error: " + errMsg
 				return
 			}
 
 			// 添加 Caddy 软件源
 			sourceCmd := exec.Command("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list")
 			if output, err := sourceCmd.CombinedOutput(); err != nil {
-				outputChan <- fmt.Sprintf("Error: 添加源失败:\n%s", string(output))
+				errMsg := fmt.Sprintf("添加源失败:\n%s", string(output))
+				utils.Error(errMsg)
+				outputChan <- "Error: " + errMsg
 				return
 			}
 
 			// 更新软件包索引
 			if err := apt.Update(); err != nil {
-				outputChan <- fmt.Sprintf("Error: 更新软件包索引失败: %v", err)
+				errMsg := fmt.Sprintf("更新软件包索引失败: %v", err)
+				utils.Error(errMsg)
+				outputChan <- "Error: " + errMsg
 				return
 			}
 
 			// 安装 Caddy
 			if err := apt.Install("caddy"); err != nil {
-				outputChan <- fmt.Sprintf("Error: 安装 Caddy 失败: %v", err)
+				errMsg := fmt.Sprintf("安装 Caddy 失败: %v", err)
+				utils.Error(errMsg)
+				outputChan <- "Error: " + errMsg
 				return
 			}
 
 		case utils.CentOS, utils.RedHat:
-			// RHEL 系的安装方式
-			outputChan <- "使用 DNF/YUM 包管理器安装..."
-			outputChan <- "Error: 暂不支持在 RHEL 系统上安装 Caddy"
+			errMsg := "暂不支持在 RHEL 系统上安装 Caddy"
+			utils.Error(errMsg)
+			outputChan <- "Error: " + errMsg
 			return
 
 		default:
-			outputChan <- fmt.Sprintf("Error: 不支持的操作系统: %s", osType)
+			errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
+			utils.Error(errMsg)
+			outputChan <- "Error: " + errMsg
 			return
 		}
 
 		// 验证安装结果
 		dpkg := NewDpkg(nil)
 		if !dpkg.IsInstalled("caddy") {
-			outputChan <- "Error: Caddy 安装验证失败，未检测到已安装的包"
+			errMsg := "Caddy 安装验证失败，未检测到已安装的包"
+			utils.Error(errMsg)
+			outputChan <- "Error: " + errMsg
 			return
 		}
 
+		utils.Info("Caddy 安装完成")
 		outputChan <- "Success: Caddy 安装完成"
 	}()
 
@@ -170,7 +185,7 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 	}
 
 	serviceManager := system.NewServiceManager()
-	fmt.Printf("Using %s to check caddy status\n", serviceManager.Type())
+	utils.Debug("Using %s to check caddy status", serviceManager.Type())
 
 	status := "stopped"
 	if serviceManager.IsActive("caddy") {
@@ -246,4 +261,64 @@ func (c *Caddy) UpdateConfig(project *Project) error {
 func (c *Caddy) Reload() error {
 	serviceManager := system.NewServiceManager()
 	return serviceManager.Reload("caddy")
+}
+
+// Start starts the Caddy service
+func (c *Caddy) Start() (chan string, error) {
+	outputChan := make(chan string, 100)
+
+	go func() {
+		defer close(outputChan)
+
+		// 检查是否已安装
+		dpkg := NewDpkg(nil)
+		if !dpkg.IsInstalled("caddy") {
+			errMsg := "Caddy 未安装，请先安装"
+			utils.Error(errMsg)
+			outputChan <- "Error: " + errMsg
+			return
+		}
+
+		// 获取当前状态
+		status, err := c.GetStatus()
+		if err != nil {
+			errMsg := fmt.Sprintf("获取状态失败: %v", err)
+			utils.Error(errMsg)
+			outputChan <- "Error: " + errMsg
+			return
+		}
+
+		// 如果已经在运行，则不需要启动
+		if status["status"] == "running" {
+			utils.Info("Caddy 服务已在运行中")
+			outputChan <- "Caddy 服务已在运行中"
+			outputChan <- "Success: 无需重复启动"
+			return
+		}
+
+		utils.Info("正在启动 Caddy 服务...")
+		outputChan <- "🚀 [caddy] 正在启动 Caddy 服务..."
+
+		// 启动服务
+		serviceManager := system.NewServiceManager()
+		if err := serviceManager.Start("caddy"); err != nil {
+			errMsg := fmt.Sprintf("启动服务失败: %v", err)
+			utils.Error(errMsg)
+			outputChan <- "Error: " + errMsg
+			return
+		}
+
+		// 验证服务是否成功启动
+		if !serviceManager.IsActive("caddy") {
+			errMsg := "服务启动失败"
+			utils.Error(errMsg)
+			outputChan <- "Error: " + errMsg
+			return
+		}
+
+		utils.Info("Caddy 服务已成功启动")
+		outputChan <- "Success: Caddy 服务已成功启动"
+	}()
+
+	return outputChan, nil
 }

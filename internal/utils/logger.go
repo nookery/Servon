@@ -26,6 +26,22 @@ var levelNames = map[LogLevel]string{
 	ERROR: "ERROR",
 }
 
+// ANSI 颜色代码
+const (
+	colorRed    = "\033[31m"
+	colorYellow = "\033[33m"
+	colorBlue   = "\033[36m"
+	colorGreen  = "\033[32m"
+	colorReset  = "\033[0m"
+)
+
+var levelColors = map[LogLevel]string{
+	DEBUG: colorBlue,
+	INFO:  colorGreen,
+	WARN:  colorYellow,
+	ERROR: colorRed,
+}
+
 type Logger struct {
 	mu       sync.Mutex
 	file     *os.File
@@ -110,24 +126,28 @@ func (l *Logger) log(level LogLevel, format string, args ...interface{}) {
 	}
 
 	// 获取调用信息
-	_, file, line, ok := runtime.Caller(2)
+	_, file, line, ok := runtime.Caller(3)
 	if !ok {
 		file = "unknown"
 		line = 0
 	}
-	// 只保留最后两级目录
-	parts := strings.Split(file, string(os.PathSeparator))
-	if len(parts) > 2 {
-		file = filepath.Join(parts[len(parts)-2:]...)
+	// 查找并保留从 "internal" 开始的路径
+	if idx := strings.Index(file, "internal"); idx != -1 {
+		file = file[idx:]
 	}
 
 	// 格式化日志消息
-	now := time.Now().Format("2006-01-02 15:04:05.000")
+	now := time.Now()
+	// 文件日志使用完整时间格式
+	fullTimeStr := now.Format("2006-01-02 15:04:05.000")
+	// 终端输出使用简短时间格式
+	shortTimeStr := now.Format("15:04:05")
+
 	msg := fmt.Sprintf(format, args...)
 	logLine := fmt.Sprintf("[%s] [%s] [%s:%d] %s\n",
-		now, levelNames[level], file, line, msg)
+		fullTimeStr, levelNames[level], file, line, msg)
 
-	// 写入日志
+	// 写入日志文件（不带颜色，使用完整时间）
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -135,10 +155,10 @@ func (l *Logger) log(level LogLevel, format string, args ...interface{}) {
 		fmt.Printf("写入日志失败: %v\n", err)
 	}
 
-	// 如果是错误级别，同时输出到控制台
-	if level >= ERROR {
-		fmt.Print(logLine)
-	}
+	// 输出到控制台（带颜色，使用简短时间）
+	coloredLogLine := fmt.Sprintf("%s[%s] [%s] [%s:%d] %s%s\n",
+		levelColors[level], shortTimeStr, levelNames[level], file, line, msg, colorReset)
+	fmt.Print(coloredLogLine)
 }
 
 // Debug 记录调试级别日志

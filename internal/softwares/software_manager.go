@@ -98,3 +98,45 @@ func (m *SoftwareManager) StopSoftware(name string) error {
 	}
 	return sw.Stop()
 }
+
+// StartSoftware 启动指定的软件
+func (m *SoftwareManager) StartSoftware(name string) (chan string, error) {
+	sw, err := NewSoftware(name)
+	if err != nil {
+		return nil, err
+	}
+
+	// 创建一个新的 channel 来包装原始的 channel
+	outputChan := make(chan string, 100)
+	originalChan, err := sw.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	// 启动一个 goroutine 来处理消息
+	go func() {
+		defer close(outputChan)
+		success := true
+		var lastMsg string
+
+		for msg := range originalChan {
+			lastMsg = msg
+			outputChan <- msg
+			// 检查是否有错误消息
+			if strings.HasPrefix(msg, "Error:") {
+				success = false
+			}
+		}
+
+		// 如果没有看到成功消息，认为是失败
+		if !strings.Contains(lastMsg, "Success:") {
+			success = false
+		}
+
+		if !success {
+			outputChan <- "Error: 启动过程未正常完成"
+		}
+	}()
+
+	return outputChan, nil
+}

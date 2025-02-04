@@ -4,12 +4,12 @@ import "fmt"
 
 // SoftwareRegistry 存储所有已注册的软件
 var registry = map[string]func() Software{
-	"caddy":   func() Software { return NewCaddy() },
-	"nginx":   func() Software { return NewNginx() },
-	"mongodb": func() Software { return NewMongoDB() },
-	"redis":   func() Software { return NewRedis() },
-	"mysql":   func() Software { return NewMySQL() },
-	"docker":  func() Software { return NewDocker() },
+	"caddy": func() Software { return NewCaddy() },
+	// "nginx":   func() Software { return NewNginx() },
+	// "mongodb": func() Software { return NewMongoDB() },
+	// "redis":   func() Software { return NewRedis() },
+	// "mysql":   func() Software { return NewMySQL() },
+	// "docker":  func() Software { return NewDocker() },
 }
 
 // Software 定义软件操作的门面接口
@@ -22,6 +22,8 @@ type Software interface {
 	GetStatus() (map[string]string, error)
 	// Stop 停止软件服务
 	Stop() error
+	// Start 启动软件服务并返回日志输出通道
+	Start() (chan string, error)
 	// GetInfo 获取软件信息
 	GetInfo() SoftwareInfo
 }

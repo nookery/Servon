@@ -52,3 +52,12 @@ func (s SystemCtl) Reload(service string) error {
 	}
 	return nil
 }
+
+// Start starts a service
+func (s SystemCtl) Start(service string) error {
+	cmd := exec.Command("sudo", "systemctl", "start", service)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to start service: %v\n%s", err, string(output))
+	}
+	return nil
+}
