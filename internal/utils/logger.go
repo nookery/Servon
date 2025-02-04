@@ -245,6 +245,7 @@ func StreamCommand(cmd *exec.Cmd) error {
 		return fmt.Errorf("无法创建错误输出管道: %v", err)
 	}
 
+	Info("🚀 启动命令: %s", cmd.String())
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("启动命令失败: %v", err)
 	}
