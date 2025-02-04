@@ -15,11 +15,13 @@ func GetSoftwareCommand() *cobra.Command {
 
 示例：
   servon software list      # 显示支持的软件列表
-  servon software install   # 安装指定的软件`,
+  servon software install   # 安装指定的软件
+  servon software info      # 显示软件详细信息`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			utils.PrintCommandHelp(cmd, map[string]string{
 				"list":    "显示支持的软件列表",
 				"install": "安装指定的软件",
+				"info":    "显示软件详细信息",
 			})
 			return nil
 		},
@@ -27,6 +29,7 @@ func GetSoftwareCommand() *cobra.Command {
 
 	cmd.AddCommand(newListCmd())
 	cmd.AddCommand(newInstallCmd())
+	cmd.AddCommand(newInfoCmd())
 
 	return cmd
 }

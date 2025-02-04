@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"servon/internal/system"
 	"servon/internal/utils"
 )
 
@@ -161,7 +162,6 @@ func (c *Caddy) Uninstall() (chan string, error) {
 func (c *Caddy) GetStatus() (map[string]string, error) {
 	dpkg := NewDpkg(nil)
 
-	// 检查是否安装
 	if !dpkg.IsInstalled("caddy") {
 		return map[string]string{
 			"status":  "not_installed",
@@ -169,10 +169,11 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 		}, nil
 	}
 
-	// 检查服务状态
-	cmd := exec.Command("systemctl", "is-active", "caddy")
+	serviceManager := system.NewServiceManager()
+	fmt.Printf("Using %s to check caddy status\n", serviceManager.Type())
+
 	status := "stopped"
-	if err := cmd.Run(); err == nil {
+	if serviceManager.IsActive("caddy") {
 		status = "running"
 	}
 
@@ -190,11 +191,8 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 }
 
 func (c *Caddy) Stop() error {
-	cmd := exec.Command("sudo", "systemctl", "stop", "caddy")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("停止服务失败: %v\n%s", err, string(output))
-	}
-	return nil
+	serviceManager := system.NewServiceManager()
+	return serviceManager.Stop("caddy")
 }
 
 func (c *Caddy) GetInfo() SoftwareInfo {
@@ -246,9 +244,6 @@ func (c *Caddy) UpdateConfig(project *Project) error {
 
 // Reload reloads the Caddy configuration
 func (c *Caddy) Reload() error {
-	cmd := exec.Command("sudo", "systemctl", "reload", "caddy")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to reload Caddy: %v\n%s", err, string(output))
-	}
-	return nil
+	serviceManager := system.NewServiceManager()
+	return serviceManager.Reload("caddy")
 }
