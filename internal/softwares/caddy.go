@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"servon/internal/utils"
 )
 
 type Caddy struct {
@@ -49,38 +51,63 @@ func (c *Caddy) Install() (chan string, error) {
 	go func() {
 		defer close(outputChan)
 
-		// 添加 Caddy 官方源
-		outputChan <- "添加 Caddy 官方源..."
-		addKeyCmd := exec.Command("sudo", "apt", "install", "-y", "debian-keyring", "debian-archive-keyring", "apt-transport-https")
-		if output, err := addKeyCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("添加密钥失败:\n%s", string(output))
+		// 检查操作系统类型
+		osType := utils.GetOSType()
+		outputChan <- fmt.Sprintf("检测到操作系统: %s", osType)
+
+		switch osType {
+		case utils.Ubuntu, utils.Debian:
+			// Debian 系的安装方式
+			outputChan <- "使用 APT 包管理器安装..."
+
+			// 添加 Caddy 官方源
+			outputChan <- "添加 Caddy 官方源..."
+
+			// 下载并安装 GPG 密钥
+			curlCmd := exec.Command("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg")
+			if output, err := curlCmd.CombinedOutput(); err != nil {
+				outputChan <- fmt.Sprintf("Error: 下载 GPG 密钥失败:\n%s", string(output))
+				return
+			}
+
+			// 添加 Caddy 软件源
+			sourceCmd := exec.Command("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list")
+			if output, err := sourceCmd.CombinedOutput(); err != nil {
+				outputChan <- fmt.Sprintf("Error: 添加源失败:\n%s", string(output))
+				return
+			}
+
+			// 更新软件包索引
+			if err := apt.Update(); err != nil {
+				outputChan <- fmt.Sprintf("Error: 更新软件包索引失败: %v", err)
+				return
+			}
+
+			// 安装 Caddy
+			if err := apt.Install("caddy"); err != nil {
+				outputChan <- fmt.Sprintf("Error: 安装 Caddy 失败: %v", err)
+				return
+			}
+
+		case utils.CentOS, utils.RedHat:
+			// RHEL 系的安装方式
+			outputChan <- "使用 DNF/YUM 包管理器安装..."
+			outputChan <- "Error: 暂不支持在 RHEL 系统上安装 Caddy"
+			return
+
+		default:
+			outputChan <- fmt.Sprintf("Error: 不支持的操作系统: %s", osType)
 			return
 		}
 
-		// 使用 shell 执行带管道的命令
-		curlCmd := exec.Command("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg")
-		if output, err := curlCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("下载 GPG 密钥失败:\n%s", string(output))
+		// 验证安装结果
+		dpkg := NewDpkg(nil)
+		if !dpkg.IsInstalled("caddy") {
+			outputChan <- "Error: Caddy 安装验证失败，未检测到已安装的包"
 			return
 		}
 
-		sourceCmd := exec.Command("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list")
-		if output, err := sourceCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("添加源失败:\n%s", string(output))
-			return
-		}
-
-		// 更新软件包索引
-		if err := apt.Update(); err != nil {
-			return
-		}
-
-		// 安装 Caddy
-		if err := apt.Install("caddy"); err != nil {
-			return
-		}
-
-		outputChan <- "Caddy 安装完成"
+		outputChan <- "Success: Caddy 安装完成"
 	}()
 
 	return outputChan, nil
