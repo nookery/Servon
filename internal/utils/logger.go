@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -117,8 +118,8 @@ func (l *Logger) rotateFile() error {
 	return nil
 }
 
-// log 记录日志
-func (l *Logger) log(level LogLevel, format string, args ...interface{}) {
+// log 记录日志并可选择性地发送到channel
+func (l *Logger) log(level LogLevel, ch chan<- string, format string, args ...interface{}) {
 	// 检查并轮转日志文件
 	if err := l.rotateFile(); err != nil {
 		fmt.Printf("轮转日志文件失败: %v\n", err)
@@ -144,10 +145,10 @@ func (l *Logger) log(level LogLevel, format string, args ...interface{}) {
 	shortTimeStr := now.Format("15:04:05")
 
 	msg := fmt.Sprintf(format, args...)
+
+	// 写入日志文件
 	logLine := fmt.Sprintf("[%s] [%s] [%s:%d] %s\n",
 		fullTimeStr, levelNames[level], file, line, msg)
-
-	// 写入日志文件（不带颜色，使用完整时间）
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -155,7 +156,17 @@ func (l *Logger) log(level LogLevel, format string, args ...interface{}) {
 		fmt.Printf("写入日志失败: %v\n", err)
 	}
 
-	// 输出到控制台（带颜色，使用简短时间）
+	// 如果提供了channel，发送消息并跳过控制台输出
+	if ch != nil {
+		if level == ERROR {
+			ch <- "Error: " + msg
+		} else {
+			ch <- msg
+		}
+		return
+	}
+
+	// 只有在没有提供channel时才输出到控制台
 	coloredLogLine := fmt.Sprintf("%s[%s] [%s] [%s:%d] %s%s\n",
 		levelColors[level], shortTimeStr, levelNames[level], file, line, msg, colorReset)
 	fmt.Print(coloredLogLine)
@@ -163,22 +174,32 @@ func (l *Logger) log(level LogLevel, format string, args ...interface{}) {
 
 // Debug 记录调试级别日志
 func (l *Logger) Debug(format string, args ...interface{}) {
-	l.log(DEBUG, format, args...)
+	l.log(DEBUG, nil, format, args...)
 }
 
 // Info 记录信息级别日志
 func (l *Logger) Info(format string, args ...interface{}) {
-	l.log(INFO, format, args...)
+	l.log(INFO, nil, format, args...)
 }
 
 // Warn 记录警告级别日志
 func (l *Logger) Warn(format string, args ...interface{}) {
-	l.log(WARN, format, args...)
+	l.log(WARN, nil, format, args...)
 }
 
 // Error 记录错误级别日志
 func (l *Logger) Error(format string, args ...interface{}) {
-	l.log(ERROR, format, args...)
+	l.log(ERROR, nil, format, args...)
+}
+
+// InfoChan 添加新的方法支持channel
+func (l *Logger) InfoChan(ch chan<- string, format string, args ...interface{}) {
+	l.log(INFO, ch, format, args...)
+}
+
+// ErrorChan 添加错误级别的channel支持
+func (l *Logger) ErrorChan(ch chan<- string, format string, args ...interface{}) {
+	l.log(ERROR, ch, format, args...)
 }
 
 // Close 关闭日志文件
@@ -203,4 +224,58 @@ func Warn(format string, args ...interface{}) {
 
 func Error(format string, args ...interface{}) {
 	GetLogger().Error(format, args...)
+}
+
+func InfoChan(ch chan<- string, format string, args ...interface{}) {
+	GetLogger().InfoChan(ch, format, args...)
+}
+
+func ErrorChan(ch chan<- string, format string, args ...interface{}) {
+	GetLogger().ErrorChan(ch, format, args...)
+}
+
+// StreamCommand 实时处理命令的输出流
+func StreamCommand(cmd *exec.Cmd) error {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("无法创建标准输出管道: %v", err)
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("无法创建错误输出管道: %v", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("启动命令失败: %v", err)
+	}
+
+	// 处理标准输出
+	go func() {
+		buf := make([]byte, 1024)
+		for {
+			n, err := stdout.Read(buf)
+			if n > 0 {
+				fmt.Printf("%s", string(buf[:n]))
+			}
+			if err != nil {
+				break
+			}
+		}
+	}()
+
+	// 处理错误输出
+	go func() {
+		buf := make([]byte, 1024)
+		for {
+			n, err := stderr.Read(buf)
+			if n > 0 {
+				fmt.Printf("%s", string(buf[:n]))
+			}
+			if err != nil {
+				break
+			}
+		}
+	}()
+
+	return cmd.Wait()
 }

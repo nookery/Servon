@@ -21,13 +21,13 @@ func (s ServiceCmd) Type() string {
 }
 
 func (s ServiceCmd) IsActive(service string) bool {
-	utils.Info("[service] checking status for service: %s", service)
+	utils.Info("checking status for service: %s", service)
 	cmd := exec.Command("service", service, "status")
 	output, err := cmd.CombinedOutput()
 	status := strings.TrimSpace(string(output))
 
 	if err != nil {
-		utils.Error("[service] status check for %s failed: %v (output: %s)", service, err, status)
+		utils.Error("status check for %s failed: %v (output: %s)", service, err, status)
 		return false
 	}
 

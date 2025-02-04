@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"servon/internal/softwares"
 
-	"strings"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -67,24 +65,9 @@ func newInstallCmd() *cobra.Command {
 			color.New(color.FgCyan, color.Bold).Printf("📦 开始安装 %s ...\n", name)
 			fmt.Println()
 
-			msgChan, err := manager.InstallSoftware(name)
+			err := manager.InstallSoftware(name, nil)
 			if err != nil {
 				color.New(color.FgRed).Printf("\n❌ 安装失败: %v\n", err)
-				return nil
-			}
-
-			// 显示安装进度并检查错误
-			hasError := false
-			for msg := range msgChan {
-				color.New(color.FgHiWhite).Println(msg)
-				if strings.HasPrefix(msg, "Error:") {
-					hasError = true
-				}
-			}
-
-			fmt.Println()
-			if hasError {
-				color.New(color.FgRed, color.Bold).Printf("❌ 软件 %s 安装失败！\n", name)
 				return nil
 			}
 
