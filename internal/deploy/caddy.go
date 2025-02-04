@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"servon/utils"
 	"text/template"
-	"servon/internal/utils"
 )
 
 const caddyConfigTemplate = `
@@ -22,7 +22,7 @@ const caddyConfigTemplate = `
 // updateCaddyConfig 更新 Caddy 配置
 func updateCaddyConfig(project *Project) error {
 	utils.Info("更新 Caddy 配置: [%d] %s", project.ID, project.Domain)
-	
+
 	// 创建配置目录
 	configDir := filepath.Join("data", "caddy", "conf.d")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
@@ -90,4 +90,4 @@ func GetDomains() ([]string, error) {
 		domains = append(domains, p.Domain)
 	}
 	return domains, nil
-} 
+}

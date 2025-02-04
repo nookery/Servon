@@ -5,10 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"servon/utils"
 	"strings"
 	"sync"
 	"time"
-	"servon/internal/utils"
 )
 
 // 添加日志相关的变量和结构
@@ -49,7 +49,7 @@ func addLog(id int, log string) {
 // BuildProject 构建项目
 func BuildProject(id int, logChan chan<- string) error {
 	utils.Info("开始构建项目: %d", id)
-	
+
 	projectsMu.RLock()
 	project, exists := projects[id]
 	projectsMu.RUnlock()
@@ -170,4 +170,4 @@ func build(project *Project, dir string, logFn func(string)) error {
 	logFn(fmt.Sprintf("构建输出:\n%s", output))
 	logFn("构建完成")
 	return nil
-} 
+}

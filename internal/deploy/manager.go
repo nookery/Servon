@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"servon/utils"
 	"sync"
-	"servon/internal/utils"
 )
 
 var (
@@ -91,7 +91,7 @@ func GetProjects() ([]*Project, error) {
 // CreateProject 创建项目
 func CreateProject(project Project) (*Project, error) {
 	utils.Info("创建新项目: %s", project.Name)
-	
+
 	if err := validateProject(project); err != nil {
 		utils.Error("项目验证失败: %v", err)
 		return nil, err
@@ -117,7 +117,7 @@ func CreateProject(project Project) (*Project, error) {
 // UpdateProject 更新项目
 func UpdateProject(project Project) (*Project, error) {
 	utils.Info("更新项目: [%d] %s", project.ID, project.Name)
-	
+
 	if err := validateProject(project); err != nil {
 		utils.Error("项目验证失败: %v", err)
 		return nil, err
@@ -149,7 +149,7 @@ func UpdateProject(project Project) (*Project, error) {
 // DeleteProject 删除项目
 func DeleteProject(id int) error {
 	utils.Info("删除项目: %d", id)
-	
+
 	projectsMu.Lock()
 	defer projectsMu.Unlock()
 
@@ -198,4 +198,4 @@ func validateProject(project Project) error {
 func cleanupProject(id int) error {
 	projectDir := filepath.Join("data", "projects", fmt.Sprintf("%d", id))
 	return os.RemoveAll(projectDir)
-} 
+}
