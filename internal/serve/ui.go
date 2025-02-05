@@ -31,7 +31,15 @@ func (s *Server) setupUIRoutes() {
 	// 2. 确保先注册静态路由再注册通配路由
 	s.router.GET("/", func(c *gin.Context) {
 		c.Header("Content-Type", "text/html")
-		content, _ := fs.ReadFile(subFS, "index.html")
+		content, err := fs.ReadFile(subFS, "index.html")
+		if err != nil {
+			// 如果找不到 index.html，尝试读取 placeholder.html
+			content, err = fs.ReadFile(subFS, "placeholder.html")
+			if err != nil {
+				c.String(http.StatusInternalServerError, "无法加载页面")
+				return
+			}
+		}
 		c.Data(200, "text/html; charset=utf-8", content)
 	})
 
@@ -54,7 +62,15 @@ func (s *Server) setupUIRoutes() {
 		}
 
 		c.Header("Content-Type", "text/html")
-		content, _ := fs.ReadFile(subFS, "index.html")
+		content, err := fs.ReadFile(subFS, "index.html")
+		if err != nil {
+			// 如果找不到 index.html，尝试读取 placeholder.html
+			content, err = fs.ReadFile(subFS, "placeholder.html")
+			if err != nil {
+				c.String(http.StatusInternalServerError, "无法加载页面")
+				return
+			}
+		}
 		c.Data(200, "text/html; charset=utf-8", content)
 	})
 }

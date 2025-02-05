@@ -16,8 +16,22 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'internal/web/dist',
+    outDir: 'internal/serve/dist',
     assetsDir: 'assets',
-    emptyOutDir: true,
+    emptyOutDir: false,
+    rollupOptions: {
+      input: {
+        main: 'index.html'
+      },
+      output: {
+        // 清理除了 placeholder.html 以外的文件
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name === 'placeholder.html') {
+            return assetInfo.name;
+          }
+          return 'assets/[name]-[hash][extname]';
+        }
+      }
+    }
   },
 })
