@@ -6,6 +6,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"servon/internal/utils"
 )
 
 // newInstallCmd 返回 install 子命令
@@ -61,9 +62,7 @@ func newInstallCmd() *cobra.Command {
 			}
 
 			// 开始安装
-			fmt.Println() // 空行使显示更清晰
-			color.New(color.FgCyan, color.Bold).Printf("📦 开始安装 %s ...\n", name)
-			fmt.Println()
+			utils.InfoTitle("📦 开始安装 %s ...", name)
 
 			err := manager.InstallSoftware(name, nil)
 			if err != nil {
@@ -71,8 +70,7 @@ func newInstallCmd() *cobra.Command {
 				return nil
 			}
 
-			color.New(color.FgGreen, color.Bold).Printf("✨ 软件 %s 安装完成！\n", name)
-			fmt.Println()
+			utils.InfoTitle("✨ 软件 %s 安装完成！", name)
 
 			return nil
 		},

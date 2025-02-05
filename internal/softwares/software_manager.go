@@ -1,7 +1,5 @@
 package softwares
 
-import "fmt"
-
 // SoftwareManager 管理所有软件的安装、卸载等操作
 type SoftwareManager struct {
 	supportedSoftware []SoftwareInfo
@@ -30,7 +28,6 @@ func (m *SoftwareManager) GetSoftwareNames() []string {
 
 // InstallSoftware 安装指定的软件
 func (m *SoftwareManager) InstallSoftware(name string, msgChan chan<- string) error {
-	fmt.Println("安装软件, 是否提供管道", msgChan != nil)
 	sw, err := NewSoftware(name)
 	if err != nil {
 		return err

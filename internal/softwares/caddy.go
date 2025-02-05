@@ -46,7 +46,6 @@ func NewCaddy() *Caddy {
 }
 
 func (c *Caddy) Install(logChan chan<- string) error {
-	fmt.Println("安装caddy, 是否提供管道", logChan != nil)
 	outputChan := make(chan string, 100)
 	apt := NewApt()
 

@@ -29,11 +29,13 @@ var levelNames = map[LogLevel]string{
 
 // ANSI 颜色代码
 const (
-	colorRed    = "\033[31m"
-	colorYellow = "\033[33m"
-	colorBlue   = "\033[36m"
-	colorGreen  = "\033[32m"
-	colorReset  = "\033[0m"
+	colorRed     = "\033[31m"
+	colorYellow  = "\033[33m"
+	colorBlue    = "\033[36m"
+	colorGreen   = "\033[32m"
+	colorReset   = "\033[0m"
+	colorMagenta = "\033[35m"
+	colorBold    = "\033[1m"
 )
 
 var levelColors = map[LogLevel]string{
@@ -216,6 +218,30 @@ func Debug(format string, args ...interface{}) {
 
 func Info(format string, args ...interface{}) {
 	GetLogger().Info(format, args...)
+}
+
+func InfoWithSpace(format string, args ...interface{}) {
+	fmt.Println()
+	GetLogger().Info(format, args...)
+	fmt.Println()
+}
+
+// InfoTitle 打印醒目的标题信息
+// 用于在日志中突出显示重要的分段或章节标题
+// 格式：=== 标题内容 ===
+// 参数：
+//   - format: 格式化字符串，支持 Printf 风格的格式化
+//   - args: 对应 format 中占位符的参数列表
+//
+// 示例：
+//
+//	InfoTitle("开始处理任务 %d", taskID)
+//	输出：
+//	=== 开始处理任务 1 ===
+func InfoTitle(format string, args ...interface{}) {
+	fmt.Println()
+	fmt.Printf(colorBold+colorMagenta+"=== "+format+" ==="+colorReset+"\n", args...)
+	fmt.Println()
 }
 
 func Warn(format string, args ...interface{}) {
