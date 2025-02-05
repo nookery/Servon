@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SystemInfo from '../components/SystemInfo.vue'
+import SystemInfo from '../modules/SystemInfo.vue'
 </script>
 
 <template>

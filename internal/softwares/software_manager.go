@@ -27,21 +27,27 @@ func (m *SoftwareManager) GetSoftwareNames() []string {
 }
 
 // InstallSoftware 安装指定的软件
-func (m *SoftwareManager) InstallSoftware(name string) (chan string, error) {
+func (m *SoftwareManager) InstallSoftware(name string, msgChan chan<- string) error {
 	sw, err := NewSoftware(name)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return sw.Install()
+
+	err = sw.Install(msgChan)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // UninstallSoftware 卸载指定的软件
-func (m *SoftwareManager) UninstallSoftware(name string) (chan string, error) {
+func (m *SoftwareManager) UninstallSoftware(name string, msgChan chan<- string) error {
 	sw, err := NewSoftware(name)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return sw.Uninstall()
+	return sw.Uninstall(msgChan)
 }
 
 // GetSoftwareStatus 获取软件状态
@@ -60,4 +66,14 @@ func (m *SoftwareManager) StopSoftware(name string) error {
 		return err
 	}
 	return sw.Stop()
+}
+
+// StartSoftware 启动指定的软件
+func (m *SoftwareManager) StartSoftware(name string, logChan chan<- string) error {
+	sw, err := NewSoftware(name)
+	if err != nil {
+		return err
+	}
+
+	return sw.Start(logChan)
 }

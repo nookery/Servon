@@ -2,7 +2,7 @@
 /// <reference lib="es2015" />
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import ThemeSwitcher from '../components/ThemeSwitcher.vue'
+import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
 import pkg from '../../package.json'
 
 const currentUser = ref('')
@@ -11,6 +11,8 @@ const memoryUsage = ref(0)
 const diskUsage = ref(0)
 const osInfo = ref('')
 const currentTheme = ref(localStorage.getItem('theme') || 'light')
+const downloadSpeed = ref(0)
+const uploadSpeed = ref(0)
 
 // 获取系统资源使用情况
 const fetchSystemResources = async () => {
@@ -34,6 +36,17 @@ const fetchOSInfo = async () => {
     }
 }
 
+// 获取网络资源使用情况
+const fetchNetworkResources = async () => {
+    try {
+        const res = await axios.get('/web_api/system/network')
+        downloadSpeed.value = res.data.download_speed
+        uploadSpeed.value = res.data.upload_speed
+    } catch (error) {
+        console.error('获取网络资源信息失败:', error)
+    }
+}
+
 function changeTheme(theme: string) {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
@@ -50,7 +63,12 @@ onMounted(async () => {
 
     fetchSystemResources()
     fetchOSInfo()
-    setInterval(fetchSystemResources, 5000)
+    fetchNetworkResources()
+    setInterval(() => {
+        fetchSystemResources()
+        fetchOSInfo()
+        fetchNetworkResources()
+    }, 50000)
 
     // 初始化主题
     const savedTheme = localStorage.getItem('theme')
@@ -96,6 +114,22 @@ onMounted(async () => {
                         磁盘: {{ diskUsage.toFixed(1) }}%
                     </div>
                     <progress class="progress progress-primary h-2" :value="diskUsage" max="100"></progress>
+                </div>
+
+                <!-- Network Usage -->
+                <div class="flex gap-4">
+                    <div class="flex items-center gap-1">
+                        <i class="ri-download-line text-xs text-base-content/70"></i>
+                        <span class="text-xs text-base-content/70">
+                            {{ (downloadSpeed / 1024 / 1024).toFixed(1) }} MB/s
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <i class="ri-upload-line text-xs text-base-content/70"></i>
+                        <span class="text-xs text-base-content/70">
+                            {{ (uploadSpeed / 1024 / 1024).toFixed(1) }} MB/s
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Theme Switcher Component -->

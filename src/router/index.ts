@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import CronTasks from '../views/CronTasks.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -26,6 +27,18 @@ const router = createRouter({
         {
             path: '/ports',
             component: () => import('../views/Ports.vue')
+        },
+        {
+            path: '/deploy',
+            component: () => import('../views/Deploy.vue')
+        },
+        {
+            path: '/cron',
+            name: 'cron',
+            component: CronTasks,
+            meta: {
+                title: '定时任务'
+            }
         }
     ]
 })

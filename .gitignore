@@ -1,8 +1,6 @@
 .pnpm-store/
 servon
 
-# build output
-dist/
 # generated types
 .astro/
 

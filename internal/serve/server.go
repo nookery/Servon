@@ -8,11 +8,12 @@ import (
 
 type Server struct {
 	router *gin.Engine
+	host   string
 	port   int
 	withUI bool
 }
 
-func NewServer(port int, withUI bool) *Server {
+func NewServer(host string, port int, withUI bool) *Server {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.RedirectTrailingSlash = false
@@ -44,6 +45,7 @@ func NewServer(port int, withUI bool) *Server {
 
 	return &Server{
 		router: router,
+		host:   host,
 		port:   port,
 		withUI: withUI,
 	}
@@ -61,5 +63,5 @@ func (s *Server) setupRoutes() {
 
 func (s *Server) Start() error {
 	s.setupRoutes()
-	return s.router.Run(fmt.Sprintf(":%d", s.port))
+	return s.router.Run(fmt.Sprintf("%s:%d", s.host, s.port))
 }

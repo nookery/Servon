@@ -2,6 +2,7 @@ package handler
 
 import (
 	"servon/internal/softwares"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,13 +26,15 @@ func (h *SoftwareHandler) HandleGetSoftwareList(c *gin.Context) {
 	for i, sw := range softwareList {
 		names[i] = sw.Name
 	}
+	sort.Strings(names)
 	c.JSON(200, names)
 }
 
 // HandleInstallSoftware 处理安装软件的请求
 func (h *SoftwareHandler) HandleInstallSoftware(c *gin.Context) {
 	name := c.Param("name")
-	outputChan, err := h.manager.InstallSoftware(name)
+	msgChan := make(chan string, 100)
+	err := h.manager.InstallSoftware(name, msgChan)
 	if err != nil {
 		c.String(500, err.Error())
 		return
@@ -41,7 +44,7 @@ func (h *SoftwareHandler) HandleInstallSoftware(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 
-	for msg := range outputChan {
+	for msg := range msgChan {
 		c.SSEvent("message", msg)
 		c.Writer.Flush()
 	}
@@ -50,7 +53,8 @@ func (h *SoftwareHandler) HandleInstallSoftware(c *gin.Context) {
 // HandleUninstallSoftware 处理卸载软件的请求
 func (h *SoftwareHandler) HandleUninstallSoftware(c *gin.Context) {
 	name := c.Param("name")
-	outputChan, err := h.manager.UninstallSoftware(name)
+	msgChan := make(chan string, 100)
+	err := h.manager.UninstallSoftware(name, msgChan)
 	if err != nil {
 		c.String(500, err.Error())
 		return
@@ -60,7 +64,7 @@ func (h *SoftwareHandler) HandleUninstallSoftware(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 
-	for msg := range outputChan {
+	for msg := range msgChan {
 		c.SSEvent("message", msg)
 		c.Writer.Flush()
 	}
