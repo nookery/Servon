@@ -3,6 +3,7 @@ package softwares
 // SoftwareRegistry 存储所有已注册的软件
 var registry = map[string]func() Software{
 	"caddy": func() Software { return NewCaddy() },
+	"clash": func() Software { return NewClash() },
 }
 
 // SoftwareManager 管理所有软件的安装、卸载等操作
