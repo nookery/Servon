@@ -47,7 +47,7 @@ func NewCaddy() *Caddy {
 
 func (c *Caddy) Install(logChan chan<- string) error {
 	outputChan := make(chan string, 100)
-	apt := NewApt()
+	apt := system.NewApt()
 
 	// 检查操作系统类型
 	osType := utils.GetOSType()
@@ -114,7 +114,7 @@ func (c *Caddy) Install(logChan chan<- string) error {
 
 func (c *Caddy) Uninstall(logChan chan<- string) error {
 	outputChan := make(chan string, 100)
-	apt := NewApt()
+	apt := system.NewApt()
 
 	go func() {
 		defer close(outputChan)
@@ -167,11 +167,8 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 		}, nil
 	}
 
-	serviceManager := system.NewServiceManager()
-	utils.Debug("Using %s to check caddy status", serviceManager.Type())
-
 	status := "stopped"
-	if serviceManager.IsActive("caddy") {
+	if system.ServiceIsActive("caddy") {
 		status = "running"
 	}
 
@@ -189,8 +186,7 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 }
 
 func (c *Caddy) Stop() error {
-	serviceManager := system.NewServiceManager()
-	return serviceManager.Stop("caddy")
+	return system.ServiceStop("caddy")
 }
 
 func (c *Caddy) GetInfo() SoftwareInfo {
@@ -242,58 +238,41 @@ func (c *Caddy) UpdateConfig(project *Project) error {
 
 // Reload reloads the Caddy configuration
 func (c *Caddy) Reload() error {
-	serviceManager := system.NewServiceManager()
-	return serviceManager.Reload("caddy")
+	return system.ServiceReload("caddy")
 }
 
 // Start starts the Caddy service
 func (c *Caddy) Start(logChan chan<- string) error {
-	outputChan := make(chan string, 100)
+	// 检查是否已安装
+	dpkg := NewDpkg(nil)
+	if !dpkg.IsInstalled("caddy") {
+		errMsg := "Caddy 未安装，请先安装"
+		utils.ErrorChan(logChan, "%s", errMsg)
+		return fmt.Errorf("%s", errMsg)
+	}
 
-	go func() {
-		defer close(outputChan)
+	// 获取当前状态
+	status, err := c.GetStatus()
+	if err != nil {
+		errMsg := fmt.Sprintf("获取状态失败: %v", err)
+		utils.ErrorChan(logChan, "%s", errMsg)
+		return fmt.Errorf("%s", errMsg)
+	}
 
-		// 检查是否已安装
-		dpkg := NewDpkg(nil)
-		if !dpkg.IsInstalled("caddy") {
-			errMsg := "Caddy 未安装，请先安装"
-			utils.ErrorChan(outputChan, "%s", errMsg)
-			return
-		}
+	// 如果已经在运行，则不需要启动
+	if status["status"] == "running" {
+		utils.InfoChan(logChan, "Caddy 服务已在运行中")
+		return nil
+	}
 
-		// 获取当前状态
-		status, err := c.GetStatus()
-		if err != nil {
-			errMsg := fmt.Sprintf("获取状态失败: %v", err)
-			utils.ErrorChan(outputChan, "%s", errMsg)
-			return
-		}
+	utils.DebugChan(logChan, "正在启动 Caddy 服务...")
 
-		// 如果已经在运行，则不需要启动
-		if status["status"] == "running" {
-			utils.InfoChan(outputChan, "Caddy 服务已在运行中")
-			return
-		}
+	// 启动服务
+	if err := system.ServiceStart("caddy"); err != nil {
+		return err
+	}
 
-		utils.InfoChan(outputChan, "正在启动 Caddy 服务...")
-
-		// 启动服务
-		serviceManager := system.NewServiceManager()
-		if err := serviceManager.Start("caddy"); err != nil {
-			errMsg := fmt.Sprintf("启动服务失败: %v", err)
-			utils.ErrorChan(outputChan, "%s", errMsg)
-			return
-		}
-
-		// 验证服务是否成功启动
-		if !serviceManager.IsActive("caddy") {
-			errMsg := "服务启动失败"
-			utils.ErrorChan(outputChan, "%s", errMsg)
-			return
-		}
-
-		utils.InfoChan(outputChan, "Caddy 服务已成功启动")
-	}()
+	utils.DebugChan(logChan, "Caddy 服务已成功启动")
 
 	return nil
 }

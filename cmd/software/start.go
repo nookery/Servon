@@ -3,7 +3,7 @@ package software
 import (
 	"fmt"
 	"servon/internal/softwares"
-	"strings"
+	"servon/internal/utils"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -62,33 +62,16 @@ func newStartCmd() *cobra.Command {
 			}
 
 			// 开始启动
-			fmt.Println() // 空行使显示更清晰
-			color.New(color.FgCyan, color.Bold).Printf("🚀 开始启动 %s ...\n", name)
-			fmt.Println()
+			utils.InfoTitle("🚀 %s 启动中 ...", name)
 
-			msgChan, err := manager.StartSoftware(name)
+			err := manager.StartSoftware(name, nil)
 			if err != nil {
-				color.New(color.FgRed).Printf("\n❌ 启动失败: %v\n", err)
+				utils.InfoTitle("❌ %s 启动失败", name)
+				utils.Error("%s", err)
 				return nil
 			}
 
-			// 显示启动进度并检查错误
-			hasError := false
-			for msg := range msgChan {
-				color.New(color.FgHiWhite).Println(msg)
-				if strings.HasPrefix(msg, "Error:") {
-					hasError = true
-				}
-			}
-
-			fmt.Println()
-			if hasError {
-				color.New(color.FgRed, color.Bold).Printf("❌ 软件 %s 启动失败！\n", name)
-				return nil
-			}
-
-			color.New(color.FgGreen, color.Bold).Printf("✨ 软件 %s 启动成功！\n", name)
-			fmt.Println()
+			utils.InfoTitle("✅ %s 启动成功！", name)
 
 			return nil
 		},

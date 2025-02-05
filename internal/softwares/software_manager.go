@@ -69,18 +69,11 @@ func (m *SoftwareManager) StopSoftware(name string) error {
 }
 
 // StartSoftware 启动指定的软件
-func (m *SoftwareManager) StartSoftware(name string) (chan string, error) {
+func (m *SoftwareManager) StartSoftware(name string, logChan chan<- string) error {
 	sw, err := NewSoftware(name)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// 创建一个新的 channel 来包装原始的 channel
-	outputChan := make(chan string, 100)
-	err = sw.Start(outputChan)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputChan, nil
+	return sw.Start(logChan)
 }

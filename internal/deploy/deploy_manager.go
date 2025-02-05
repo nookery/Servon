@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	utils.Info("初始化部署管理器")
+	utils.Debug("初始化部署管理器")
 	// 确保数据目录存在
 	if err := os.MkdirAll("data", 0755); err != nil {
 		utils.Error("创建数据目录失败: %v", err)
@@ -35,7 +35,7 @@ func loadProjects() error {
 	data, err := os.ReadFile(dataFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			utils.Info("项目数据文件不存在，将创建新文件")
+			utils.Debug("项目数据文件不存在，将创建新文件")
 			return nil
 		}
 		return err

@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 )
@@ -134,10 +133,6 @@ func (l *Logger) log(level LogLevel, ch chan<- string, format string, args ...in
 		file = "unknown"
 		line = 0
 	}
-	// 查找并保留从 "internal" 开始的路径
-	if idx := strings.Index(file, "internal"); idx != -1 {
-		file = file[idx:]
-	}
 
 	// 格式化日志消息
 	now := time.Now()
@@ -199,6 +194,11 @@ func (l *Logger) InfoChan(ch chan<- string, format string, args ...interface{}) 
 	l.log(INFO, ch, format, args...)
 }
 
+// DebugChan 添加调试级别的channel支持
+func (l *Logger) DebugChan(ch chan<- string, format string, args ...interface{}) {
+	l.log(DEBUG, ch, format, args...)
+}
+
 // ErrorChan 添加错误级别的channel支持
 func (l *Logger) ErrorChan(ch chan<- string, format string, args ...interface{}) {
 	l.log(ERROR, ch, format, args...)
@@ -214,6 +214,10 @@ func (l *Logger) Close() error {
 // 为方便使用，提供包级别的函数
 func Debug(format string, args ...interface{}) {
 	GetLogger().Debug(format, args...)
+}
+
+func DebugChan(ch chan<- string, format string, args ...interface{}) {
+	GetLogger().DebugChan(ch, format, args...)
 }
 
 func Info(format string, args ...interface{}) {
