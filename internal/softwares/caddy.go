@@ -100,7 +100,7 @@ func (c *Caddy) Install(logChan chan<- string) error {
 	}
 
 	// 验证安装结果
-	dpkg := NewDpkg(nil)
+	dpkg := system.NewDpkg(outputChan)
 	if !dpkg.IsInstalled("caddy") {
 		errMsg := "Caddy 安装验证失败，未检测到已安装的包"
 		utils.ErrorChan(outputChan, "%s", errMsg)
@@ -158,7 +158,7 @@ func (c *Caddy) Uninstall(logChan chan<- string) error {
 }
 
 func (c *Caddy) GetStatus() (map[string]string, error) {
-	dpkg := NewDpkg(nil)
+	dpkg := system.NewDpkg(nil)
 
 	if !dpkg.IsInstalled("caddy") {
 		return map[string]string{
@@ -244,7 +244,7 @@ func (c *Caddy) Reload() error {
 // Start starts the Caddy service
 func (c *Caddy) Start(logChan chan<- string) error {
 	// 检查是否已安装
-	dpkg := NewDpkg(nil)
+	dpkg := system.NewDpkg(nil)
 	if !dpkg.IsInstalled("caddy") {
 		errMsg := "Caddy 未安装，请先安装"
 		utils.ErrorChan(logChan, "%s", errMsg)
