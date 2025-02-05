@@ -267,12 +267,14 @@ func (c *Caddy) Start(logChan chan<- string) error {
 
 	utils.DebugChan(logChan, "正在启动 Caddy 服务...")
 
-	// 启动服务
-	if err := system.ServiceStart("caddy"); err != nil {
-		return err
+	// 使用 StreamCommand 来启动 Caddy
+	cmd := exec.Command("caddy", "start")
+	if err := utils.StreamCommand(cmd); err != nil {
+		errMsg := fmt.Sprintf("启动 Caddy 失败: %v", err)
+		utils.ErrorChan(logChan, "%s", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
 	utils.DebugChan(logChan, "Caddy 服务已成功启动")
-
 	return nil
 }
