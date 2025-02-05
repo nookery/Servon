@@ -2,16 +2,6 @@ package softwares
 
 import "fmt"
 
-// SoftwareRegistry 存储所有已注册的软件
-var registry = map[string]func() Software{
-	"caddy": func() Software { return NewCaddy() },
-	// "nginx":   func() Software { return NewNginx() },
-	// "mongodb": func() Software { return NewMongoDB() },
-	// "redis":   func() Software { return NewRedis() },
-	// "mysql":   func() Software { return NewMySQL() },
-	// "docker":  func() Software { return NewDocker() },
-}
-
 // Software 定义软件操作的门面接口
 type Software interface {
 	// Install 安装软件，如果提供了日志通道则输出日志

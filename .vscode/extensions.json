@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "Vue.volar",
-    "astro-build.astro-vscode"
   ],
   "unwantedRecommendations": []
 }
