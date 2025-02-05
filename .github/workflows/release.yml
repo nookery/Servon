@@ -81,7 +81,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.current-version }}
         run: |
           # 确保前端资源被正确嵌入
-          cp -r internal/web/dist/ internal/web/dist_build/
+          cp -r internal/serve/dist/ internal/serve/dist_build/
           go build -ldflags="-X 'servon/internal/version.Version=$VERSION'" -o "servon-${{ matrix.os }}-${{ matrix.arch }}"
           sha256sum "servon-${{ matrix.os }}-${{ matrix.arch }}" > "servon-${{ matrix.os }}-${{ matrix.arch }}.sha256"
 
