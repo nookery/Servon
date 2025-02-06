@@ -1,7 +1,8 @@
 {{ .Domain }} {
     {{ if eq .Type "static" }}
+    bind 0.0.0.0
     root * {{ .OutputPath }}
-    file_server
+    file_server browse
     {{ else }}
     reverse_proxy localhost:{{ .Port }}
     {{ end }}

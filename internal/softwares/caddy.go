@@ -17,7 +17,7 @@ type Caddy struct {
 }
 
 type Project struct {
-	ID        int
+	Name      string
 	Domain    string
 	Type      string
 	OutputDir string
@@ -210,12 +210,20 @@ func (c *Caddy) UpdateConfig(project *Project) error {
 	}{
 		Domain:     project.Domain,
 		Type:       project.Type,
-		OutputPath: filepath.Join("data", "projects", fmt.Sprintf("%d", project.ID), project.OutputDir),
+		OutputPath: project.OutputDir,
 		Port:       project.Port,
 	}
 
+	// 确定配置文件的存储目录
+	projectDir := filepath.Join("data", "caddy", "conf.d")
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		return fmt.Errorf("failed to create project directory: %v", err)
+	}
+
+	utils.Debug("配置文件目录: %s", projectDir)
+
 	// 创建配置文件
-	configFile := filepath.Join(configDir, fmt.Sprintf("%d.conf", project.ID))
+	configFile := filepath.Join(projectDir, fmt.Sprintf("%s.conf", project.Name))
 	f, err := os.Create(configFile)
 	if err != nil {
 		return fmt.Errorf("failed to create config file: %v", err)

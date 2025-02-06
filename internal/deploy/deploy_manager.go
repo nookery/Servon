@@ -213,7 +213,7 @@ func ServeStatic(name string, path string, domain string) error {
 	// 配置 Caddy
 	caddy := softwares.NewCaddy()
 	err := caddy.UpdateConfig(&softwares.Project{
-		ID:        0, // 静态服务不需要ID
+		Name:      name,
 		Domain:    domain,
 		Type:      "static",
 		OutputDir: path, // 直接使用提供的路径
