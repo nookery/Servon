@@ -15,7 +15,8 @@
 				"unifiedjs.vscode-mdx",
 				"astro-build.astro-vscode",
 				"bradlc.vscode-tailwindcss",
-				"github.vscode-github-actions"
+				"github.vscode-github-actions",
+				"matthewpi.caddyfile-support"
 			]
 		}
 	},
@@ -23,12 +24,29 @@
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [
-		3000 // 前端开发服务器端口
+		80,
+		2019,
+		3000, // 前端开发服务器端口
+		3344, // 预留
+		3345, // 预留
+		3346, // 预留
+		3347, // 预留
+		3348, // 预留
+		3349, // 预留
+		3350, // 预留
+		8881,
+		8882,
+		8883,
+		8884,
+		8885,
+		8886,
+		8887,
+		8888
 	],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "uname -a",
 	// Configure tool-specific properties.
 	// "customizations": {},
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+	"remoteUser": "root"
 }

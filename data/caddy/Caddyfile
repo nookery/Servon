@@ -1,5 +1,5 @@
 {
-	admin off
+	auto_https off
 }
 
 import conf.d/*.conf
