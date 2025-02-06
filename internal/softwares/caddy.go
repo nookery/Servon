@@ -16,18 +16,6 @@ type Caddy struct {
 	info SoftwareInfo
 }
 
-// Configuration related constants and types
-const caddyConfigTemplate = `
-{{ .Domain }} {
-	{{ if eq .Type "static" }}
-	root * {{ .OutputPath }}
-	file_server
-	{{ else }}
-	reverse_proxy localhost:{{ .Port }}
-	{{ end }}
-}
-`
-
 type Project struct {
 	ID        int
 	Domain    string
@@ -201,6 +189,18 @@ func (c *Caddy) UpdateConfig(project *Project) error {
 		return fmt.Errorf("failed to create config directory: %v", err)
 	}
 
+	// 读取站点配置模板
+	templateContent, err := os.ReadFile("internal/softwares/templates/caddy_site.conf.tmpl")
+	if err != nil {
+		return fmt.Errorf("failed to read site template: %v", err)
+	}
+
+	// 解析并执行模板
+	tmpl, err := template.New("caddy").Parse(string(templateContent))
+	if err != nil {
+		return fmt.Errorf("failed to parse config template: %v", err)
+	}
+
 	// 准备模板数据
 	data := struct {
 		Domain     string
@@ -212,12 +212,6 @@ func (c *Caddy) UpdateConfig(project *Project) error {
 		Type:       project.Type,
 		OutputPath: filepath.Join("data", "projects", fmt.Sprintf("%d", project.ID), project.OutputDir),
 		Port:       project.Port,
-	}
-
-	// 解析并执行模板
-	tmpl, err := template.New("caddy").Parse(caddyConfigTemplate)
-	if err != nil {
-		return fmt.Errorf("failed to parse config template: %v", err)
 	}
 
 	// 创建配置文件
@@ -267,8 +261,36 @@ func (c *Caddy) Start(logChan chan<- string) error {
 
 	utils.DebugChan(logChan, "正在启动 Caddy 服务...")
 
+	// 获取 Caddyfile 路径
+	caddyfile := filepath.Join("data", "caddy", "Caddyfile")
+
+	// 确保目录存在
+	if err := os.MkdirAll(filepath.Dir(caddyfile), 0755); err != nil {
+		errMsg := fmt.Sprintf("创建 Caddy 配置目录失败: %v", err)
+		utils.ErrorChan(logChan, "%s", errMsg)
+		return fmt.Errorf("%s", errMsg)
+	}
+
+	// 如果文件不存在，创建基础配置
+	if _, err := os.Stat(caddyfile); os.IsNotExist(err) {
+		// 读取基础配置模板
+		baseConfig, err := os.ReadFile("internal/softwares/templates/caddy_base.conf")
+		if err != nil {
+			errMsg := fmt.Sprintf("读取基础配置模板失败: %v", err)
+			utils.ErrorChan(logChan, "%s", errMsg)
+			return fmt.Errorf("%s", errMsg)
+		}
+
+		if err := os.WriteFile(caddyfile, baseConfig, 0644); err != nil {
+			errMsg := fmt.Sprintf("创建 Caddyfile 失败: %v", err)
+			utils.ErrorChan(logChan, "%s", errMsg)
+			return fmt.Errorf("%s", errMsg)
+		}
+		utils.DebugChan(logChan, "已创建新的 Caddyfile")
+	}
+
 	// 使用 StreamCommand 来启动 Caddy
-	cmd := exec.Command("caddy", "start")
+	cmd := exec.Command("caddy", "start", "--config", caddyfile)
 	if err := utils.StreamCommand(cmd); err != nil {
 		errMsg := fmt.Sprintf("启动 Caddy 失败: %v", err)
 		utils.ErrorChan(logChan, "%s", errMsg)

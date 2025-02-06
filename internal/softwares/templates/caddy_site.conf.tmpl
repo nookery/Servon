@@ -1,0 +1,8 @@
+{{ .Domain }} {
+    {{ if eq .Type "static" }}
+    root * {{ .OutputPath }}
+    file_server
+    {{ else }}
+    reverse_proxy localhost:{{ .Port }}
+    {{ end }}
+} 
