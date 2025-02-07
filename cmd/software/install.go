@@ -2,11 +2,10 @@ package software
 
 import (
 	"fmt"
-	"servon/internal/softwares"
+	"servon/cmd/utils/logger"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"servon/internal/utils"
 )
 
 // newInstallCmd 返回 install 子命令
@@ -27,7 +26,7 @@ func newInstallCmd() *cobra.Command {
 				fmt.Println("[软件名称]")
 
 				// 显示支持的软件列表
-				manager := softwares.NewSoftwareManager()
+				manager := NewSoftwareManager()
 				names := manager.GetSoftwareNames()
 				fmt.Println("\n支持的软件:")
 				for _, name := range names {
@@ -40,7 +39,7 @@ func newInstallCmd() *cobra.Command {
 				return nil
 			}
 
-			manager := softwares.NewSoftwareManager()
+			manager := NewSoftwareManager()
 			name := args[0]
 
 			// 检查软件是否支持
@@ -58,11 +57,12 @@ func newInstallCmd() *cobra.Command {
 				for _, sw := range manager.GetSoftwareNames() {
 					color.New(color.FgHiWhite).Printf("  - %s\n", sw)
 				}
+				color.New(color.FgHiCyan).Println()
 				return nil
 			}
 
 			// 开始安装
-			utils.InfoTitle("📦 开始安装 %s ...", name)
+			logger.InfoTitle("📦 开始安装 %s ...", name)
 
 			err := manager.InstallSoftware(name, nil)
 			if err != nil {
@@ -70,7 +70,7 @@ func newInstallCmd() *cobra.Command {
 				return nil
 			}
 
-			utils.InfoTitle("✨ 软件 %s 安装完成！", name)
+			logger.InfoTitle("✨ 软件 %s 安装完成！", name)
 
 			return nil
 		},

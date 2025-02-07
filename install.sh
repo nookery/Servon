@@ -241,10 +241,7 @@ print_usage() {
     echo
     echo "You can now use Servon with the following commands:"
     echo
-    echo "  servon serve      Start the web server"
-    echo "  servon info       Display system information"
-    echo "  servon monitor    Monitor system resources"
-    echo "  servon version    Show version information"
+    echo "  servon"
     echo
     echo "For more information, visit: https://github.com/nookery/servon"
     echo

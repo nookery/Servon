@@ -2,8 +2,7 @@ package software
 
 import (
 	"fmt"
-	"servon/internal/softwares"
-	"servon/internal/utils"
+	"servon/cmd/utils/logger"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -27,7 +26,7 @@ func newStartCmd() *cobra.Command {
 				fmt.Println("[软件名称]")
 
 				// 显示支持的软件列表
-				manager := softwares.NewSoftwareManager()
+				manager := NewSoftwareManager()
 				names := manager.GetSoftwareNames()
 				fmt.Println("\n支持的软件:")
 				for _, name := range names {
@@ -40,7 +39,7 @@ func newStartCmd() *cobra.Command {
 				return nil
 			}
 
-			manager := softwares.NewSoftwareManager()
+			manager := NewSoftwareManager()
 			name := args[0]
 
 			// 检查软件是否支持
@@ -62,16 +61,16 @@ func newStartCmd() *cobra.Command {
 			}
 
 			// 开始启动
-			utils.InfoTitle("🚀 %s 启动中 ...", name)
+			logger.InfoTitle("🚀 %s 启动中 ...", name)
 
 			err := manager.StartSoftware(name, nil)
 			if err != nil {
-				utils.InfoTitle("❌ %s 启动失败", name)
-				utils.Error("%s", err)
+				logger.InfoTitle("❌ %s 启动失败", name)
+				logger.Error("%s", err)
 				return nil
 			}
 
-			utils.InfoTitle("✅ %s 启动成功！", name)
+			logger.InfoTitle("✅ %s 启动成功！", name)
 
 			return nil
 		},

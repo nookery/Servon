@@ -2,9 +2,7 @@ package software
 
 import (
 	"fmt"
-
-	"servon/internal/softwares"
-	"servon/internal/utils"
+	"servon/cmd/utils/logger"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -27,7 +25,7 @@ func newStopCmd() *cobra.Command {
 				fmt.Println("[软件名称]")
 
 				// 显示支持的软件列表
-				manager := softwares.NewSoftwareManager()
+				manager := NewSoftwareManager()
 				names := manager.GetSoftwareNames()
 				fmt.Println("\n支持的软件:")
 				for _, name := range names {
@@ -40,7 +38,7 @@ func newStopCmd() *cobra.Command {
 				return nil
 			}
 
-			manager := softwares.NewSoftwareManager()
+			manager := NewSoftwareManager()
 			name := args[0]
 
 			// 检查软件是否支持
@@ -62,16 +60,16 @@ func newStopCmd() *cobra.Command {
 			}
 
 			// 开始停止
-			utils.InfoTitle("🛑 %s 停止中 ...", name)
+			logger.InfoTitle("🛑 %s 停止中 ...", name)
 
 			err := manager.StopSoftware(name)
 			if err != nil {
-				utils.InfoTitle("❌ %s 停止失败", name)
-				utils.Error("%s", err)
+				logger.InfoTitle("❌ %s 停止失败", name)
+				logger.Error("%s", err)
 				return nil
 			}
 
-			utils.InfoTitle("✅ %s 已停止！", name)
+			logger.InfoTitle("✅ %s 已停止！", name)
 
 			return nil
 		},
