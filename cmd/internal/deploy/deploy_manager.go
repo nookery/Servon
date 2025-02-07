@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"servon/internal/softwares"
-	"servon/internal/utils"
+	"servon/cmd/internal/softwares"
+	"servon/cmd/internal/utils"
 	"sync"
 )
 

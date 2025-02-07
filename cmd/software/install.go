@@ -2,11 +2,11 @@ package software
 
 import (
 	"fmt"
-	"servon/internal/softwares"
+	"servon/cmd/internal/softwares"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"servon/internal/utils"
+	"servon/cmd/internal/utils"
 )
 
 // newInstallCmd 返回 install 子命令

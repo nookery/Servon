@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"servon/internal/utils"
+	"servon/cmd/internal/utils"
 )
 
 // Apt 提供apt包管理器的基本操作

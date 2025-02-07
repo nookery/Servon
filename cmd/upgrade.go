@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"servon/internal/upgrade"
+	"servon/cmd/internal/upgrade"
 
 	"github.com/spf13/cobra"
 )

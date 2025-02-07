@@ -5,8 +5,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"servon/internal/system"
-	"servon/internal/utils"
+	"servon/cmd/internal/system"
+	"servon/cmd/internal/utils"
 )
 
 type Caddy struct {

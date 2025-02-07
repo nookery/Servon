@@ -3,8 +3,8 @@ package software
 import (
 	"fmt"
 
-	"servon/internal/softwares"
-	"servon/internal/utils"
+	"servon/cmd/internal/softwares"
+	"servon/cmd/internal/utils"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

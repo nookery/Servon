@@ -2,7 +2,7 @@ package handler
 
 import (
 	"net/http"
-	"servon/internal/system"
+	"servon/cmd/internal/system"
 
 	"github.com/gin-gonic/gin"
 )

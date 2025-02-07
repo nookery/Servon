@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"servon/internal/softwares"
+	"servon/cmd/internal/softwares"
 	"sort"
 
 	"github.com/gin-gonic/gin"

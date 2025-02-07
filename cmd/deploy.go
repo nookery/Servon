@@ -6,8 +6,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"servon/internal/deploy"
-	"servon/internal/utils"
+	"servon/cmd/internal/deploy"
+	"servon/cmd/internal/utils"
 )
 
 // DeployCmd 表示 deploy 命令

@@ -1,7 +1,7 @@
 package software
 
 import (
-	"servon/internal/softwares"
+	"servon/cmd/internal/softwares"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

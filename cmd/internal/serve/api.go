@@ -1,7 +1,7 @@
 package web
 
 import (
-	"servon/internal/serve/handler"
+	"servon/cmd/internal/serve/handler"
 )
 
 // setupAPIRoutes 设置所有API路由

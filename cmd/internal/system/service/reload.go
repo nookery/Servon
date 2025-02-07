@@ -1,6 +1,6 @@
 package service
 
-import "servon/internal/utils"
+import "servon/cmd/internal/utils"
 import "os/exec"
 import "fmt"
 

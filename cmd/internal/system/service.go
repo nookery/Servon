@@ -1,6 +1,6 @@
 package system
 
-import "servon/internal/system/service"
+import "servon/cmd/internal/system/service"
 
 // ServiceIsActive 检查服务是否处于活动状态
 func ServiceIsActive(serviceName string) bool {

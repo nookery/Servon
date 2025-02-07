@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 	"os/exec"
-	"servon/internal/utils"
+	"servon/cmd/internal/utils"
 )
 
 func Stop(serviceName string) error {

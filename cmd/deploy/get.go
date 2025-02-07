@@ -1,7 +1,7 @@
 package deploy
 
 import (
-	"servon/internal/deploy"
+	"servon/cmd/internal/deploy"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

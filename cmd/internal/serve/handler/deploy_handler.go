@@ -3,7 +3,7 @@ package handler
 import (
 	"io"
 	"net/http"
-	"servon/internal/deploy"
+	"servon/cmd/internal/deploy"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

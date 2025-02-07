@@ -3,7 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"servon/internal/system"
+	"servon/cmd/internal/system"
 	"strconv"
 	"time"
 

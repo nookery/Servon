@@ -2,7 +2,7 @@ package upgrade
 
 import (
 	"fmt"
-	"servon/internal/version"
+	"servon/cmd/internal/version"
 
 	"github.com/fatih/color"
 )
