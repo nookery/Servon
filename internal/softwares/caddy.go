@@ -173,7 +173,8 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 }
 
 func (c *Caddy) Stop() error {
-	return system.ServiceStop("caddy")
+	cmd := exec.Command("caddy", "stop")
+	return utils.StreamCommand(cmd)
 }
 
 func (c *Caddy) GetInfo() SoftwareInfo {
