@@ -2,7 +2,6 @@ package deploy
 
 import (
 	"fmt"
-	"servon/cmd/internal/deploy"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -46,7 +45,7 @@ func newServeCmd() *cobra.Command {
 				return
 			}
 
-			err := deploy.ServeStatic(name, path, domain)
+			err := ServeStatic(name, path, domain)
 			if err != nil {
 				color.New(color.FgRed).Printf("创建静态文件服务失败: %v\n", err)
 				return

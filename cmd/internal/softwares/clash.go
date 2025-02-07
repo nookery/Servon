@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"servon/cmd/internal/system"
 	"servon/cmd/internal/utils"
+	"servon/cmd/system"
 )
 
 type Clash struct {

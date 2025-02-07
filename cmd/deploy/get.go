@@ -1,8 +1,6 @@
 package deploy
 
 import (
-	"servon/cmd/internal/deploy"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +12,7 @@ func newGetCmd() *cobra.Command {
 		Short: "获取项目列表",
 		Long:  `获取所有项目列表`,
 		Run: func(cmd *cobra.Command, args []string) {
-			projects, err := deploy.GetProjects()
+			projects, err := GetProjects()
 			if err != nil {
 				color.New(color.FgRed).Printf("获取项目列表失败: %v\n", err)
 				return

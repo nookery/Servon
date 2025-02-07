@@ -6,7 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"servon/cmd/internal/deploy"
+	"servon/cmd/deploy"
 	"servon/cmd/internal/utils"
 )
 
