@@ -36,6 +36,16 @@ func (m *SoftwareManager) GetSoftwareNames() []string {
 	return names
 }
 
+// IsSupportedSoftware checks if the given software is supported
+func (sm *SoftwareManager) IsSupportedSoftware(name string) bool {
+	for _, sw := range sm.GetSoftwareNames() {
+		if sw == name {
+			return true
+		}
+	}
+	return false
+}
+
 // InstallSoftware 安装指定的软件
 func (m *SoftwareManager) InstallSoftware(name string, msgChan chan<- string) error {
 	sw, err := NewSoftware(name)

@@ -32,7 +32,7 @@ func GetSoftwareCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(newListCmd())
-	cmd.AddCommand(newInstallCmd())
+	cmd.AddCommand(InstallCmd)
 	cmd.AddCommand(newInfoCmd())
 	cmd.AddCommand(newStartCmd())
 	cmd.AddCommand(newStopCmd())

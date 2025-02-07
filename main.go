@@ -29,6 +29,7 @@ func init() {
 	RootCmd.AddCommand(cmd.UpgradeCmd)
 	RootCmd.AddCommand(cmd.DeployCmd)
 	RootCmd.AddCommand(cmd.IPCmd)
+	RootCmd.AddCommand(cmd.InstallCmd)
 	RootCmd.AddCommand(cmd.SystemCmd)
 	RootCmd.AddCommand(cmd.SoftwareCmd)
 
