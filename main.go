@@ -5,11 +5,16 @@ import (
 	"servon/cmd"
 	"servon/cmd/software"
 
-	// 导入插件
-	_ "servon/plugins/pnpm"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+
+	// 导入插件
+	_ "servon/plugins/clash"
+	_ "servon/plugins/git"
+	_ "servon/plugins/nodejs"
+	_ "servon/plugins/npm"
+	_ "servon/plugins/pnpm"
+	_ "servon/plugins/yarn"
 )
 
 var (

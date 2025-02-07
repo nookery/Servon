@@ -1,22 +1,40 @@
-package software
+package nodejs
 
 import (
 	"fmt"
 	"os/exec"
-	"strings"
-
+	"servon/cmd/software"
 	"servon/cmd/system"
 	"servon/cmd/utils"
 	"servon/cmd/utils/logger"
+	"strings"
 )
 
-type NodeJS struct {
-	info SoftwareInfo
+// NodeJSPlugin 实现 Plugin 接口
+type NodeJSPlugin struct{}
+
+func (p *NodeJSPlugin) Init() error {
+	return nil
 }
 
-func NewNodeJS() *NodeJS {
+func (p *NodeJSPlugin) Name() string {
+	return "nodejs"
+}
+
+func (p *NodeJSPlugin) Register() {
+	software.RegisterSoftware("nodejs", func() software.Software {
+		return NewNodeJS()
+	})
+}
+
+// NodeJS 实现 Software 接口
+type NodeJS struct {
+	info software.SoftwareInfo
+}
+
+func NewNodeJS() software.Software {
 	return &NodeJS{
-		info: SoftwareInfo{
+		info: software.SoftwareInfo{
 			Name:        "nodejs",
 			Description: "JavaScript 运行时环境",
 		},
@@ -133,18 +151,23 @@ func (n *NodeJS) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (n *NodeJS) GetInfo() SoftwareInfo {
+func (n *NodeJS) GetInfo() software.SoftwareInfo {
 	return n.info
 }
 
-// Start 实现 Software 接口要求，但 NodeJS 不需要启动服务
 func (n *NodeJS) Start(logChan chan<- string) error {
 	logger.InfoChan(logChan, "NodeJS 是运行时环境，无需启动服务")
 	return nil
 }
 
-// Stop 实现 Software 接口要求，但 NodeJS 不需要停止服务
 func (n *NodeJS) Stop() error {
 	logger.Info("NodeJS 是运行时环境，无需停止服务")
 	return nil
+}
+
+func init() {
+	// 在包被导入时自动注册插件
+	if err := software.RegisterPlugin(&NodeJSPlugin{}); err != nil {
+		fmt.Printf("Failed to register NodeJS plugin: %v\n", err)
+	}
 }

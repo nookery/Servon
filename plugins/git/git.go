@@ -1,28 +1,47 @@
-package software
+package git
 
 import (
 	"fmt"
 	"os/exec"
-	"strings"
-
+	"servon/cmd/software"
 	"servon/cmd/system"
 	"servon/cmd/utils"
 	"servon/cmd/utils/logger"
+	"strings"
 )
 
-type Git struct {
-	info SoftwareInfo
+// GitPlugin 实现 Plugin 接口
+type GitPlugin struct{}
+
+func (p *GitPlugin) Init() error {
+	return nil
 }
 
-func NewGit() *Git {
+func (p *GitPlugin) Name() string {
+	return "git"
+}
+
+func (p *GitPlugin) Register() {
+	software.RegisterSoftware("git", func() software.Software {
+		return NewGit()
+	})
+}
+
+// Git 实现 Software 接口
+type Git struct {
+	info software.SoftwareInfo
+}
+
+func NewGit() software.Software {
 	return &Git{
-		info: SoftwareInfo{
+		info: software.SoftwareInfo{
 			Name:        "git",
 			Description: "分布式版本控制系统",
 		},
 	}
 }
 
+// ... existing code from git.go ...
 func (g *Git) Install(logChan chan<- string) error {
 	logger.InfoChan(logChan, "正在安装 Git...")
 
@@ -117,7 +136,7 @@ func (g *Git) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (g *Git) GetInfo() SoftwareInfo {
+func (g *Git) GetInfo() software.SoftwareInfo {
 	return g.info
 }
 
@@ -129,4 +148,11 @@ func (g *Git) Start(logChan chan<- string) error {
 func (g *Git) Stop() error {
 	logger.Info("Git 是版本控制工具，无需停止服务")
 	return nil
+}
+
+func init() {
+	// 在包被导入时自动注册插件
+	if err := software.RegisterPlugin(&GitPlugin{}); err != nil {
+		fmt.Printf("Failed to register Git plugin: %v\n", err)
+	}
 }

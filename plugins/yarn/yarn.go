@@ -1,20 +1,38 @@
-package software
+package yarn
 
 import (
 	"fmt"
 	"os/exec"
-	"strings"
-
+	"servon/cmd/software"
 	"servon/cmd/utils/logger"
+	"strings"
 )
 
-type Yarn struct {
-	info SoftwareInfo
+// YarnPlugin 实现 Plugin 接口
+type YarnPlugin struct{}
+
+func (p *YarnPlugin) Init() error {
+	return nil
 }
 
-func NewYarn() *Yarn {
+func (p *YarnPlugin) Name() string {
+	return "yarn"
+}
+
+func (p *YarnPlugin) Register() {
+	software.RegisterSoftware("yarn", func() software.Software {
+		return NewYarn()
+	})
+}
+
+// Yarn 实现 Software 接口
+type Yarn struct {
+	info software.SoftwareInfo
+}
+
+func NewYarn() software.Software {
 	return &Yarn{
-		info: SoftwareInfo{
+		info: software.SoftwareInfo{
 			Name:        "yarn",
 			Description: "快速、可靠、安全的依赖管理工具",
 		},
@@ -85,7 +103,7 @@ func (y *Yarn) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (y *Yarn) GetInfo() SoftwareInfo {
+func (y *Yarn) GetInfo() software.SoftwareInfo {
 	return y.info
 }
 
@@ -97,4 +115,11 @@ func (y *Yarn) Start(logChan chan<- string) error {
 func (y *Yarn) Stop() error {
 	logger.Info("Yarn 是包管理工具，无需停止服务")
 	return nil
+}
+
+func init() {
+	// 在包被导入时自动注册插件
+	if err := software.RegisterPlugin(&YarnPlugin{}); err != nil {
+		fmt.Printf("Failed to register Yarn plugin: %v\n", err)
+	}
 }

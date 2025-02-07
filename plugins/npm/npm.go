@@ -1,20 +1,38 @@
-package software
+package npm
 
 import (
 	"fmt"
 	"os/exec"
-	"strings"
-
+	"servon/cmd/software"
 	"servon/cmd/utils/logger"
+	"strings"
 )
 
-type Npm struct {
-	info SoftwareInfo
+// NpmPlugin 实现 Plugin 接口
+type NpmPlugin struct{}
+
+func (p *NpmPlugin) Init() error {
+	return nil
 }
 
-func NewNpm() *Npm {
+func (p *NpmPlugin) Name() string {
+	return "npm"
+}
+
+func (p *NpmPlugin) Register() {
+	software.RegisterSoftware("npm", func() software.Software {
+		return NewNpm()
+	})
+}
+
+// Npm 实现 Software 接口
+type Npm struct {
+	info software.SoftwareInfo
+}
+
+func NewNpm() software.Software {
 	return &Npm{
-		info: SoftwareInfo{
+		info: software.SoftwareInfo{
 			Name:        "npm",
 			Description: "Node.js 默认的包管理器",
 		},
@@ -82,7 +100,7 @@ func (n *Npm) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (n *Npm) GetInfo() SoftwareInfo {
+func (n *Npm) GetInfo() software.SoftwareInfo {
 	return n.info
 }
 
@@ -94,4 +112,11 @@ func (n *Npm) Start(logChan chan<- string) error {
 func (n *Npm) Stop() error {
 	logger.Info("npm 是包管理工具，无需停止服务")
 	return nil
+}
+
+func init() {
+	// 在包被导入时自动注册插件
+	if err := software.RegisterPlugin(&NpmPlugin{}); err != nil {
+		fmt.Printf("Failed to register Npm plugin: %v\n", err)
+	}
 }

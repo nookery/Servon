@@ -1,19 +1,37 @@
-package software
+package clash
 
 import (
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
-
+	"servon/cmd/software"
 	"servon/cmd/system"
 	"servon/cmd/utils"
 	"servon/cmd/utils/logger"
+	"strings"
 )
 
+// ClashPlugin 实现 Plugin 接口
+type ClashPlugin struct{}
+
+func (p *ClashPlugin) Init() error {
+	return nil
+}
+
+func (p *ClashPlugin) Name() string {
+	return "clash"
+}
+
+func (p *ClashPlugin) Register() {
+	software.RegisterSoftware("clash", func() software.Software {
+		return NewClash()
+	})
+}
+
+// Clash 实现 Software 接口
 type Clash struct {
-	info SoftwareInfo
+	info software.SoftwareInfo
 }
 
 // Configuration related constants and types
@@ -32,15 +50,16 @@ rules:
   # Configure your rules here
 `
 
-func NewClash() *Clash {
+func NewClash() software.Software {
 	return &Clash{
-		info: SoftwareInfo{
+		info: software.SoftwareInfo{
 			Name:        "clash",
 			Description: "A rule-based tunnel in Go",
 		},
 	}
 }
 
+// ... existing code from clash.go ...
 func (c *Clash) Install(logChan chan<- string) error {
 	osType := utils.GetOSType()
 	logger.InfoChan(logChan, "检测到操作系统: %s", osType)
@@ -208,11 +227,7 @@ func (c *Clash) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (c *Clash) Stop() error {
-	return system.ServiceStop("clash")
-}
-
-func (c *Clash) GetInfo() SoftwareInfo {
+func (c *Clash) GetInfo() software.SoftwareInfo {
 	return c.info
 }
 
@@ -251,6 +266,17 @@ func (c *Clash) Start(logChan chan<- string) error {
 	return nil
 }
 
+func (c *Clash) Stop() error {
+	return system.ServiceStop("clash")
+}
+
 func (c *Clash) Reload() error {
 	return system.ServiceReload("clash")
+}
+
+func init() {
+	// 在包被导入时自动注册插件
+	if err := software.RegisterPlugin(&ClashPlugin{}); err != nil {
+		fmt.Printf("Failed to register Clash plugin: %v\n", err)
+	}
 }
