@@ -17,18 +17,6 @@ var (
 	dataFile   = "data/projects.json"
 )
 
-func init() {
-	utils.Debug("初始化部署管理器")
-	// 确保数据目录存在
-	if err := os.MkdirAll("data", 0755); err != nil {
-		utils.Error("创建数据目录失败: %v", err)
-		return
-	}
-	if err := loadProjects(); err != nil {
-		utils.Error("加载项目数据失败: %v", err)
-	}
-}
-
 // 加载项目数据
 func loadProjects() error {
 	utils.Debug("开始加载项目数据")
@@ -213,7 +201,7 @@ func ServeStatic(name string, path string, domain string) error {
 	// 配置 Caddy
 	caddy := softwares.NewCaddy()
 	err := caddy.UpdateConfig(&softwares.Project{
-		ID:        0, // 静态服务不需要ID
+		Name:      name,
 		Domain:    domain,
 		Type:      "static",
 		OutputDir: path, // 直接使用提供的路径
