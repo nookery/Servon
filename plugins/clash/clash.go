@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"servon/cmd/contract"
 	"servon/cmd/software"
 	"servon/cmd/system"
 	"servon/cmd/utils"
@@ -24,14 +25,14 @@ func (p *ClashPlugin) Name() string {
 }
 
 func (p *ClashPlugin) Register() {
-	software.RegisterSoftware("clash", func() software.Software {
+	software.RegisterSoftware("clash", func() contract.Software {
 		return NewClash()
 	})
 }
 
 // Clash 实现 Software 接口
 type Clash struct {
-	info software.SoftwareInfo
+	info contract.SoftwareInfo
 }
 
 // Configuration related constants and types
@@ -50,9 +51,9 @@ rules:
   # Configure your rules here
 `
 
-func NewClash() software.Software {
+func NewClash() contract.Software {
 	return &Clash{
-		info: software.SoftwareInfo{
+		info: contract.SoftwareInfo{
 			Name:        "clash",
 			Description: "A rule-based tunnel in Go",
 		},
@@ -227,7 +228,7 @@ func (c *Clash) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (c *Clash) GetInfo() software.SoftwareInfo {
+func (c *Clash) GetInfo() contract.SoftwareInfo {
 	return c.info
 }
 
@@ -276,7 +277,7 @@ func (c *Clash) Reload() error {
 
 func init() {
 	// 在包被导入时自动注册插件
-	if err := software.RegisterPlugin(&ClashPlugin{}); err != nil {
+	if err := contract.RegisterPlugin(&ClashPlugin{}); err != nil {
 		fmt.Printf("Failed to register Clash plugin: %v\n", err)
 	}
 }

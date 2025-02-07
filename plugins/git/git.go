@@ -3,6 +3,7 @@ package git
 import (
 	"fmt"
 	"os/exec"
+	"servon/cmd/contract"
 	"servon/cmd/software"
 	"servon/cmd/system"
 	"servon/cmd/utils"
@@ -22,19 +23,19 @@ func (p *GitPlugin) Name() string {
 }
 
 func (p *GitPlugin) Register() {
-	software.RegisterSoftware("git", func() software.Software {
+	software.RegisterSoftware("git", func() contract.Software {
 		return NewGit()
 	})
 }
 
 // Git 实现 Software 接口
 type Git struct {
-	info software.SoftwareInfo
+	info contract.SoftwareInfo
 }
 
-func NewGit() software.Software {
+func NewGit() contract.Software {
 	return &Git{
-		info: software.SoftwareInfo{
+		info: contract.SoftwareInfo{
 			Name:        "git",
 			Description: "分布式版本控制系统",
 		},
@@ -136,7 +137,7 @@ func (g *Git) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (g *Git) GetInfo() software.SoftwareInfo {
+func (g *Git) GetInfo() contract.SoftwareInfo {
 	return g.info
 }
 
@@ -152,7 +153,7 @@ func (g *Git) Stop() error {
 
 func init() {
 	// 在包被导入时自动注册插件
-	if err := software.RegisterPlugin(&GitPlugin{}); err != nil {
+	if err := contract.RegisterPlugin(&GitPlugin{}); err != nil {
 		fmt.Printf("Failed to register Git plugin: %v\n", err)
 	}
 }

@@ -3,6 +3,7 @@ package nodejs
 import (
 	"fmt"
 	"os/exec"
+	"servon/cmd/contract"
 	"servon/cmd/software"
 	"servon/cmd/system"
 	"servon/cmd/utils"
@@ -22,19 +23,19 @@ func (p *NodeJSPlugin) Name() string {
 }
 
 func (p *NodeJSPlugin) Register() {
-	software.RegisterSoftware("nodejs", func() software.Software {
+	software.RegisterSoftware("nodejs", func() contract.Software {
 		return NewNodeJS()
 	})
 }
 
 // NodeJS 实现 Software 接口
 type NodeJS struct {
-	info software.SoftwareInfo
+	info contract.SoftwareInfo
 }
 
-func NewNodeJS() software.Software {
+func NewNodeJS() contract.Software {
 	return &NodeJS{
-		info: software.SoftwareInfo{
+		info: contract.SoftwareInfo{
 			Name:        "nodejs",
 			Description: "JavaScript 运行时环境",
 		},
@@ -151,7 +152,7 @@ func (n *NodeJS) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (n *NodeJS) GetInfo() software.SoftwareInfo {
+func (n *NodeJS) GetInfo() contract.SoftwareInfo {
 	return n.info
 }
 
@@ -167,7 +168,7 @@ func (n *NodeJS) Stop() error {
 
 func init() {
 	// 在包被导入时自动注册插件
-	if err := software.RegisterPlugin(&NodeJSPlugin{}); err != nil {
+	if err := contract.RegisterPlugin(&NodeJSPlugin{}); err != nil {
 		fmt.Printf("Failed to register NodeJS plugin: %v\n", err)
 	}
 }

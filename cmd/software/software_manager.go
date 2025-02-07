@@ -3,23 +3,25 @@ package software
 import (
 	"fmt"
 	"sync"
+
+	"servon/cmd/contract"
 )
 
 var (
 	// registry 存储所有已注册的软件
-	registry = make(map[string]func() Software)
+	registry = make(map[string]func() contract.Software)
 	regMutex sync.RWMutex
 )
 
 // RegisterSoftware 注册一个新的软件到注册表中
-func RegisterSoftware(name string, factory func() Software) {
+func RegisterSoftware(name string, factory func() contract.Software) {
 	regMutex.Lock()
 	defer regMutex.Unlock()
 	registry[name] = factory
 }
 
 // NewSoftware 创建一个新的软件实例
-func NewSoftware(name string) (Software, error) {
+func NewSoftware(name string) (contract.Software, error) {
 	regMutex.RLock()
 	factory, exists := registry[name]
 	regMutex.RUnlock()
@@ -31,14 +33,14 @@ func NewSoftware(name string) (Software, error) {
 }
 
 // GetSupportedSoftware 返回支持的软件列表
-func GetSupportedSoftware() []SoftwareInfo {
+func GetSupportedSoftware() []contract.SoftwareInfo {
 	regMutex.RLock()
 	defer regMutex.RUnlock()
 
-	supportedSoftware := make([]SoftwareInfo, 0, len(registry))
+	supportedSoftware := make([]contract.SoftwareInfo, 0, len(registry))
 	for name, factory := range registry {
 		sw := factory()
-		info := SoftwareInfo{
+		info := contract.SoftwareInfo{
 			Name:        name,
 			Description: sw.GetInfo().Description,
 		}
@@ -49,7 +51,7 @@ func GetSupportedSoftware() []SoftwareInfo {
 
 // SoftwareManager 管理所有软件的安装、卸载等操作
 type SoftwareManager struct {
-	supportedSoftware []SoftwareInfo
+	supportedSoftware []contract.SoftwareInfo
 }
 
 // NewSoftwareManager 创建软件管理器实例
@@ -60,7 +62,7 @@ func NewSoftwareManager() *SoftwareManager {
 }
 
 // GetSupportedSoftware 返回支持的软件列表
-func (m *SoftwareManager) GetSupportedSoftware() []SoftwareInfo {
+func (m *SoftwareManager) GetSupportedSoftware() []contract.SoftwareInfo {
 	return m.supportedSoftware
 }
 

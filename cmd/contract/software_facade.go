@@ -1,4 +1,4 @@
-package software
+package contract
 
 // Software 定义软件操作的门面接口
 type Software interface {

@@ -3,6 +3,7 @@ package pnpm
 import (
 	"fmt"
 	"os/exec"
+	"servon/cmd/contract"
 	"servon/cmd/software"
 	"servon/cmd/utils/logger"
 	"strings"
@@ -20,19 +21,19 @@ func (p *PnpmPlugin) Name() string {
 }
 
 func (p *PnpmPlugin) Register() {
-	software.RegisterSoftware("pnpm", func() software.Software {
+	software.RegisterSoftware("pnpm", func() contract.Software {
 		return NewPnpm()
 	})
 }
 
 // Pnpm 实现 Software 接口
 type Pnpm struct {
-	info software.SoftwareInfo
+	info contract.SoftwareInfo
 }
 
-func NewPnpm() software.Software {
+func NewPnpm() contract.Software {
 	return &Pnpm{
-		info: software.SoftwareInfo{
+		info: contract.SoftwareInfo{
 			Name:        "pnpm",
 			Description: "快速的、节省磁盘空间的包管理器",
 		},
@@ -121,7 +122,7 @@ func (p *Pnpm) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (p *Pnpm) GetInfo() software.SoftwareInfo {
+func (p *Pnpm) GetInfo() contract.SoftwareInfo {
 	return p.info
 }
 
@@ -137,7 +138,7 @@ func (p *Pnpm) Stop() error {
 
 func init() {
 	// 在包被导入时自动注册插件
-	if err := software.RegisterPlugin(&PnpmPlugin{}); err != nil {
+	if err := contract.RegisterPlugin(&PnpmPlugin{}); err != nil {
 		fmt.Printf("Failed to register Pnpm plugin: %v\n", err)
 	}
 }

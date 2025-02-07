@@ -5,12 +5,13 @@ import (
 	"os/exec"
 	"strings"
 
+	"servon/cmd/contract"
 	"servon/cmd/system"
 	"servon/cmd/utils/logger"
 )
 
 type Caddy struct {
-	info   SoftwareInfo
+	info   contract.SoftwareInfo
 	config *CaddyConfig
 }
 
@@ -24,7 +25,7 @@ type Project struct {
 
 func NewCaddy() *Caddy {
 	return &Caddy{
-		info: SoftwareInfo{
+		info: contract.SoftwareInfo{
 			Name:        "caddy",
 			Description: "现代化的 Web 服务器，支持自动 HTTPS",
 		},
@@ -60,7 +61,7 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (c *Caddy) GetInfo() SoftwareInfo {
+func (c *Caddy) GetInfo() contract.SoftwareInfo {
 	return c.info
 }
 

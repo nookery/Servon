@@ -2,8 +2,10 @@ package software
 
 import "sync"
 
+import "servon/cmd/contract"
+
 var (
-	plugins     = make(map[string]Plugin)
+	plugins     = make(map[string]contract.Plugin)
 	pluginMutex sync.RWMutex
 )
 
@@ -13,7 +15,7 @@ func LoadPlugins() error {
 	defer pluginMutex.RUnlock()
 
 	for _, plugin := range plugins {
-		if err := RegisterPlugin(plugin); err != nil {
+		if err := contract.RegisterPlugin(plugin); err != nil {
 			return err
 		}
 	}

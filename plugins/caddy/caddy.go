@@ -3,6 +3,7 @@ package caddy
 import (
 	"fmt"
 	"os/exec"
+	"servon/cmd/contract"
 	"servon/cmd/software"
 	"servon/cmd/system"
 	"servon/cmd/utils"
@@ -22,13 +23,13 @@ func (p *CaddyPlugin) Name() string {
 }
 
 func (p *CaddyPlugin) Register() {
-	software.RegisterSoftware("caddy", func() software.Software {
+	software.RegisterSoftware("caddy", func() contract.Software {
 		return NewCaddy()
 	})
 }
 
 type Caddy struct {
-	info   software.SoftwareInfo
+	info   contract.SoftwareInfo
 	config *CaddyConfig
 }
 
@@ -40,9 +41,9 @@ type Project struct {
 	Port      int
 }
 
-func NewCaddy() software.Software {
+func NewCaddy() contract.Software {
 	return &Caddy{
-		info: software.SoftwareInfo{
+		info: contract.SoftwareInfo{
 			Name:        "caddy",
 			Description: "现代化的 Web 服务器，支持自动 HTTPS",
 		},
@@ -50,12 +51,9 @@ func NewCaddy() software.Software {
 	}
 }
 
-// ... existing code from caddy.go ...
-// [保持原有的所有方法实现不变，只需修改 SoftwareInfo 为 software.SoftwareInfo]
-
 func init() {
 	// 在包被导入时自动注册插件
-	if err := software.RegisterPlugin(&CaddyPlugin{}); err != nil {
+	if err := contract.RegisterPlugin(&CaddyPlugin{}); err != nil {
 		fmt.Printf("Failed to register Caddy plugin: %v\n", err)
 	}
 }
@@ -204,7 +202,7 @@ func (c *Caddy) Stop() error {
 	return logger.StreamCommand(cmd)
 }
 
-func (c *Caddy) GetInfo() software.SoftwareInfo {
+func (c *Caddy) GetInfo() contract.SoftwareInfo {
 	return c.info
 }
 

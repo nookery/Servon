@@ -1,4 +1,4 @@
-package software
+package contract
 
 // Plugin 定义软件插件接口
 type Plugin interface {

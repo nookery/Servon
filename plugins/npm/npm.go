@@ -3,6 +3,7 @@ package npm
 import (
 	"fmt"
 	"os/exec"
+	"servon/cmd/contract"
 	"servon/cmd/software"
 	"servon/cmd/utils/logger"
 	"strings"
@@ -20,19 +21,19 @@ func (p *NpmPlugin) Name() string {
 }
 
 func (p *NpmPlugin) Register() {
-	software.RegisterSoftware("npm", func() software.Software {
+	software.RegisterSoftware("npm", func() contract.Software {
 		return NewNpm()
 	})
 }
 
 // Npm 实现 Software 接口
 type Npm struct {
-	info software.SoftwareInfo
+	info contract.SoftwareInfo
 }
 
-func NewNpm() software.Software {
+func NewNpm() contract.Software {
 	return &Npm{
-		info: software.SoftwareInfo{
+		info: contract.SoftwareInfo{
 			Name:        "npm",
 			Description: "Node.js 默认的包管理器",
 		},
@@ -100,7 +101,7 @@ func (n *Npm) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (n *Npm) GetInfo() software.SoftwareInfo {
+func (n *Npm) GetInfo() contract.SoftwareInfo {
 	return n.info
 }
 
@@ -116,7 +117,7 @@ func (n *Npm) Stop() error {
 
 func init() {
 	// 在包被导入时自动注册插件
-	if err := software.RegisterPlugin(&NpmPlugin{}); err != nil {
+	if err := contract.RegisterPlugin(&NpmPlugin{}); err != nil {
 		fmt.Printf("Failed to register Npm plugin: %v\n", err)
 	}
 }
