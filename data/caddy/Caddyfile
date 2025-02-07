@@ -1,5 +1,5 @@
 {
-	auto_https off
+    auto_https off
 }
 
-import conf.d/*.conf
+import ./*.conf
