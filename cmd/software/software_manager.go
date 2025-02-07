@@ -5,6 +5,7 @@ var registry = map[string]func() Software{
 	"caddy":  func() Software { return NewCaddy() },
 	"clash":  func() Software { return NewClash() },
 	"nodejs": func() Software { return NewNodeJS() },
+	"npm":    func() Software { return NewNpm() },
 	"pnpm":   func() Software { return NewPnpm() },
 	"yarn":   func() Software { return NewYarn() },
 }

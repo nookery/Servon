@@ -32,6 +32,14 @@ func (p *Pnpm) Install(logChan chan<- string) error {
 		return fmt.Errorf("%s", errMsg)
 	}
 
+	// 检查 npm 是否已安装
+	npmCmd := exec.Command("npm", "--version")
+	if err := npmCmd.Run(); err != nil {
+		errMsg := "请先安装 npm"
+		logger.ErrorChan(logChan, "%s", errMsg)
+		return fmt.Errorf("%s", errMsg)
+	}
+
 	// 使用 StreamCommand 来执行安装并输出详细日志
 	cmd := exec.Command("npm", "install", "-g", "pnpm")
 	if err := logger.StreamCommand(cmd); err != nil {
@@ -64,6 +72,15 @@ func (p *Pnpm) GetStatus() (map[string]string, error) {
 	if err := nodeCmd.Run(); err != nil {
 		return map[string]string{
 			"status":  "nodejs_not_installed",
+			"version": "",
+		}, nil
+	}
+
+	// 检查 npm 是否已安装
+	npmCmd := exec.Command("npm", "--version")
+	if err := npmCmd.Run(); err != nil {
+		return map[string]string{
+			"status":  "npm_not_installed",
 			"version": "",
 		}, nil
 	}
