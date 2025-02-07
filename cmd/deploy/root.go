@@ -1,7 +1,7 @@
 package deploy
 
 import (
-	"servon/cmd/internal/utils"
+	"servon/cmd/utils"
 
 	"github.com/spf13/cobra"
 )

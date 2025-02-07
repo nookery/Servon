@@ -1,4 +1,4 @@
-package softwares
+package software
 
 // SoftwareRegistry 存储所有已注册的软件
 var registry = map[string]func() Software{

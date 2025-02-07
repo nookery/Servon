@@ -1,8 +1,6 @@
 package software
 
 import (
-	"servon/cmd/internal/softwares"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +11,7 @@ func newListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "显示支持的软件列表",
 		Run: func(cmd *cobra.Command, args []string) {
-			manager := softwares.NewSoftwareManager()
+			manager := NewSoftwareManager()
 			names := manager.GetSoftwareNames()
 
 			color.New(color.FgHiCyan).Println("支持的软件列表：")

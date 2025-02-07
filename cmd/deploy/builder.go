@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"servon/cmd/internal/utils"
+	"servon/cmd/utils"
 	"strings"
 	"sync"
 )

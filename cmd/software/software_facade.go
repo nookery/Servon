@@ -1,4 +1,4 @@
-package softwares
+package software
 
 import "fmt"
 

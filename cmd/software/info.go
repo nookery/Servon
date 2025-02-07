@@ -2,7 +2,6 @@ package software
 
 import (
 	"fmt"
-	"servon/cmd/internal/softwares"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -26,7 +25,7 @@ func newInfoCmd() *cobra.Command {
 				fmt.Println("[软件名称]")
 
 				// 显示支持的软件列表
-				manager := softwares.NewSoftwareManager()
+				manager := NewSoftwareManager()
 				names := manager.GetSoftwareNames()
 				fmt.Println("\n支持的软件:")
 				for _, name := range names {
@@ -39,7 +38,7 @@ func newInfoCmd() *cobra.Command {
 				return nil
 			}
 
-			manager := softwares.NewSoftwareManager()
+			manager := NewSoftwareManager()
 			name := args[0]
 
 			// 检查软件是否支持

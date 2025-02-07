@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"servon/cmd/internal/softwares"
+	"servon/cmd/software"
 	"sort"
 
 	"github.com/gin-gonic/gin"
@@ -9,13 +9,13 @@ import (
 
 // SoftwareHandler 处理软件相关的 HTTP 请求
 type SoftwareHandler struct {
-	manager *softwares.SoftwareManager
+	manager *software.SoftwareManager
 }
 
 // NewSoftwareHandler 创建软件处理器实例
 func NewSoftwareHandler() *SoftwareHandler {
 	return &SoftwareHandler{
-		manager: softwares.NewSoftwareManager(),
+		manager: software.NewSoftwareManager(),
 	}
 }
 

@@ -1,8 +1,10 @@
 package service
 
-import "servon/cmd/internal/utils"
-import "os/exec"
-import "fmt"
+import (
+	"fmt"
+	"os/exec"
+	"servon/cmd/utils"
+)
 
 func Start(serviceName string) error {
 	utils.Debug("正在启动服务: %s", serviceName)

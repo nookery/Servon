@@ -1,8 +1,10 @@
 package service
 
-import "servon/cmd/internal/utils"
-import "os/exec"
-import "fmt"
+import (
+	"fmt"
+	"os/exec"
+	"servon/cmd/utils"
+)
 
 func Reload(serviceName string) error {
 	utils.Info("正在重载服务(container): %s", serviceName)

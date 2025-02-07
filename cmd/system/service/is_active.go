@@ -2,7 +2,7 @@ package service
 
 import (
 	"os/exec"
-	"servon/cmd/internal/utils"
+	"servon/cmd/utils"
 	"strings"
 )
 

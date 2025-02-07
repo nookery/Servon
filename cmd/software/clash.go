@@ -1,4 +1,4 @@
-package softwares
+package software
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"servon/cmd/internal/utils"
 	"servon/cmd/system"
+	"servon/cmd/utils"
 )
 
 type Clash struct {

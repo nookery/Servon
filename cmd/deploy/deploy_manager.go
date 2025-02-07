@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"servon/cmd/internal/softwares"
-	"servon/cmd/internal/utils"
+	"servon/cmd/software"
+	"servon/cmd/utils"
 	"sync"
 )
 
@@ -199,8 +199,8 @@ func ServeStatic(name string, path string, domain string) error {
 	}
 
 	// 配置 Caddy
-	caddy := softwares.NewCaddy()
-	err := caddy.UpdateConfig(&softwares.Project{
+	caddy := software.NewCaddy()
+	err := caddy.UpdateConfig(&software.Project{
 		Name:      name,
 		Domain:    domain,
 		Type:      "static",

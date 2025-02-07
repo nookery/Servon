@@ -1,12 +1,12 @@
-package softwares
+package software
 
 import (
 	"fmt"
 	"os/exec"
 	"strings"
 
-	"servon/cmd/internal/utils"
 	"servon/cmd/system"
+	"servon/cmd/utils"
 )
 
 type Caddy struct {
