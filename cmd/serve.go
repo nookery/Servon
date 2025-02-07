@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	web "servon/cmd/internal/serve"
+	web "servon/cmd/serve"
 	"servon/cmd/version"
 
 	"github.com/fatih/color"

@@ -1,11 +1,21 @@
 package software
 
 import (
+	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
 	"text/template"
 )
+
+// 定义模板文件的路径常量
+const (
+	caddyBaseTemplate = "templates/caddy_base.conf"
+	caddySiteTemplate = "templates/caddy_site.conf.tmpl"
+)
+
+//go:embed templates/caddy_site.conf.tmpl templates/caddy_base.conf
+var templateFS embed.FS
 
 // CaddyConfig handles all configuration related operations for Caddy
 type CaddyConfig struct {
@@ -43,7 +53,7 @@ func (cc *CaddyConfig) EnsureConfigDir() error {
 func (cc *CaddyConfig) EnsureCaddyfile() error {
 	caddyfile := cc.GetCaddyfilePath()
 	if _, err := os.Stat(caddyfile); os.IsNotExist(err) {
-		templateCaddyfile, err := os.ReadFile("internal/softwares/templates/caddy_base.conf")
+		templateCaddyfile, err := templateFS.ReadFile(caddyBaseTemplate)
 		if err != nil {
 			return fmt.Errorf("failed to read Caddyfile template: %v", err)
 		}
@@ -63,7 +73,7 @@ func (cc *CaddyConfig) UpdateProjectConfig(project *Project) error {
 	}
 
 	// 读取站点配置模板
-	templateContent, err := os.ReadFile("internal/softwares/templates/caddy_site.conf.tmpl")
+	templateContent, err := templateFS.ReadFile(caddySiteTemplate)
 	if err != nil {
 		return fmt.Errorf("failed to read site template: %v", err)
 	}
