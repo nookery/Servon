@@ -8,6 +8,7 @@ var registry = map[string]func() Software{
 	"npm":    func() Software { return NewNpm() },
 	"pnpm":   func() Software { return NewPnpm() },
 	"yarn":   func() Software { return NewYarn() },
+	"git":    func() Software { return NewGit() },
 }
 
 // SoftwareManager 管理所有软件的安装、卸载等操作
