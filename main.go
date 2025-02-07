@@ -49,6 +49,12 @@ func init() {
 	RootCmd.AddCommand(cmd.SystemCmd)
 	RootCmd.AddCommand(cmd.SoftwareCmd)
 
+	// 添加 up 命令，并将 upgrade 设置为它的别名
+	upCmd := *cmd.UpgradeCmd
+	upCmd.Use = "up"
+	upCmd.Aliases = []string{"upgrade"}
+	RootCmd.AddCommand(&upCmd)
+
 	// 设置彩色模板
 	usageTemplate := titleColor.Sprintf("Usage:\n") +
 		infoColor.Sprintf("  %s [command]\n", os.Args[0]) +
