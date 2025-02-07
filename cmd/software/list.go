@@ -14,10 +14,11 @@ func newListCmd() *cobra.Command {
 			manager := NewSoftwareManager()
 			names := manager.GetSoftwareNames()
 
-			color.New(color.FgHiCyan).Println("支持的软件列表：")
+			color.New(color.FgHiCyan).Println("\n支持的软件列表：")
 			for _, name := range names {
 				color.New(color.FgHiWhite).Printf("- %s\n", name)
 			}
+			color.New(color.FgHiCyan).Println()
 		},
 	}
 }
