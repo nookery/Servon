@@ -17,18 +17,6 @@ var (
 	dataFile   = "data/projects.json"
 )
 
-func init() {
-	utils.Debug("初始化部署管理器")
-	// 确保数据目录存在
-	if err := os.MkdirAll("data", 0755); err != nil {
-		utils.Error("创建数据目录失败: %v", err)
-		return
-	}
-	if err := loadProjects(); err != nil {
-		utils.Error("加载项目数据失败: %v", err)
-	}
-}
-
 // 加载项目数据
 func loadProjects() error {
 	utils.Debug("开始加载项目数据")

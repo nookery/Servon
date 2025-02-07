@@ -15,7 +15,7 @@ type CaddyConfig struct {
 // NewCaddyConfig creates a new CaddyConfig instance
 func NewCaddyConfig() *CaddyConfig {
 	return &CaddyConfig{
-		baseDir: filepath.Join("data", "caddy"),
+		baseDir: "/data/caddy",
 	}
 }
 
