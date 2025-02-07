@@ -3,8 +3,7 @@ package system
 import (
 	"fmt"
 	"os/exec"
-
-	"servon/cmd/utils"
+	"servon/cmd/utils/logger"
 )
 
 // Apt 提供apt包管理器的基本操作
@@ -19,7 +18,7 @@ func NewApt() *Apt {
 // Update 更新软件包索引
 func (a *Apt) Update() error {
 	cmd := exec.Command("sudo", "apt-get", "update")
-	if err := utils.StreamCommand(cmd); err != nil {
+	if err := logger.StreamCommand(cmd); err != nil {
 		return fmt.Errorf("更新索引失败: %v", err)
 	}
 	return nil
@@ -30,7 +29,7 @@ func (a *Apt) Install(packages ...string) error {
 	args := append([]string{"apt-get", "install", "-y"}, packages...)
 	cmd := exec.Command("sudo", args...)
 
-	if err := utils.StreamCommand(cmd); err != nil {
+	if err := logger.StreamCommand(cmd); err != nil {
 		return fmt.Errorf("安装失败: %v", err)
 	}
 	return nil
@@ -40,7 +39,7 @@ func (a *Apt) Install(packages ...string) error {
 func (a *Apt) Remove(packages ...string) error {
 	args := append([]string{"apt-get", "remove", "-y"}, packages...)
 	cmd := exec.Command("sudo", args...)
-	if err := utils.StreamCommand(cmd); err != nil {
+	if err := logger.StreamCommand(cmd); err != nil {
 		return fmt.Errorf("移除失败: %v", err)
 	}
 	return nil
@@ -50,7 +49,7 @@ func (a *Apt) Remove(packages ...string) error {
 func (a *Apt) Purge(packages ...string) error {
 	args := append([]string{"apt-get", "purge", "-y"}, packages...)
 	cmd := exec.Command("sudo", args...)
-	if err := utils.StreamCommand(cmd); err != nil {
+	if err := logger.StreamCommand(cmd); err != nil {
 		return fmt.Errorf("清理失败: %v", err)
 	}
 	return nil

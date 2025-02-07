@@ -2,7 +2,7 @@ package software
 
 import (
 	"fmt"
-	"servon/cmd/utils"
+	"servon/cmd/utils/logger"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -60,16 +60,16 @@ func newStopCmd() *cobra.Command {
 			}
 
 			// 开始停止
-			utils.InfoTitle("🛑 %s 停止中 ...", name)
+			logger.InfoTitle("🛑 %s 停止中 ...", name)
 
 			err := manager.StopSoftware(name)
 			if err != nil {
-				utils.InfoTitle("❌ %s 停止失败", name)
-				utils.Error("%s", err)
+				logger.InfoTitle("❌ %s 停止失败", name)
+				logger.Error("%s", err)
 				return nil
 			}
 
-			utils.InfoTitle("✅ %s 已停止！", name)
+			logger.InfoTitle("✅ %s 已停止！", name)
 
 			return nil
 		},

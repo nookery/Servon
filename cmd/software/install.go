@@ -2,8 +2,7 @@ package software
 
 import (
 	"fmt"
-
-	"servon/cmd/utils"
+	"servon/cmd/utils/logger"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -62,7 +61,7 @@ func newInstallCmd() *cobra.Command {
 			}
 
 			// 开始安装
-			utils.InfoTitle("📦 开始安装 %s ...", name)
+			logger.InfoTitle("📦 开始安装 %s ...", name)
 
 			err := manager.InstallSoftware(name, nil)
 			if err != nil {
@@ -70,7 +69,7 @@ func newInstallCmd() *cobra.Command {
 				return nil
 			}
 
-			utils.InfoTitle("✨ 软件 %s 安装完成！", name)
+			logger.InfoTitle("✨ 软件 %s 安装完成！", name)
 
 			return nil
 		},

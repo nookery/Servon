@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"servon/cmd/software"
-	"servon/cmd/utils"
+	"servon/cmd/utils/logger"
 	"sync"
 )
 
@@ -19,11 +19,11 @@ var (
 
 // 加载项目数据
 func loadProjects() error {
-	utils.Debug("开始加载项目数据")
+	logger.Debug("开始加载项目数据")
 	data, err := os.ReadFile(dataFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			utils.Debug("项目数据文件不存在，将创建新文件")
+			logger.Debug("项目数据文件不存在，将创建新文件")
 			return nil
 		}
 		return err
@@ -44,7 +44,7 @@ func loadProjects() error {
 		}
 	}
 
-	utils.Info("成功加载 %d 个项目", len(projectsList))
+	logger.Info("成功加载 %d 个项目", len(projectsList))
 	return nil
 }
 
@@ -79,10 +79,10 @@ func GetProjects() ([]*Project, error) {
 
 // CreateProject 创建项目
 func CreateProject(project Project) (*Project, error) {
-	utils.Info("创建新项目: %s", project.Name)
+	logger.Info("创建新项目: %s", project.Name)
 
 	if err := validateProject(project); err != nil {
-		utils.Error("项目验证失败: %v", err)
+		logger.Error("项目验证失败: %v", err)
 		return nil, err
 	}
 
@@ -95,20 +95,20 @@ func CreateProject(project Project) (*Project, error) {
 
 	projects[project.ID] = &project
 	if err := saveProjects(); err != nil {
-		utils.Error("保存项目数据失败: %v", err)
+		logger.Error("保存项目数据失败: %v", err)
 		return nil, err
 	}
 
-	utils.Info("项目创建成功: [%d] %s", project.ID, project.Name)
+	logger.Info("项目创建成功: [%d] %s", project.ID, project.Name)
 	return &project, nil
 }
 
 // UpdateProject 更新项目
 func UpdateProject(project Project) (*Project, error) {
-	utils.Info("更新项目: [%d] %s", project.ID, project.Name)
+	logger.Info("更新项目: [%d] %s", project.ID, project.Name)
 
 	if err := validateProject(project); err != nil {
-		utils.Error("项目验证失败: %v", err)
+		logger.Error("项目验证失败: %v", err)
 		return nil, err
 	}
 
@@ -117,7 +117,7 @@ func UpdateProject(project Project) (*Project, error) {
 
 	existing, exists := projects[project.ID]
 	if !exists {
-		utils.Error("项目不存在: %d", project.ID)
+		logger.Error("项目不存在: %d", project.ID)
 		return nil, fmt.Errorf("项目不存在")
 	}
 
@@ -127,39 +127,39 @@ func UpdateProject(project Project) (*Project, error) {
 
 	projects[project.ID] = &project
 	if err := saveProjects(); err != nil {
-		utils.Error("保存项目数据失败: %v", err)
+		logger.Error("保存项目数据失败: %v", err)
 		return nil, err
 	}
 
-	utils.Info("项目更新成功: [%d] %s", project.ID, project.Name)
+	logger.Info("项目更新成功: [%d] %s", project.ID, project.Name)
 	return &project, nil
 }
 
 // DeleteProject 删除项目
 func DeleteProject(id int) error {
-	utils.Info("删除项目: %d", id)
+	logger.Info("删除项目: %d", id)
 
 	projectsMu.Lock()
 	defer projectsMu.Unlock()
 
 	if _, exists := projects[id]; !exists {
-		utils.Error("项目不存在: %d", id)
+		logger.Error("项目不存在: %d", id)
 		return fmt.Errorf("项目不存在")
 	}
 
 	// 删除项目文件
 	if err := cleanupProject(id); err != nil {
-		utils.Error("清理项目文件失败: %v", err)
+		logger.Error("清理项目文件失败: %v", err)
 		return err
 	}
 
 	delete(projects, id)
 	if err := saveProjects(); err != nil {
-		utils.Error("保存项目数据失败: %v", err)
+		logger.Error("保存项目数据失败: %v", err)
 		return err
 	}
 
-	utils.Info("项目删除成功: %d", id)
+	logger.Info("项目删除成功: %d", id)
 	return nil
 }
 
@@ -191,7 +191,7 @@ func cleanupProject(id int) error {
 
 // ServeStatic 创建静态文件服务
 func ServeStatic(name string, path string, domain string) error {
-	utils.Info("创建静态文件服务: %s -> %s", path, domain)
+	logger.Info("创建静态文件服务: %s -> %s", path, domain)
 
 	// 验证路径是否存在
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -210,6 +210,6 @@ func ServeStatic(name string, path string, domain string) error {
 		return fmt.Errorf("配置 Caddy 失败: %v", err)
 	}
 
-	utils.Info("静态文件服务创建成功: %s", domain)
+	logger.Info("静态文件服务创建成功: %s", domain)
 	return nil
 }

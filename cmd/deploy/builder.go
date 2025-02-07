@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"servon/cmd/utils"
+	"servon/cmd/utils/logger"
 	"strings"
 	"sync"
 )
@@ -47,20 +47,20 @@ func addLog(id int, log string) {
 
 // BuildProject 构建项目
 func BuildProject(id int, logChan chan<- string) error {
-	utils.Info("开始构建项目: %d", id)
+	logger.Info("开始构建项目: %d", id)
 
 	projectsMu.RLock()
 	project, exists := projects[id]
 	projectsMu.RUnlock()
 
 	if !exists {
-		utils.Error("项目不存在: %d", id)
+		logger.Error("项目不存在: %d", id)
 		return fmt.Errorf("项目不存在")
 	}
 
 	// 修改日志发送逻辑
 	sendLog := func(log string) {
-		utils.Debug("[项目 %d] %s", id, log)
+		logger.Debug("[项目 %d] %s", id, log)
 		addLog(id, log)
 		logChan <- log
 	}
@@ -70,7 +70,7 @@ func BuildProject(id int, logChan chan<- string) error {
 	saveProjects()
 	sendLog("开始部署...")
 
-	utils.Info("项目构建完成: [%d] %s", id, project.Name)
+	logger.Info("项目构建完成: [%d] %s", id, project.Name)
 	sendLog("部署完成")
 	return nil
 }

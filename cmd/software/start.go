@@ -2,7 +2,7 @@ package software
 
 import (
 	"fmt"
-	"servon/cmd/utils"
+	"servon/cmd/utils/logger"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -61,16 +61,16 @@ func newStartCmd() *cobra.Command {
 			}
 
 			// 开始启动
-			utils.InfoTitle("🚀 %s 启动中 ...", name)
+			logger.InfoTitle("🚀 %s 启动中 ...", name)
 
 			err := manager.StartSoftware(name, nil)
 			if err != nil {
-				utils.InfoTitle("❌ %s 启动失败", name)
-				utils.Error("%s", err)
+				logger.InfoTitle("❌ %s 启动失败", name)
+				logger.Error("%s", err)
 				return nil
 			}
 
-			utils.InfoTitle("✅ %s 启动成功！", name)
+			logger.InfoTitle("✅ %s 启动成功！", name)
 
 			return nil
 		},
