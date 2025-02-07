@@ -1,4 +1,4 @@
-package software
+package deploy
 
 import (
 	"fmt"
@@ -13,14 +13,6 @@ import (
 type Caddy struct {
 	info   contract.SoftwareInfo
 	config *CaddyConfig
-}
-
-type Project struct {
-	Name      string
-	Domain    string
-	Type      string
-	OutputDir string
-	Port      int
 }
 
 func NewCaddy() *Caddy {
