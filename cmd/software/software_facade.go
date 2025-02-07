@@ -1,7 +1,5 @@
 package software
 
-import "fmt"
-
 // Software 定义软件操作的门面接口
 type Software interface {
 	// Install 安装软件，如果提供了日志通道则输出日志
@@ -22,22 +20,4 @@ type Software interface {
 type SoftwareInfo struct {
 	Name        string
 	Description string
-}
-
-// NewSoftware 创建指定软件的门面实例
-func NewSoftware(name string) (Software, error) {
-	if factory, ok := registry[name]; ok {
-		return factory(), nil
-	}
-	return nil, fmt.Errorf("不支持的软件: %s", name)
-}
-
-// GetSupportedSoftware 获取所有支持的软件
-func GetSupportedSoftware() []SoftwareInfo {
-	var list []SoftwareInfo
-	for _, factory := range registry {
-		sw := factory()
-		list = append(list, sw.GetInfo())
-	}
-	return list
 }

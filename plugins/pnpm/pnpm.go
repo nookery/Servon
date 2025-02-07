@@ -1,26 +1,45 @@
-package software
+package pnpm
 
 import (
 	"fmt"
 	"os/exec"
-	"strings"
-
+	"servon/cmd/software"
 	"servon/cmd/utils/logger"
+	"strings"
 )
 
-type Pnpm struct {
-	info SoftwareInfo
+// PnpmPlugin 实现 Plugin 接口
+type PnpmPlugin struct{}
+
+func (p *PnpmPlugin) Init() error {
+	return nil
 }
 
-func NewPnpm() *Pnpm {
+func (p *PnpmPlugin) Name() string {
+	return "pnpm"
+}
+
+func (p *PnpmPlugin) Register() {
+	software.RegisterSoftware("pnpm", func() software.Software {
+		return NewPnpm()
+	})
+}
+
+// Pnpm 实现 Software 接口
+type Pnpm struct {
+	info software.SoftwareInfo
+}
+
+func NewPnpm() software.Software {
 	return &Pnpm{
-		info: SoftwareInfo{
+		info: software.SoftwareInfo{
 			Name:        "pnpm",
 			Description: "快速的、节省磁盘空间的包管理器",
 		},
 	}
 }
 
+// 从原来的 pnpm.go 复制所有方法实现...
 func (p *Pnpm) Install(logChan chan<- string) error {
 	logger.InfoChan(logChan, "正在安装 pnpm...")
 
@@ -102,7 +121,7 @@ func (p *Pnpm) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (p *Pnpm) GetInfo() SoftwareInfo {
+func (p *Pnpm) GetInfo() software.SoftwareInfo {
 	return p.info
 }
 
@@ -114,4 +133,11 @@ func (p *Pnpm) Start(logChan chan<- string) error {
 func (p *Pnpm) Stop() error {
 	logger.Info("pnpm 是包管理工具，无需停止服务")
 	return nil
+}
+
+func init() {
+	// 在包被导入时自动注册插件
+	if err := software.RegisterPlugin(&PnpmPlugin{}); err != nil {
+		fmt.Printf("Failed to register Pnpm plugin: %v\n", err)
+	}
 }

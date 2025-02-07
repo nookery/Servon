@@ -1,14 +1,50 @@
 package software
 
-// SoftwareRegistry 存储所有已注册的软件
-var registry = map[string]func() Software{
-	"caddy":  func() Software { return NewCaddy() },
-	"clash":  func() Software { return NewClash() },
-	"nodejs": func() Software { return NewNodeJS() },
-	"npm":    func() Software { return NewNpm() },
-	"pnpm":   func() Software { return NewPnpm() },
-	"yarn":   func() Software { return NewYarn() },
-	"git":    func() Software { return NewGit() },
+import (
+	"fmt"
+	"sync"
+)
+
+var (
+	// registry 存储所有已注册的软件
+	registry = make(map[string]func() Software)
+	regMutex sync.RWMutex
+)
+
+// RegisterSoftware 注册一个新的软件到注册表中
+func RegisterSoftware(name string, factory func() Software) {
+	regMutex.Lock()
+	defer regMutex.Unlock()
+	registry[name] = factory
+}
+
+// NewSoftware 创建一个新的软件实例
+func NewSoftware(name string) (Software, error) {
+	regMutex.RLock()
+	factory, exists := registry[name]
+	regMutex.RUnlock()
+
+	if !exists {
+		return nil, fmt.Errorf("software %s is not supported", name)
+	}
+	return factory(), nil
+}
+
+// GetSupportedSoftware 返回支持的软件列表
+func GetSupportedSoftware() []SoftwareInfo {
+	regMutex.RLock()
+	defer regMutex.RUnlock()
+
+	supportedSoftware := make([]SoftwareInfo, 0, len(registry))
+	for name, factory := range registry {
+		sw := factory()
+		info := SoftwareInfo{
+			Name:        name,
+			Description: sw.GetInfo().Description,
+		}
+		supportedSoftware = append(supportedSoftware, info)
+	}
+	return supportedSoftware
 }
 
 // SoftwareManager 管理所有软件的安装、卸载等操作
