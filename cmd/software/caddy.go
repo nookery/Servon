@@ -217,8 +217,32 @@ func (c *Caddy) UpdateConfig(project *Project) error {
 
 // Reload reloads the Caddy configuration
 func (c *Caddy) Reload() error {
+	// 检查 caddy 是否在运行
+	running, err := c.isRunning()
+	if err != nil {
+		return fmt.Errorf("检查 caddy 运行状态失败: %v", err)
+	}
+
+	if !running {
+		logger.Warn("Caddy 服务未运行，请先启动 Caddy")
+		return nil
+	}
+
 	cmd := exec.Command("caddy", "reload", "--config", c.config.GetCaddyfilePath())
 	return logger.StreamCommand(cmd)
+}
+
+// isRunning 检查 caddy 是否在运行
+func (c *Caddy) isRunning() (bool, error) {
+	cmd := exec.Command("pgrep", "caddy")
+	if err := cmd.Run(); err != nil {
+		// exit status 1 表示没有找到进程
+		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 // Start starts the Caddy service

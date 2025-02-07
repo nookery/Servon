@@ -57,6 +57,7 @@ func newInstallCmd() *cobra.Command {
 				for _, sw := range manager.GetSoftwareNames() {
 					color.New(color.FgHiWhite).Printf("  - %s\n", sw)
 				}
+				color.New(color.FgHiCyan).Println()
 				return nil
 			}
 

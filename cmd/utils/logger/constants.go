@@ -11,10 +11,10 @@ const (
 )
 
 var levelNames = map[LogLevel]string{
-	DEBUG: "DEBUG",
-	INFO:  "INFO",
-	WARN:  "WARN",
-	ERROR: "ERROR",
+	DEBUG: "D",
+	INFO:  "I",
+	WARN:  "W",
+	ERROR: "E",
 }
 
 // ANSI 颜色代码

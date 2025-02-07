@@ -109,6 +109,7 @@ var deployServeCmd = &cobra.Command{
 			color.New(color.FgCyan).Println("    --name photos \\")
 			color.New(color.FgCyan).Println("    --path /home/user/pictures \\")
 			color.New(color.FgCyan).Println("    --domain photos.example.com")
+			fmt.Println()
 			return
 		}
 
@@ -130,5 +131,6 @@ var deployServeCmd = &cobra.Command{
 		color.New(color.FgHiCyan).Printf("http://%s\n", domain)
 		fmt.Println()
 		color.New(color.FgHiBlack).Println("提示：请确保域名已正确解析到服务器IP")
+		fmt.Println()
 	},
 }

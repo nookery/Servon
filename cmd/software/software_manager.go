@@ -5,6 +5,8 @@ var registry = map[string]func() Software{
 	"caddy":  func() Software { return NewCaddy() },
 	"clash":  func() Software { return NewClash() },
 	"nodejs": func() Software { return NewNodeJS() },
+	"pnpm":   func() Software { return NewPnpm() },
+	"yarn":   func() Software { return NewYarn() },
 }
 
 // SoftwareManager 管理所有软件的安装、卸载等操作
