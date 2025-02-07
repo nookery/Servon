@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	// 导入插件
+	_ "servon/plugins/caddy"
 	_ "servon/plugins/clash"
 	_ "servon/plugins/git"
 	_ "servon/plugins/nodejs"
