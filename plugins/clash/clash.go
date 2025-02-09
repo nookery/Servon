@@ -5,29 +5,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"servon/cmd/software"
-	"servon/cmd/system"
+	"servon/core"
 	"servon/core/contract"
+	"servon/core/model"
+	"servon/core/system"
+	"servon/core/utils"
 	"servon/core/utils/logger"
-	"servon/utils"
 	"strings"
 )
 
-// ClashPlugin 实现 Plugin 接口
-type ClashPlugin struct{}
-
-func (p *ClashPlugin) Init() error {
-	return nil
-}
-
-func (p *ClashPlugin) Name() string {
-	return "clash"
-}
-
-func (p *ClashPlugin) Register() {
-	software.RegisterSoftware("clash", func() contract.SuperSoft {
-		return NewClash()
-	})
+func Setup(core *core.Core) {
+	core.RegisterSoftware("clash", NewClash())
 }
 
 // Clash 实现 Software 接口
@@ -66,7 +54,7 @@ func (c *Clash) Install(logChan chan<- string) error {
 	logger.InfoChan(logChan, "检测到操作系统: %s", osType)
 
 	switch osType {
-	case utils.Ubuntu, utils.Debian:
+	case model.Ubuntu, model.Debian:
 		logger.InfoChan(logChan, "开始安装 Clash...")
 
 		// 创建安装目录
@@ -143,7 +131,7 @@ WantedBy=multi-user.target`
 			return fmt.Errorf("%s", errMsg)
 		}
 
-	case utils.CentOS, utils.RedHat:
+	case model.CentOS, model.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"
 		logger.ErrorChan(logChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
@@ -273,11 +261,4 @@ func (c *Clash) Stop() error {
 
 func (c *Clash) Reload() error {
 	return system.ServiceReload("clash")
-}
-
-func init() {
-	// 在包被导入时自动注册插件
-	if err := contract.RegisterPlugin(&ClashPlugin{}); err != nil {
-		fmt.Printf("Failed to register Clash plugin: %v\n", err)
-	}
 }

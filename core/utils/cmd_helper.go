@@ -27,10 +27,12 @@ func PrintCommandHelp(cmd *cobra.Command) {
 	color.New(color.FgCyan).Printf("%s\n", cmd.UseLine())
 
 	// 可用命令列表
-	color.New(color.FgHiWhite).Println("🔧 可用命令:")
-	for name, desc := range commands {
-		color.New(color.FgCyan).Printf("  ▶️  %s", name)
-		color.New(color.FgWhite).Printf("\t%s\n", desc)
+	if len(commands) > 0 {
+		color.New(color.FgHiWhite).Println("🔧 可用命令:")
+		for name, desc := range commands {
+			color.New(color.FgCyan).Printf("  ▶️  %s", name)
+			color.New(color.FgWhite).Printf("\t%s\n", desc)
+		}
 	}
 
 	fmt.Println()
@@ -48,5 +50,12 @@ func PrintList(list []string, title string) {
 	for _, item := range list {
 		color.New(color.FgCyan).Printf("  ▶️  %s\n", item)
 	}
+	fmt.Println()
+}
+
+// PrintError 打印错误信息
+func PrintError(err error) {
+	fmt.Println()
+	color.New(color.FgHiRed).Printf("❌ 错误: %s\n", err.Error())
 	fmt.Println()
 }

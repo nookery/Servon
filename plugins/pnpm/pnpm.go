@@ -3,27 +3,14 @@ package pnpm
 import (
 	"fmt"
 	"os/exec"
-	"servon/cmd/software"
+	"servon/core"
 	"servon/core/contract"
 	"servon/core/utils/logger"
 	"strings"
 )
 
-// PnpmPlugin 实现 Plugin 接口
-type PnpmPlugin struct{}
-
-func (p *PnpmPlugin) Init() error {
-	return nil
-}
-
-func (p *PnpmPlugin) Name() string {
-	return "pnpm"
-}
-
-func (p *PnpmPlugin) Register() {
-	software.RegisterSoftware("pnpm", func() contract.SuperSoft {
-		return NewPnpm()
-	})
+func Setup(core *core.Core) {
+	core.RegisterSoftware("pnpm", NewPnpm())
 }
 
 // Pnpm 实现 Software 接口
@@ -134,11 +121,4 @@ func (p *Pnpm) Start(logChan chan<- string) error {
 func (p *Pnpm) Stop() error {
 	logger.Info("pnpm 是包管理工具，无需停止服务")
 	return nil
-}
-
-func init() {
-	// 在包被导入时自动注册插件
-	if err := contract.RegisterPlugin(&PnpmPlugin{}); err != nil {
-		fmt.Printf("Failed to register Pnpm plugin: %v\n", err)
-	}
 }

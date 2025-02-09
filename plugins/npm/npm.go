@@ -3,27 +3,14 @@ package npm
 import (
 	"fmt"
 	"os/exec"
+	"servon/core"
 	"servon/core/contract"
-	"servon/core/provider"
 	"servon/core/utils/logger"
 	"strings"
 )
 
-// NpmPlugin 实现 Plugin 接口
-type NpmPlugin struct{}
-
-func (p *NpmPlugin) Init() error {
-	return nil
-}
-
-func (p *NpmPlugin) Name() string {
-	return "npm"
-}
-
-func (p *NpmPlugin) Register() {
-	provider.RegisterSoftware("npm", func() contract.SuperSoft {
-		return NewNpm()
-	})
+func Setup(core *core.Core) {
+	core.RegisterSoftware("npm", NewNpm())
 }
 
 // Npm 实现 Software 接口
@@ -113,11 +100,4 @@ func (n *Npm) Start(logChan chan<- string) error {
 func (n *Npm) Stop() error {
 	logger.Info("npm 是包管理工具，无需停止服务")
 	return nil
-}
-
-func init() {
-	// 在包被导入时自动注册插件
-	if err := contract.RegisterPlugin(&NpmPlugin{}); err != nil {
-		fmt.Printf("Failed to register Npm plugin: %v\n", err)
-	}
 }

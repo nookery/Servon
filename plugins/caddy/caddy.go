@@ -3,32 +3,16 @@ package caddy
 import (
 	"fmt"
 	"os/exec"
+	"servon/core"
 	"servon/core/contract"
+	"servon/core/model"
+	"servon/core/system"
 	"servon/core/utils/logger"
-	"servon/plugins/software"
-	"servon/plugins/system"
-	"servon/utils"
 	"strings"
 )
 
-// CaddyPlugin 实现 Plugin 接口
-type CaddyPlugin struct{}
-
-func (p *CaddyPlugin) Init() error {
-	return nil
-}
-
-func (p *CaddyPlugin) Name() string {
-	return "caddy"
-}
-
-func (p *CaddyPlugin) Register() {
-	software.RegisterSoftware("caddy", func() contract.SuperSoft {
-		return NewCaddy()
-	})
-}
-
 type Caddy struct {
+	core   *core.Core
 	info   contract.SoftwareInfo
 	config *CaddyConfig
 }
@@ -41,8 +25,13 @@ type Project struct {
 	Port      int
 }
 
-func NewCaddy() contract.SuperSoft {
+func Setup(core *core.Core) {
+	core.RegisterSoftware("caddy", NewCaddy(core))
+}
+
+func NewCaddy(core *core.Core) contract.SuperSoft {
 	return &Caddy{
+		core: core,
 		info: contract.SoftwareInfo{
 			Name:        "caddy",
 			Description: "现代化的 Web 服务器，支持自动 HTTPS",
@@ -51,22 +40,13 @@ func NewCaddy() contract.SuperSoft {
 	}
 }
 
-func init() {
-	// 在包被导入时自动注册插件
-	if err := contract.RegisterPlugin(&CaddyPlugin{}); err != nil {
-		fmt.Printf("Failed to register Caddy plugin: %v\n", err)
-	}
-}
 func (c *Caddy) Install(logChan chan<- string) error {
 	outputChan := make(chan string, 100)
 	apt := system.NewApt()
-
-	// 检查操作系统类型
-	osType := utils.GetOSType()
-	logger.InfoChan(logChan, "检测到操作系统: %s", osType)
+	osType := c.core.GetOSType()
 
 	switch osType {
-	case utils.Ubuntu, utils.Debian:
+	case model.Ubuntu, model.Debian:
 		logger.InfoChan(logChan, "使用 APT 包管理器安装...")
 		logger.InfoChan(logChan, "添加 Caddy 官方源...")
 
@@ -100,7 +80,7 @@ func (c *Caddy) Install(logChan chan<- string) error {
 			return fmt.Errorf("%s", errMsg)
 		}
 
-	case utils.CentOS, utils.RedHat:
+	case model.CentOS, model.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Caddy"
 		logger.ErrorChan(outputChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)

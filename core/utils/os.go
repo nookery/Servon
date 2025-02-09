@@ -2,19 +2,11 @@ package utils
 
 import (
 	"os/exec"
+	"servon/core/model"
 	"strings"
 )
 
-// OSType 表示操作系统类型
-type OSType string
-
-const (
-	Ubuntu  OSType = "ubuntu"
-	Debian  OSType = "debian"
-	CentOS  OSType = "centos"
-	RedHat  OSType = "redhat"
-	Unknown OSType = "unknown"
-)
+type OSType = model.OSType
 
 // GetOSType 获取当前操作系统类型
 func GetOSType() OSType {
@@ -22,21 +14,21 @@ func GetOSType() OSType {
 	cmd := exec.Command("cat", "/etc/os-release")
 	output, err := cmd.Output()
 	if err != nil {
-		return Unknown
+		return model.Unknown
 	}
 
 	osInfo := strings.ToLower(string(output))
 
 	switch {
 	case strings.Contains(osInfo, "ubuntu"):
-		return Ubuntu
+		return model.Ubuntu
 	case strings.Contains(osInfo, "debian"):
-		return Debian
+		return model.Debian
 	case strings.Contains(osInfo, "centos"):
-		return CentOS
+		return model.CentOS
 	case strings.Contains(osInfo, "redhat"):
-		return RedHat
+		return model.RedHat
 	default:
-		return Unknown
+		return model.Unknown
 	}
 }

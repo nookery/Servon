@@ -1,10 +1,9 @@
 package software
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"servon/core"
+	"servon/core/utils"
 )
 
 func newInstallCmd(core *core.Core) *cobra.Command {
@@ -12,13 +11,17 @@ func newInstallCmd(core *core.Core) *cobra.Command {
 		Use:   "install [软件名称]",
 		Short: "安装指定的软件",
 		Long:  `安装指定的软件。`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) < 1 {
-				return fmt.Errorf("请指定要安装的软件名称")
+				utils.PrintCommandHelp(cmd)
+				return
 			}
 
 			name := args[0]
-			return core.InstallSoftware(name, nil)
+			err := core.InstallSoftware(name, nil)
+			if err != nil {
+				utils.PrintError(err)
+			}
 		},
 	}
 }

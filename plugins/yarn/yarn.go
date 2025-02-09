@@ -3,32 +3,19 @@ package yarn
 import (
 	"fmt"
 	"os/exec"
-	"servon/cmd/software"
+	"servon/core"
 	"servon/core/contract"
 	"servon/core/utils/logger"
 	"strings"
 )
 
-// YarnPlugin 实现 Plugin 接口
-type YarnPlugin struct{}
-
-func (p *YarnPlugin) Init() error {
-	return nil
-}
-
-func (p *YarnPlugin) Name() string {
-	return "yarn"
-}
-
-func (p *YarnPlugin) Register() {
-	software.RegisterSoftware("yarn", func() contract.SuperSoft {
-		return NewYarn()
-	})
-}
-
 // Yarn 实现 Software 接口
 type Yarn struct {
 	info contract.SoftwareInfo
+}
+
+func Setup(core *core.Core) {
+	core.RegisterSoftware("yarn", NewYarn())
 }
 
 func NewYarn() contract.SuperSoft {
@@ -116,11 +103,4 @@ func (y *Yarn) Start(logChan chan<- string) error {
 func (y *Yarn) Stop() error {
 	logger.Info("Yarn 是包管理工具，无需停止服务")
 	return nil
-}
-
-func init() {
-	// 在包被导入时自动注册插件
-	if err := contract.RegisterPlugin(&YarnPlugin{}); err != nil {
-		fmt.Printf("Failed to register Yarn plugin: %v\n", err)
-	}
 }

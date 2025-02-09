@@ -5,5 +5,5 @@ import (
 )
 
 func Setup(core *core.Core) {
-	core.AddCommand(ServeCmd)
+	core.AddCommand(NewServeCommand(core))
 }

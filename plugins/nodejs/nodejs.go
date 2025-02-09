@@ -3,34 +3,21 @@ package nodejs
 import (
 	"fmt"
 	"os/exec"
-	"servon/cmd/software"
-	"servon/cmd/system"
+	"servon/core"
 	"servon/core/contract"
+	"servon/core/model"
+	"servon/core/system"
+	"servon/core/utils"
 	"servon/core/utils/logger"
-	"servon/utils"
 	"strings"
 )
 
-// NodeJSPlugin 实现 Plugin 接口
-type NodeJSPlugin struct{}
-
-func (p *NodeJSPlugin) Init() error {
-	return nil
-}
-
-func (p *NodeJSPlugin) Name() string {
-	return "nodejs"
-}
-
-func (p *NodeJSPlugin) Register() {
-	software.RegisterSoftware("nodejs", func() contract.SuperSoft {
-		return NewNodeJS()
-	})
-}
-
-// NodeJS 实现 Software 接口
 type NodeJS struct {
 	info contract.SoftwareInfo
+}
+
+func Setup(core *core.Core) {
+	core.RegisterSoftware("nodejs", NewNodeJS())
 }
 
 func NewNodeJS() contract.SuperSoft {
@@ -45,12 +32,10 @@ func NewNodeJS() contract.SuperSoft {
 func (n *NodeJS) Install(logChan chan<- string) error {
 	outputChan := make(chan string, 100)
 	apt := system.NewApt()
-
 	osType := utils.GetOSType()
-	logger.InfoChan(logChan, "检测到操作系统: %s", osType)
 
 	switch osType {
-	case utils.Ubuntu, utils.Debian:
+	case model.Ubuntu, model.Debian:
 		logger.InfoChan(logChan, "使用 APT 包管理器安装...")
 		logger.InfoChan(logChan, "添加 NodeJS 官方源...")
 
@@ -69,7 +54,7 @@ func (n *NodeJS) Install(logChan chan<- string) error {
 			return fmt.Errorf("%s", errMsg)
 		}
 
-	case utils.CentOS, utils.RedHat:
+	case model.CentOS, model.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 NodeJS"
 		logger.ErrorChan(outputChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
@@ -164,11 +149,4 @@ func (n *NodeJS) Start(logChan chan<- string) error {
 func (n *NodeJS) Stop() error {
 	logger.Info("NodeJS 是运行时环境，无需停止服务")
 	return nil
-}
-
-func init() {
-	// 在包被导入时自动注册插件
-	if err := contract.RegisterPlugin(&NodeJSPlugin{}); err != nil {
-		fmt.Printf("Failed to register NodeJS plugin: %v\n", err)
-	}
 }

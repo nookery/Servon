@@ -1,4 +1,4 @@
-package cmd
+package ip
 
 import (
 	"bytes"
@@ -10,7 +10,12 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"servon/core"
 )
+
+func Setup(core *core.Core) {
+	core.AddCommand(IPCmd)
+}
 
 var IPCmd = &cobra.Command{
 	Use:   "ip",

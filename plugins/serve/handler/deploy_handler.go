@@ -3,8 +3,9 @@ package handler
 import (
 	"io"
 	"net/http"
-	"servon/cmd/deploy"
 	"strconv"
+
+	"servon/plugins/deploy"
 
 	"github.com/gin-gonic/gin"
 )

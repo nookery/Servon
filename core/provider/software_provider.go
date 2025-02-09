@@ -32,7 +32,11 @@ func (p *SoftwareProvider) Register(name string, software SuperSoft) error {
 func (p *SoftwareProvider) Install(name string, logChan chan<- string) error {
 	software, ok := p.softwares[name]
 	if !ok {
-		return fmt.Errorf("software %s not found", name)
+		registeredSoftwares := make([]string, 0, len(p.softwares))
+		for name := range p.softwares {
+			registeredSoftwares = append(registeredSoftwares, name)
+		}
+		return fmt.Errorf("软件 %s 未注册, 可用的软件有: %v", name, registeredSoftwares)
 	}
 	return software.Install(logChan)
 }

@@ -4,7 +4,12 @@ import (
 	"servon/core/utils"
 
 	"github.com/spf13/cobra"
+	"servon/core"
 )
+
+func Setup(core *core.Core) {
+	core.AddCommand(GetDeployCommand())
+}
 
 // GetDeployCommand 返回 deploy 命令
 func GetDeployCommand() *cobra.Command {
