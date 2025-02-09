@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"servon/core/model"
 	"servon/core/templates"
 	"servon/core/utils/logger"
@@ -21,12 +22,14 @@ type serviceTemplateData struct {
 
 // SystemProvider 系统管理器
 type SystemProvider struct {
-	RootCmd *cobra.Command
+	RootCmd        *cobra.Command
+	DataRootFolder string
 }
 
-func NewSystemProvider() SystemProvider {
+func NewSystemProvider(dataRootFolder string) SystemProvider {
 	return SystemProvider{
-		RootCmd: &cobra.Command{},
+		RootCmd:        &cobra.Command{},
+		DataRootFolder: dataRootFolder,
 	}
 }
 
@@ -74,14 +77,21 @@ func (s *SystemProvider) CanUseApt() bool {
 // GetServiceFilePath returns the full path of the systemd service file for a given command
 func (p *SystemProvider) GetServiceFilePath(command string) string {
 	serviceName := "servon-" + strings.ReplaceAll(command, "/", "-") + ".service"
-	return "/etc/systemd/system/" + serviceName
+	return filepath.Join(p.DataRootFolder, "services", serviceName)
 }
 
 // RunBackgroundService 使用 systemd 在后台运行指定的命令作为服务，返回服务文件的路径
 func (p *SystemProvider) RunBackgroundService(command string, args []string, logChan chan<- string) (string, error) {
+	serviceFilePath := p.GetServiceFilePath(command)
+
+	// 确保服务目录存在
+	if err := os.MkdirAll(filepath.Dir(serviceFilePath), 0755); err != nil {
+		logger.ErrorChan(logChan, "创建服务目录失败: %v", err)
+		return "", err
+	}
+
 	// 生成唯一的服务名称
 	serviceName := "servon-" + strings.ReplaceAll(command, "/", "-") + ".service"
-	serviceFilePath := p.GetServiceFilePath(command)
 
 	// 准备模板数据
 	data := serviceTemplateData{
@@ -104,12 +114,6 @@ func (p *SystemProvider) RunBackgroundService(command string, args []string, log
 		return "", err
 	}
 
-	// 确保日志目录存在
-	if err := exec.Command("mkdir", "-p", "/var/log/servon").Run(); err != nil {
-		logger.ErrorChan(logChan, "创建日志目录失败: %v", err)
-		return "", err
-	}
-
 	// 写入服务文件
 	if err := os.WriteFile(serviceFilePath, serviceContent.Bytes(), 0644); err != nil {
 		logger.ErrorChan(logChan, "创建服务文件失败: %v", err)
@@ -117,6 +121,13 @@ func (p *SystemProvider) RunBackgroundService(command string, args []string, log
 	}
 
 	logger.InfoChan(logChan, "正在启动服务: %s", serviceName)
+
+	// 创建软链接到系统服务目录
+	systemdPath := "/etc/systemd/system/" + serviceName
+	if err := os.Symlink(serviceFilePath, systemdPath); err != nil {
+		logger.ErrorChan(logChan, "创建服务软链接失败: %v", err)
+		return "", err
+	}
 
 	// 重新加载 systemd 配置
 	if err := exec.Command("systemctl", "daemon-reload").Run(); err != nil {
@@ -143,6 +154,7 @@ func (p *SystemProvider) RunBackgroundService(command string, args []string, log
 func (p *SystemProvider) StopBackgroundService(command string, logChan chan<- string) error {
 	serviceName := "servon-" + strings.ReplaceAll(command, "/", "-") + ".service"
 	serviceFilePath := p.GetServiceFilePath(command)
+	systemdPath := "/etc/systemd/system/" + serviceName
 
 	logger.InfoChan(logChan, "正在停止服务: %s", serviceName)
 
@@ -152,8 +164,14 @@ func (p *SystemProvider) StopBackgroundService(command string, logChan chan<- st
 		return err
 	}
 
+	// 删除软链接
+	if err := os.Remove(systemdPath); err != nil && !os.IsNotExist(err) {
+		logger.ErrorChan(logChan, "删除服务软链接失败: %v", err)
+		return err
+	}
+
 	// 删除服务文件
-	if err := os.Remove(serviceFilePath); err != nil {
+	if err := os.Remove(serviceFilePath); err != nil && !os.IsNotExist(err) {
 		logger.ErrorChan(logChan, "删除服务文件失败: %v", err)
 		return err
 	}

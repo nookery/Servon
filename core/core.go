@@ -5,6 +5,8 @@ import (
 	"servon/core/model"
 )
 
+const DataRootFolder = "/data"
+
 type Core struct {
 	api.Command
 	api.Shell
@@ -24,7 +26,7 @@ func New() *Core {
 		Command: api.NewCommand(),
 		Shell:   api.NewShell(),
 		Soft:    api.NewSoft(),
-		System:  api.NewSystem(),
+		System:  api.NewSystem(DataRootFolder),
 		Util:    api.NewUtil(),
 		Version: api.NewVersion(),
 		Data:    api.NewData(),

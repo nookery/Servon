@@ -9,9 +9,9 @@ type System struct {
 	systemProvider provider.SystemProvider
 }
 
-func NewSystem() System {
+func NewSystem(dataRootFolder string) System {
 	return System{
-		systemProvider: provider.NewSystemProvider(),
+		systemProvider: provider.NewSystemProvider(dataRootFolder),
 	}
 }
 
