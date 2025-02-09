@@ -5,9 +5,9 @@ import (
 	"os/exec"
 	"servon/cmd/software"
 	"servon/cmd/system"
-	"servon/cmd/utils"
-	"servon/cmd/utils/logger"
 	"servon/core/contract"
+	"servon/utils"
+	"servon/utils/logger"
 	"strings"
 )
 

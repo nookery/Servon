@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"servon/cmd/deploy"
-	"servon/cmd/utils"
+	"servon/utils"
 )
 
 // DeployCmd 表示 deploy 命令

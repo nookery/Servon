@@ -3,7 +3,7 @@ package system
 import (
 	"fmt"
 	"os/exec"
-	"servon/cmd/utils/logger"
+	"servon/utils/logger"
 )
 
 // Apt 提供apt包管理器的基本操作

@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 	"os/exec"
-	"servon/cmd/utils/logger"
+	"servon/utils/logger"
 )
 
 func Reload(serviceName string) error {

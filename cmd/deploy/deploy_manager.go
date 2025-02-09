@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"servon/cmd/utils/logger"
+	"servon/utils/logger"
 	"sync"
 )
 

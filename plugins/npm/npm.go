@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os/exec"
 	"servon/cmd/software"
-	"servon/cmd/utils/logger"
 	"servon/core/contract"
+	"servon/utils/logger"
 	"strings"
 )
 

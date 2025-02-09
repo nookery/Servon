@@ -2,7 +2,7 @@ package software
 
 import (
 	"fmt"
-	"servon/cmd/utils/logger"
+	"servon/utils/logger"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
