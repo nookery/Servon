@@ -23,7 +23,7 @@ func (p *NodeJSPlugin) Name() string {
 }
 
 func (p *NodeJSPlugin) Register() {
-	software.RegisterSoftware("nodejs", func() contract.Software {
+	software.RegisterSoftware("nodejs", func() contract.SuperSoftware {
 		return NewNodeJS()
 	})
 }
@@ -33,7 +33,7 @@ type NodeJS struct {
 	info contract.SoftwareInfo
 }
 
-func NewNodeJS() contract.Software {
+func NewNodeJS() contract.SuperSoftware {
 	return &NodeJS{
 		info: contract.SoftwareInfo{
 			Name:        "nodejs",

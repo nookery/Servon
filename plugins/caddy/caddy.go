@@ -23,7 +23,7 @@ func (p *CaddyPlugin) Name() string {
 }
 
 func (p *CaddyPlugin) Register() {
-	software.RegisterSoftware("caddy", func() contract.Software {
+	software.RegisterSoftware("caddy", func() contract.SuperSoftware {
 		return NewCaddy()
 	})
 }
@@ -41,7 +41,7 @@ type Project struct {
 	Port      int
 }
 
-func NewCaddy() contract.Software {
+func NewCaddy() contract.SuperSoftware {
 	return &Caddy{
 		info: contract.SoftwareInfo{
 			Name:        "caddy",

@@ -21,7 +21,7 @@ func (p *NpmPlugin) Name() string {
 }
 
 func (p *NpmPlugin) Register() {
-	software.RegisterSoftware("npm", func() contract.Software {
+	software.RegisterSoftware("npm", func() contract.SuperSoftware {
 		return NewNpm()
 	})
 }
@@ -31,7 +31,7 @@ type Npm struct {
 	info contract.SoftwareInfo
 }
 
-func NewNpm() contract.Software {
+func NewNpm() contract.SuperSoftware {
 	return &Npm{
 		info: contract.SoftwareInfo{
 			Name:        "npm",

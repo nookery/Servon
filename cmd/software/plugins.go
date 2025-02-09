@@ -1,11 +1,12 @@
 package software
 
-import "sync"
-
-import "servon/cmd/contract"
+import (
+	"servon/cmd/contract"
+	"sync"
+)
 
 var (
-	plugins     = make(map[string]contract.Plugin)
+	plugins     = make(map[string]contract.SuperPlugin)
 	pluginMutex sync.RWMutex
 )
 

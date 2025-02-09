@@ -1,7 +1,7 @@
 package contract
 
-// Software 定义软件操作的门面接口
-type Software interface {
+// SuperSoftware 定义软件操作的门面接口
+type SuperSoftware interface {
 	// Install 安装软件，如果提供了日志通道则输出日志
 	Install(logChan chan<- string) error
 	// Uninstall 卸载软件，如果提供了日志通道则输出日志

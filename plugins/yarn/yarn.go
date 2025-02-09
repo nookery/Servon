@@ -21,7 +21,7 @@ func (p *YarnPlugin) Name() string {
 }
 
 func (p *YarnPlugin) Register() {
-	software.RegisterSoftware("yarn", func() contract.Software {
+	software.RegisterSoftware("yarn", func() contract.SuperSoftware {
 		return NewYarn()
 	})
 }
@@ -31,7 +31,7 @@ type Yarn struct {
 	info contract.SoftwareInfo
 }
 
-func NewYarn() contract.Software {
+func NewYarn() contract.SuperSoftware {
 	return &Yarn{
 		info: contract.SoftwareInfo{
 			Name:        "yarn",

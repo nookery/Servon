@@ -25,7 +25,7 @@ func (p *ClashPlugin) Name() string {
 }
 
 func (p *ClashPlugin) Register() {
-	software.RegisterSoftware("clash", func() contract.Software {
+	software.RegisterSoftware("clash", func() contract.SuperSoftware {
 		return NewClash()
 	})
 }
@@ -51,7 +51,7 @@ rules:
   # Configure your rules here
 `
 
-func NewClash() contract.Software {
+func NewClash() contract.SuperSoftware {
 	return &Clash{
 		info: contract.SoftwareInfo{
 			Name:        "clash",

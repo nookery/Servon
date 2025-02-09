@@ -21,7 +21,7 @@ func (p *PnpmPlugin) Name() string {
 }
 
 func (p *PnpmPlugin) Register() {
-	software.RegisterSoftware("pnpm", func() contract.Software {
+	software.RegisterSoftware("pnpm", func() contract.SuperSoftware {
 		return NewPnpm()
 	})
 }
@@ -31,7 +31,7 @@ type Pnpm struct {
 	info contract.SoftwareInfo
 }
 
-func NewPnpm() contract.Software {
+func NewPnpm() contract.SuperSoftware {
 	return &Pnpm{
 		info: contract.SoftwareInfo{
 			Name:        "pnpm",

@@ -23,7 +23,7 @@ func (p *GitPlugin) Name() string {
 }
 
 func (p *GitPlugin) Register() {
-	software.RegisterSoftware("git", func() contract.Software {
+	software.RegisterSoftware("git", func() contract.SuperSoftware {
 		return NewGit()
 	})
 }
@@ -33,7 +33,7 @@ type Git struct {
 	info contract.SoftwareInfo
 }
 
-func NewGit() contract.Software {
+func NewGit() contract.SuperSoftware {
 	return &Git{
 		info: contract.SoftwareInfo{
 			Name:        "git",

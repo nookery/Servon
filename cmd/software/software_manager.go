@@ -9,19 +9,19 @@ import (
 
 var (
 	// registry 存储所有已注册的软件
-	registry = make(map[string]func() contract.Software)
+	registry = make(map[string]func() contract.SuperSoftware)
 	regMutex sync.RWMutex
 )
 
 // RegisterSoftware 注册一个新的软件到注册表中
-func RegisterSoftware(name string, factory func() contract.Software) {
+func RegisterSoftware(name string, factory func() contract.SuperSoftware) {
 	regMutex.Lock()
 	defer regMutex.Unlock()
 	registry[name] = factory
 }
 
 // NewSoftware 创建一个新的软件实例
-func NewSoftware(name string) (contract.Software, error) {
+func NewSoftware(name string) (contract.SuperSoftware, error) {
 	regMutex.RLock()
 	factory, exists := registry[name]
 	regMutex.RUnlock()
