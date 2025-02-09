@@ -71,10 +71,17 @@ func (s *SystemProvider) CanUseApt() bool {
 	return osType == model.Ubuntu || osType == model.Debian
 }
 
-// RunBackgroundService 使用 systemd 在后台运行指定的命令作为服务
-func (p *SystemProvider) RunBackgroundService(command string, args []string, logChan chan<- string) error {
+// GetServiceFilePath returns the full path of the systemd service file for a given command
+func (p *SystemProvider) GetServiceFilePath(command string) string {
+	serviceName := "servon-" + strings.ReplaceAll(command, "/", "-") + ".service"
+	return "/etc/systemd/system/" + serviceName
+}
+
+// RunBackgroundService 使用 systemd 在后台运行指定的命令作为服务，返回服务文件的路径
+func (p *SystemProvider) RunBackgroundService(command string, args []string, logChan chan<- string) (string, error) {
 	// 生成唯一的服务名称
 	serviceName := "servon-" + strings.ReplaceAll(command, "/", "-") + ".service"
+	serviceFilePath := p.GetServiceFilePath(command)
 
 	// 准备模板数据
 	data := serviceTemplateData{
@@ -87,27 +94,26 @@ func (p *SystemProvider) RunBackgroundService(command string, args []string, log
 	tmpl, err := template.ParseFS(templates.TemplateFS, "systemd_service.tmpl")
 	if err != nil {
 		logger.ErrorChan(logChan, "解析服务模板失败: %v", err)
-		return err
+		return "", err
 	}
 
 	// 渲染模板到缓冲区
 	var serviceContent bytes.Buffer
 	if err := tmpl.Execute(&serviceContent, data); err != nil {
 		logger.ErrorChan(logChan, "渲染服务模板失败: %v", err)
-		return err
+		return "", err
 	}
 
 	// 确保日志目录存在
 	if err := exec.Command("mkdir", "-p", "/var/log/servon").Run(); err != nil {
 		logger.ErrorChan(logChan, "创建日志目录失败: %v", err)
-		return err
+		return "", err
 	}
 
 	// 写入服务文件
-	serviceFilePath := "/etc/systemd/system/" + serviceName
 	if err := os.WriteFile(serviceFilePath, serviceContent.Bytes(), 0644); err != nil {
 		logger.ErrorChan(logChan, "创建服务文件失败: %v", err)
-		return err
+		return "", err
 	}
 
 	logger.InfoChan(logChan, "正在启动服务: %s", serviceName)
@@ -115,13 +121,13 @@ func (p *SystemProvider) RunBackgroundService(command string, args []string, log
 	// 重新加载 systemd 配置
 	if err := exec.Command("systemctl", "daemon-reload").Run(); err != nil {
 		logger.ErrorChan(logChan, "重载 systemd 配置失败: %v", err)
-		return err
+		return "", err
 	}
 
 	// 启动并启用服务
 	if err := exec.Command("systemctl", "enable", "--now", serviceName).Run(); err != nil {
 		logger.ErrorChan(logChan, "启动服务失败: %v", err)
-		return err
+		return "", err
 	}
 
 	logger.InfoChan(logChan, "服务已成功启动: %s", serviceName)
@@ -130,12 +136,13 @@ func (p *SystemProvider) RunBackgroundService(command string, args []string, log
 	logger.InfoChan(logChan, "或查看日志文件:")
 	logger.InfoChan(logChan, "  tail -f /var/log/servon/%s.log", serviceName)
 
-	return nil
+	return serviceFilePath, nil
 }
 
 // StopBackgroundService 停止后台运行的服务
 func (p *SystemProvider) StopBackgroundService(command string, logChan chan<- string) error {
 	serviceName := "servon-" + strings.ReplaceAll(command, "/", "-") + ".service"
+	serviceFilePath := p.GetServiceFilePath(command)
 
 	logger.InfoChan(logChan, "正在停止服务: %s", serviceName)
 
@@ -146,7 +153,7 @@ func (p *SystemProvider) StopBackgroundService(command string, logChan chan<- st
 	}
 
 	// 删除服务文件
-	if err := os.Remove("/etc/systemd/system/" + serviceName); err != nil {
+	if err := os.Remove(serviceFilePath); err != nil {
 		logger.ErrorChan(logChan, "删除服务文件失败: %v", err)
 		return err
 	}

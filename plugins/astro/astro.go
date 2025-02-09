@@ -23,6 +23,7 @@ func NewAstroCommand(core *core.Core) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			repo, _ := cmd.Flags().GetString("repo")
 			storage, _ := cmd.Flags().GetString("storage")
+			port, _ := cmd.Flags().GetInt("port")
 
 			if repo == "" || storage == "" {
 				color.New(color.FgRed).Println("\n❌ 缺少必要参数")
@@ -43,7 +44,7 @@ func NewAstroCommand(core *core.Core) *cobra.Command {
 				return
 			}
 
-			err := deploy(core, repo, storage)
+			err := deploy(core, repo, storage, port)
 			if err != nil {
 				core.PrintCommandErrorAndExit(err)
 			}
@@ -53,6 +54,7 @@ func NewAstroCommand(core *core.Core) *cobra.Command {
 	// 添加命令行参数
 	rootCmd.Flags().String("repo", "", "Astro项目的Git仓库地址")
 	rootCmd.Flags().String("storage", "", "项目部署的目标存储路径")
+	rootCmd.Flags().Int("port", 0, "服务端口")
 
 	return rootCmd
 }

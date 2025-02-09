@@ -36,6 +36,7 @@ func (c *System) CanUseApt() bool {
 //
 // 返回值:
 //   - error: 如果服务启动失败，返回错误信息；如果成功启动，返回 nil
+//   - serviceFilePath: 服务文件的路径
 //
 // 示例:
 //
@@ -54,7 +55,7 @@ func (c *System) CanUseApt() bool {
 //  3. 如果进程崩溃会自动重启
 //  4. 日志会被写入到 /var/log/servon/{服务名}.log
 //  5. 可以使用 systemctl status/start/stop/restart 命令管理服务
-func (c *System) RunBackgroundService(command string, args []string, logChan chan<- string) error {
+func (c *System) RunBackgroundService(command string, args []string, logChan chan<- string) (string, error) {
 	return c.systemProvider.RunBackgroundService(command, args, logChan)
 }
 
