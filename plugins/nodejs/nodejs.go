@@ -7,21 +7,22 @@ import (
 	"servon/core/contract"
 	"servon/core/model"
 	"servon/core/system"
-	"servon/core/utils"
 	"servon/core/utils/logger"
 	"strings"
 )
 
 type NodeJS struct {
 	info contract.SoftwareInfo
+	core *core.Core
 }
 
 func Setup(core *core.Core) {
-	core.RegisterSoftware("nodejs", NewNodeJS())
+	core.RegisterSoftware("nodejs", NewNodeJS(core))
 }
 
-func NewNodeJS() contract.SuperSoft {
+func NewNodeJS(core *core.Core) contract.SuperSoft {
 	return &NodeJS{
+		core: core,
 		info: contract.SoftwareInfo{
 			Name:        "nodejs",
 			Description: "JavaScript 运行时环境",
@@ -32,7 +33,7 @@ func NewNodeJS() contract.SuperSoft {
 func (n *NodeJS) Install(logChan chan<- string) error {
 	outputChan := make(chan string, 100)
 	apt := system.NewApt()
-	osType := utils.GetOSType()
+	osType := n.core.GetOSType()
 
 	switch osType {
 	case model.Ubuntu, model.Debian:

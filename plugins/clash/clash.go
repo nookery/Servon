@@ -9,7 +9,6 @@ import (
 	"servon/core/contract"
 	"servon/core/model"
 	"servon/core/system"
-	"servon/core/utils"
 	"servon/core/utils/logger"
 	"strings"
 )
@@ -21,6 +20,7 @@ func Setup(core *core.Core) {
 // Clash 实现 Software 接口
 type Clash struct {
 	info contract.SoftwareInfo
+	core *core.Core
 }
 
 // Configuration related constants and types
@@ -50,7 +50,7 @@ func NewClash() contract.SuperSoft {
 
 // ... existing code from clash.go ...
 func (c *Clash) Install(logChan chan<- string) error {
-	osType := utils.GetOSType()
+	osType := c.core.GetOSType()
 	logger.InfoChan(logChan, "检测到操作系统: %s", osType)
 
 	switch osType {

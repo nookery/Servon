@@ -4,9 +4,13 @@ import (
 	"fmt"
 	"os"
 
+	"servon/core/model"
+
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
+
+type OSType = model.OSType
 
 // UtilProvider 工具提供者
 type UtilProvider struct {

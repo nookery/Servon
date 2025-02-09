@@ -1,10 +1,12 @@
 package provider
 
 import (
-	"github.com/spf13/cobra"
+	"os/exec"
 	"servon/core/model"
-	"servon/core/utils"
 	"servon/core/utils/logger"
+	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 // SystemProvider 系统管理器
@@ -30,8 +32,28 @@ func (p *SystemProvider) UninstallSoftware(name string, logChan chan<- string) e
 	return nil
 }
 
-func (s *SystemProvider) GetOSType() utils.OSType {
-	return utils.GetOSType()
+func (s *SystemProvider) GetOSType() OSType {
+	// 尝试读取 /etc/os-release 文件
+	cmd := exec.Command("cat", "/etc/os-release")
+	output, err := cmd.Output()
+	if err != nil {
+		return model.Unknown
+	}
+
+	osInfo := strings.ToLower(string(output))
+
+	switch {
+	case strings.Contains(osInfo, "ubuntu"):
+		return model.Ubuntu
+	case strings.Contains(osInfo, "debian"):
+		return model.Debian
+	case strings.Contains(osInfo, "centos"):
+		return model.CentOS
+	case strings.Contains(osInfo, "redhat"):
+		return model.RedHat
+	default:
+		return model.Unknown
+	}
 }
 
 func (s *SystemProvider) CanUseApt() bool {

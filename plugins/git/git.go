@@ -7,7 +7,6 @@ import (
 	"servon/core/contract"
 	"servon/core/model"
 	"servon/core/system"
-	"servon/core/utils"
 	"servon/core/utils/logger"
 	"strings"
 )
@@ -19,6 +18,7 @@ func Setup(core *core.Core) {
 // Git 实现 Software 接口
 type Git struct {
 	info contract.SoftwareInfo
+	core *core.Core
 }
 
 func NewGit() contract.SuperSoft {
@@ -35,7 +35,7 @@ func (g *Git) Install(logChan chan<- string) error {
 	logger.InfoChan(logChan, "正在安装 Git...")
 
 	// 检查操作系统类型
-	osType := utils.GetOSType()
+	osType := g.core.GetOSType()
 	logger.InfoChan(logChan, "检测到操作系统: %s", osType)
 
 	switch osType {
@@ -78,7 +78,7 @@ func (g *Git) Install(logChan chan<- string) error {
 func (g *Git) Uninstall(logChan chan<- string) error {
 	logger.InfoChan(logChan, "正在卸载 Git...")
 
-	osType := utils.GetOSType()
+	osType := g.core.GetOSType()
 	switch osType {
 	case model.Ubuntu, model.Debian:
 		apt := system.NewApt()
