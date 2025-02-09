@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 	"servon/cmd"
-	"servon/cmd/software"
+	"servon/core/provider"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -34,7 +34,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	// 加载所有插件
-	if err := software.LoadPlugins(); err != nil {
+	if err := provider.LoadPlugins(); err != nil {
 		color.Red("Error loading plugins: %v\n", err)
 		os.Exit(1)
 	}

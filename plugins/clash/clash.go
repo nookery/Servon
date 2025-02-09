@@ -5,11 +5,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"servon/cmd/contract"
 	"servon/cmd/software"
 	"servon/cmd/system"
 	"servon/cmd/utils"
 	"servon/cmd/utils/logger"
+	"servon/core/contract"
 	"strings"
 )
 

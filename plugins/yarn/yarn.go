@@ -3,9 +3,9 @@ package yarn
 import (
 	"fmt"
 	"os/exec"
-	"servon/cmd/contract"
 	"servon/cmd/software"
 	"servon/cmd/utils/logger"
+	"servon/core/contract"
 	"strings"
 )
 

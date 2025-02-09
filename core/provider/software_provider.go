@@ -1,7 +1,7 @@
-package software
+package provider
 
 import (
-	"servon/cmd/contract"
+	"servon/core/contract"
 	"sync"
 )
 

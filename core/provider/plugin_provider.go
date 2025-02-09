@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"servon/cmd/contract"
+	"servon/core/contract"
 )
 
 type SuperPlugin = contract.SuperPlugin

@@ -3,11 +3,11 @@ package nodejs
 import (
 	"fmt"
 	"os/exec"
-	"servon/cmd/contract"
 	"servon/cmd/software"
 	"servon/cmd/system"
 	"servon/cmd/utils"
 	"servon/cmd/utils/logger"
+	"servon/core/contract"
 	"strings"
 )
 

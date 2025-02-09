@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"servon/cmd/contract"
+	"servon/core/contract"
 )
 
 var (
