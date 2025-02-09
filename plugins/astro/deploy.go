@@ -18,6 +18,8 @@ func deploy(core *core.Core, repo string, storage string) error {
 		return core.PrintAndReturnError(err.Error())
 	}
 
+	core.RunBackgroundService("node", []string{storage + "/index.js"}, nil)
+
 	// 成功提示
 	fmt.Println()
 	color.New(color.FgGreen, color.Bold).Printf("✨ Astro项目部署成功！\n")
