@@ -11,6 +11,8 @@ type Core struct {
 	versionProvider  provider.VersionProvider
 	systemProvider   provider.SystemProvider
 	sampleProvider   provider.SampleProvider
+	shellProvider    provider.ShellProvider
+	utilProvider     provider.UtilProvider
 }
 
 type OSType = model.OSType
@@ -23,5 +25,7 @@ func New() *Core {
 		versionProvider:  provider.NewVersionProvider(),
 		systemProvider:   provider.NewSystemProvider(),
 		sampleProvider:   provider.NewSampleProvider(),
+		shellProvider:    provider.NewShellProvider(),
+		utilProvider:     provider.NewUtilProvider(),
 	}
 }

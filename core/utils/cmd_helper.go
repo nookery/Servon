@@ -12,7 +12,9 @@ func PrintCommandHelp(cmd *cobra.Command) {
 	fmt.Println()
 
 	// 首先显示 Long 描述（包含 ASCII 艺术和描述文本）
-	fmt.Println(cmd.Long)
+	if cmd.Long != "" {
+		fmt.Println(cmd.Long)
+	}
 
 	// 自动获取所有子命令及其描述
 	commands := make(map[string]string)

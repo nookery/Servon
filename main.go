@@ -7,6 +7,7 @@ import (
 	"github.com/fatih/color"
 
 	// 导入插件
+	"servon/plugins/astro"
 	"servon/plugins/caddy"
 	"servon/plugins/clash"
 	"servon/plugins/deploy"
@@ -34,6 +35,7 @@ func main() {
 	ip.Setup(core)
 	version.Setup(core)
 	deploy.Setup(core)
+	astro.Setup(core)
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)
