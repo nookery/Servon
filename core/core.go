@@ -16,8 +16,8 @@ type Core struct {
 type OSType = model.OSType
 
 // New 创建Core实例
-func New() Core {
-	return Core{
+func New() *Core {
+	return &Core{
 		softwareProvider: provider.NewSoftwareProvider(),
 		commandProvider:  provider.NewCommandProvider(),
 		versionProvider:  provider.NewVersionProvider(),

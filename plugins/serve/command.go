@@ -48,7 +48,7 @@ func NewServeCommand(core *core.Core) *cobra.Command {
 				color.YellowString("⚡"),
 				color.HiBlackString("Server is ready"))
 
-			server := NewServer(host, port, !apiOnly)
+			server := NewServer(host, port, !apiOnly, core)
 			server.Start()
 		},
 	}

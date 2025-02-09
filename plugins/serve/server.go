@@ -15,7 +15,7 @@ type Server struct {
 	core   *core.Core
 }
 
-func NewServer(host string, port int, withUI bool) *Server {
+func NewServer(host string, port int, withUI bool, core *core.Core) *Server {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.RedirectTrailingSlash = false
@@ -50,6 +50,7 @@ func NewServer(host string, port int, withUI bool) *Server {
 		host:   host,
 		port:   port,
 		withUI: withUI,
+		core:   core,
 	}
 }
 

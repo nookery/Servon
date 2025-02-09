@@ -3,8 +3,9 @@ package handler
 import (
 	"sort"
 
-	"github.com/gin-gonic/gin"
 	"servon/core"
+
+	"github.com/gin-gonic/gin"
 )
 
 // SoftwareHandler 处理软件相关的 HTTP 请求
@@ -14,6 +15,10 @@ type SoftwareHandler struct {
 
 // NewSoftwareHandler 创建软件处理器实例
 func NewSoftwareHandler(core *core.Core) *SoftwareHandler {
+	if core == nil {
+		panic("core is nil")
+	}
+
 	return &SoftwareHandler{
 		core: core,
 	}
