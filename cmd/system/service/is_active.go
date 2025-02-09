@@ -2,7 +2,7 @@ package service
 
 import (
 	"os/exec"
-	"servon/utils/logger"
+	"servon/core/utils/logger"
 	"strings"
 )
 

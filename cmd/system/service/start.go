@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 	"os/exec"
-	"servon/utils/logger"
+	"servon/core/utils/logger"
 )
 
 func Start(serviceName string) error {

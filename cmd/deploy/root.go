@@ -1,7 +1,7 @@
 package deploy
 
 import (
-	"servon/utils"
+	"servon/core/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -17,12 +17,7 @@ func GetDeployCommand() *cobra.Command {
   servon deploy start    # 启动部署
   servon deploy stop     # 停止部署`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			utils.PrintCommandHelp(cmd, map[string]string{
-				"start": "启动部署",
-				"stop":  "停止部署",
-				"get":   "获取项目列表",
-				"serve": "创建静态文件服务",
-			})
+			utils.PrintCommandHelp(cmd)
 			return nil
 		},
 	}
