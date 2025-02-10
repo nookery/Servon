@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os/exec"
+
+	"github.com/fatih/color"
 )
 
 func Debug(format string, args ...interface{}) {
@@ -11,10 +13,11 @@ func Debug(format string, args ...interface{}) {
 }
 
 func Error(args ...interface{}) {
-	fmt.Print(args...)
+	fmt.Println(append([]interface{}{color.RedString("❌")}, args...)...)
 }
 
 func Errorf(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
 	fmt.Printf(format, args...)
 }
 
@@ -80,4 +83,9 @@ func StreamCommand(cmd *exec.Cmd) error {
 	}()
 
 	return cmd.Run()
+}
+
+// Warn 打印警告信息
+func Warn(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
 }

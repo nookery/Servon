@@ -53,3 +53,8 @@ func (c *LogApi) PrintAndReturnError(errMsg string) error {
 func (c *LogApi) PrintList(list []string, title string) {
 	libs.PrintList(list, title)
 }
+
+// Warn 打印警告信息
+func (c *LogApi) Warn(format string, args ...interface{}) {
+	libs.Warn(format, args...)
+}

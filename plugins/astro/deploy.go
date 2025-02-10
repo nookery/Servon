@@ -9,7 +9,7 @@ import (
 func (a *AstroPlugin) deploy(repo string, storage string, port int) error {
 	err := a.clone(repo, storage)
 	if err != nil {
-		return a.PrintAndReturnError(err.Error())
+		return err
 	}
 
 	err = a.build(storage)

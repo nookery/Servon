@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"os/exec"
 	"servon/core/libs"
 	"servon/core/templates"
@@ -74,17 +75,17 @@ func (c *CommandApi) NewCommand(opts CommandOptions) *cobra.Command {
 		},
 		Run: opts.Run,
 		PostRun: func(cmd *cobra.Command, args []string) {
-			libs.Infoln("🎉 命令执行成功 PostRun")
+			// libs.Infoln("🎉 命令执行成功 PostRun")
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			libs.Infoln("🎉 命令执行完成 PostRunE")
+			// libs.Infoln("🎉 命令执行完成 PostRunE")
 			return nil
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-			libs.Infoln("🎉 命令执行完成 PersistentPostRun")
+			// libs.Infoln("🎉 命令执行完成 PersistentPostRun")
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-			libs.Infoln("🎉 命令执行完成 PersistentPostRunE")
+			// libs.Infoln("🎉 命令执行完成 PersistentPostRunE")
 			return nil
 		},
 	}
@@ -95,7 +96,7 @@ func (c *CommandApi) NewCommand(opts CommandOptions) *cobra.Command {
 
 	// 自定义错误处理
 	cmd.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
-		c.Printf("%s\n", red("❌ 错误：缺少必需的参数"))
+		c.Printf("%s\n", red("❌ 错误："+fmt.Sprintf("%v", err)))
 		return nil
 	})
 
