@@ -149,14 +149,22 @@ func NewCommand(opts CommandOptions) *cobra.Command {
 
 	// 自定义帮助
 	cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
+		c.Println()
 		c.Printf("\x1b[1;36m🌈 命令帮助\x1b[0m\n")
 		c.Printf("\x1b[1;35m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m\n")
 		c.Printf("\x1b[1;33m📌 命令: %s\x1b[0m\n", c.Use)
 		c.Printf("\x1b[1;32m📝 描述: %s\x1b[0m\n", c.Short)
+		c.Println()
+		c.Printf("\x1b[1;34m🎯 子命令列表:\x1b[0m\n")
+		for _, subCmd := range c.Commands() {
+			c.Printf("\x1b[1;34m  %s \x1b[0m %s\n", subCmd.Use, subCmd.Short)
+		}
+		c.Println()
 		c.Printf("\x1b[1;34m🎯 参数列表:\x1b[0m\n")
 		c.Printf("\x1b[1;34m%s\x1b[0m\n", c.LocalFlags().FlagUsages())
 		c.Printf("\x1b[1;36m✨ 示例:\x1b[0m\n")
 		c.Printf("\x1b[1;36m%s [参数]\x1b[0m\n", c.CommandPath())
+		c.Println()
 	})
 
 	// 自定义使用说明模板
