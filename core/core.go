@@ -44,6 +44,6 @@ func New() *Core {
 	}
 
 	core.AddCommand(core.GetDeployCommand())
-
+	core.AddCommand(core.GetVersionCommand())
 	return core
 }

@@ -15,7 +15,6 @@ import (
 	"servon/plugins/nodejs"
 	"servon/plugins/pnpm"
 	"servon/plugins/software"
-	"servon/plugins/version"
 	"servon/plugins/yarn"
 )
 
@@ -29,7 +28,6 @@ func main() {
 	pnpm.Setup(core)
 	clash.Setup(core)
 	ip.Setup(core)
-	version.Setup(core)
 	astro.Setup(core)
 	software.Setup(core)
 
