@@ -110,7 +110,34 @@ func NewCommand(opts CommandOptions) *cobra.Command {
 		Short:         opts.Short,
 		SilenceErrors: true,
 		SilenceUsage:  true,
-		RunE:          opts.RunE,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			Info("开始执行命令")
+			fmt.Println()
+		},
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			Info("开始执行命令")
+			fmt.Println()
+			return nil
+		},
+		RunE: opts.RunE,
+		PostRun: func(cmd *cobra.Command, args []string) {
+			Info("命令执行成功")
+			fmt.Println()
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			Info("命令执行成功")
+			fmt.Println()
+			return nil
+		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			Info("命令执行成功")
+			fmt.Println()
+		},
+		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+			Info("命令执行成功")
+			fmt.Println()
+			return nil
+		},
 	}
 
 	// 自定义错误处理
@@ -133,19 +160,19 @@ func NewCommand(opts CommandOptions) *cobra.Command {
 	})
 
 	// 自定义使用说明模板
-	cmd.SetUsageTemplate(`
-` + "\x1b[1;36m" + `🌈 命令说明` + "\x1b[0m" + `
-` + "\x1b[1;35m" + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` + "\x1b[0m" + `
-` + "\x1b[1;33m" + `📌 命令:` + "\x1b[0m" + ` {{.UseLine}}
-` + "\x1b[1;32m" + `📝 描述:` + "\x1b[0m" + ` {{.Short}}
+	// 	cmd.SetUsageTemplate(`
+	// ` + "\x1b[1;36m" + `🌈 命令说明` + "\x1b[0m" + `
+	// ` + "\x1b[1;35m" + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` + "\x1b[0m" + `
+	// ` + "\x1b[1;33m" + `📌 命令:` + "\x1b[0m" + ` {{.UseLine}}
+	// ` + "\x1b[1;32m" + `📝 描述:` + "\x1b[0m" + ` {{.Short}}
 
-` + "\x1b[1;34m" + `🎯 参数列表:` + "\x1b[0m" + `
-{{.LocalFlags.FlagUsages}}
-` + "\x1b[1;36m" + `✨ 示例:` + "\x1b[0m" + `{{.CommandPath}} [参数]
+	// ` + "\x1b[1;34m" + `🎯 参数列表:` + "\x1b[0m" + `
+	// {{.LocalFlags.FlagUsages}}
+	// ` + "\x1b[1;36m" + `✨ 示例:` + "\x1b[0m" + `{{.CommandPath}} [参数]
 
-` + "\x1b[1;33m" + `💡 提示:` + "\x1b[0m" + ` 使用 -h 或 --help 查看更多帮助信息
-` + "\x1b[1;35m" + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` + "\x1b[0m\n\n" + `
-`)
+	// ` + "\x1b[1;33m" + `💡 提示:` + "\x1b[0m" + ` 使用 -h 或 --help 查看更多帮助信息
+	// ` + "\x1b[1;35m" + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` + "\x1b[0m\n\n" + `
+	// `)
 
 	// 确保错误不会传播到父命令
 	if cmd.Root() != nil {
