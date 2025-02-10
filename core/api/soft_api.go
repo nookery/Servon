@@ -25,14 +25,14 @@ func (p *Soft) newInfoCmd() *cobra.Command {
 		Short: "显示软件详细信息",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				libs.PrintError(fmt.Errorf("\n❌ 缺少软件名称参数"))
+				printer.PrintError(fmt.Errorf("\n❌ 缺少软件名称参数"))
 				fmt.Println("\n用法:")
-				libs.PrintYellow("  servon software info ")
+				printer.PrintYellow("  servon software info ")
 				fmt.Println("[软件名称]")
 
 				// 显示支持的软件列表
 				names := p.GetAllSoftware()
-				libs.PrintList(names, "支持的软件列表")
+				printer.PrintList(names, "支持的软件列表")
 
 				return
 			}
@@ -49,11 +49,11 @@ func (p *Soft) newInfoCmd() *cobra.Command {
 			}
 
 			if !supported {
-				libs.PrintErrorMessage(fmt.Sprintf("不支持的软件: %s", name))
+				printer.PrintErrorMessage(fmt.Sprintf("不支持的软件: %s", name))
 				fmt.Println("\n支持的软件:")
 				names := p.GetAllSoftware()
 				for _, name := range names {
-					libs.PrintList([]string{name}, "支持的软件")
+					printer.PrintList([]string{name}, "支持的软件")
 				}
 				return
 			}
@@ -61,32 +61,32 @@ func (p *Soft) newInfoCmd() *cobra.Command {
 			// 获取软件状态
 			status, err := p.GetSoftwareStatus(name)
 			if err != nil {
-				libs.PrintErrorMessage(fmt.Sprintf("获取软件状态失败: %v", err))
+				printer.PrintErrorMessage(fmt.Sprintf("获取软件状态失败: %v", err))
 				return
 			}
 
 			// 显示软件信息
 			fmt.Println()
-			libs.PrintCyan("%s", fmt.Sprintf("📦 %s\n", name))
+			printer.PrintCyan("%s", fmt.Sprintf("📦 %s\n", name))
 			fmt.Println()
 
 			// 显示安装状态
-			libs.PrintWhite("状态: ")
+			printer.PrintWhite("状态: ")
 			switch status["status"] {
 			case "running":
-				libs.PrintGreen("运行中")
+				printer.PrintGreen("运行中")
 			case "stopped":
-				libs.PrintYellow("已停止")
+				printer.PrintYellow("已停止")
 			case "not_installed":
-				libs.PrintRed("未安装")
+				printer.PrintRed("未安装")
 			default:
-				libs.PrintWhite(status["status"])
+				printer.PrintWhite(status["status"])
 			}
 
 			// 显示版本信息
 			if version := status["version"]; version != "" {
-				libs.PrintWhite("版本: ")
-				libs.PrintWhite(version)
+				printer.PrintWhite("版本: ")
+				printer.PrintWhite(version)
 			}
 
 			fmt.Println()
@@ -118,21 +118,21 @@ func (p *Soft) newStartCmd() *cobra.Command {
 		Short: "启动指定的软件",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				libs.PrintErrorMessage("缺少软件名称参数")
+				printer.PrintErrorMessage("缺少软件名称参数")
 				fmt.Println("\n用法:")
-				libs.PrintYellow("  servon software start ")
+				printer.PrintYellow("  servon software start ")
 				fmt.Println("[软件名称]")
 
 				// 显示支持的软件列表
 				names := p.GetAllSoftware()
 				fmt.Println("\n支持的软件:")
 				for _, name := range names {
-					libs.PrintList([]string{name}, "支持的软件")
+					printer.PrintList([]string{name}, "支持的软件")
 				}
 
 				fmt.Println("\n示例:")
-				libs.PrintCyan("  servon software start nginx")
-				libs.PrintCyan("  servon software start mysql")
+				printer.PrintCyan("  servon software start nginx")
+				printer.PrintCyan("  servon software start mysql")
 				return
 			}
 
@@ -148,11 +148,11 @@ func (p *Soft) newStartCmd() *cobra.Command {
 			}
 
 			if !supported {
-				libs.PrintErrorMessage(fmt.Sprintf("不支持的软件: %s", name))
+				printer.PrintErrorMessage(fmt.Sprintf("不支持的软件: %s", name))
 				fmt.Println("\n支持的软件:")
 				names := p.GetAllSoftware()
 				for _, name := range names {
-					libs.PrintList([]string{name}, "支持的软件")
+					printer.PrintList([]string{name}, "支持的软件")
 				}
 				return
 			}
@@ -178,21 +178,21 @@ func (p *Soft) newStopCmd() *cobra.Command {
 		Short: "停止指定的软件",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				libs.PrintErrorMessage("缺少软件名称参数")
+				printer.PrintErrorMessage("缺少软件名称参数")
 				fmt.Println("\n用法:")
-				libs.PrintYellow("  servon software stop ")
+				printer.PrintYellow("  servon software stop ")
 				fmt.Println("[软件名称]")
 
 				// 显示支持的软件列表
 				names := p.GetAllSoftware()
 				fmt.Println("\n支持的软件:")
 				for _, name := range names {
-					libs.PrintList([]string{name}, "支持的软件")
+					printer.PrintList([]string{name}, "支持的软件")
 				}
 
 				fmt.Println("\n示例:")
-				libs.PrintCyan("  servon software stop caddy")
-				libs.PrintCyan("  servon software stop clash")
+				printer.PrintCyan("  servon software stop caddy")
+				printer.PrintCyan("  servon software stop clash")
 				return
 			}
 
@@ -208,11 +208,11 @@ func (p *Soft) newStopCmd() *cobra.Command {
 			}
 
 			if !supported {
-				libs.PrintErrorMessage(fmt.Sprintf("不支持的软件: %s", name))
+				printer.PrintErrorMessage(fmt.Sprintf("不支持的软件: %s", name))
 				fmt.Println("\n支持的软件:")
 				names := p.GetAllSoftware()
 				for _, name := range names {
-					libs.PrintList([]string{name}, "支持的软件")
+					printer.PrintList([]string{name}, "支持的软件")
 				}
 				return
 			}
@@ -241,7 +241,7 @@ func (p *Soft) newListCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			names := p.GetAllSoftware()
 
-			libs.PrintList(names, "支持的软件列表")
+			printer.PrintList(names, "支持的软件列表")
 		},
 	})
 }
@@ -281,8 +281,8 @@ func (c *Soft) Install(name string, logChan chan<- string) error {
 			registeredSoftwares = append(registeredSoftwares, name)
 		}
 
-		libs.PrintList(registeredSoftwares, "可用的软件")
-		return libs.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
+		printer.PrintList(registeredSoftwares, "可用的软件")
+		return printer.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
 	return software.Install(logChan)
 }
@@ -291,7 +291,7 @@ func (c *Soft) Install(name string, logChan chan<- string) error {
 func (c *Soft) UninstallSoftware(name string, logChan chan<- string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
-		return libs.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
+		return printer.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
 	return software.Uninstall(logChan)
 }
@@ -300,7 +300,7 @@ func (c *Soft) UninstallSoftware(name string, logChan chan<- string) error {
 func (c *Soft) StartSoftware(name string, logChan chan<- string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
-		return libs.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
+		return printer.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
 	return software.Start(logChan)
 }
@@ -309,7 +309,7 @@ func (c *Soft) StartSoftware(name string, logChan chan<- string) error {
 func (c *Soft) StopSoftware(name string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
-		return libs.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
+		return printer.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
 	return software.Stop()
 }
@@ -318,7 +318,7 @@ func (c *Soft) StopSoftware(name string) error {
 func (c *Soft) GetSoftwareStatus(name string) (map[string]string, error) {
 	software, ok := c.Softwares[name]
 	if !ok {
-		return nil, libs.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
+		return nil, printer.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
 	return software.GetStatus()
 }
@@ -326,7 +326,7 @@ func (c *Soft) GetSoftwareStatus(name string) (map[string]string, error) {
 // RegisterSoftware 注册软件
 func (c *Soft) RegisterSoftware(name string, software contract.SuperSoft) error {
 	if _, exists := c.Softwares[name]; exists {
-		return libs.PrintAndReturnError(fmt.Sprintf("软件 %s 已注册", name))
+		return printer.PrintAndReturnError(fmt.Sprintf("软件 %s 已注册", name))
 	}
 	c.Softwares[name] = software
 	return nil

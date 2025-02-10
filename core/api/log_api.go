@@ -45,15 +45,6 @@ func (c *LogApi) InfoChan(ch chan<- string, format string, args ...interface{}) 
 	libs.InfoChan(ch, format, args...)
 }
 
-func (c *LogApi) PrintAndReturnError(errMsg string) error {
-	return libs.PrintAndReturnError(errMsg)
-}
-
-// PrintList 打印列表
-func (c *LogApi) PrintList(list []string, title string) {
-	libs.PrintList(list, title)
-}
-
 // Warn 打印警告信息
 func (c *LogApi) Warn(format string, args ...interface{}) {
 	libs.Warn(format, args...)

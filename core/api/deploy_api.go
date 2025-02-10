@@ -45,7 +45,7 @@ func (c *DeployApi) NewMethodsCommand() *cobra.Command {
 		Use:   "methods",
 		Short: "列举出当前的部署方法",
 		Run: func(cmd *cobra.Command, args []string) {
-			libs.PrintList(c.GetMethods(), "部署方法")
+			printer.PrintList(c.GetMethods(), "部署方法")
 		},
 	})
 }
