@@ -1,25 +1,21 @@
 package core
 
 import (
+	"servon/core/api"
 	"servon/core/libs"
 )
 
 // 调用关系 Core -> Core API(Public) -> Libs(Private)
 
-import (
-	"servon/core/api"
-)
-
 const DataRootFolder = "/data"
 const LoggerFolder = "/logs"
 
 type Core struct {
-	api.Command
+	api.CommandApi
 	api.Soft
 	api.SystemApi
-	api.Version
+	api.VersionApi
 	api.Data
-	api.Sample
 	api.LogApi
 }
 
@@ -37,12 +33,11 @@ const (
 // New 创建Core实例
 func New() *Core {
 	return &Core{
-		Command:   api.NewCommandApi(),
-		Soft:      api.NewSoft(),
-		SystemApi: api.NewSystemApi(),
-		Version:   api.NewVersion(),
-		Data:      api.NewData(),
-		Sample:    api.NewSample(),
-		LogApi:    api.NewLogApi(),
+		CommandApi: api.NewCommandApi(),
+		Soft:       api.NewSoft(),
+		SystemApi:  api.NewSystemApi(),
+		VersionApi: api.NewVersion(),
+		Data:       api.NewData(),
+		LogApi:     api.NewLogApi(),
 	}
 }

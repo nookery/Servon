@@ -2,34 +2,39 @@ package software
 
 import (
 	"servon/core"
-	"servon/core/utils"
 
 	"github.com/spf13/cobra"
 )
 
+type SoftWarePlugin struct {
+	core *core.Core
+}
+
+func NewSoftWarePlugin(core *core.Core) *SoftWarePlugin {
+	return &SoftWarePlugin{
+		core: core,
+	}
+}
+
 // Setup 注册到内核
 func Setup(core *core.Core) error {
-	core.AddCommand(GetSoftwareCommand(core))
+	plugin := NewSoftWarePlugin(core)
+	core.AddCommand(plugin.GetSoftwareCommand())
 	return nil
 }
 
 // GetSoftwareCommand 返回 software 命令
-func GetSoftwareCommand(core *core.Core) *cobra.Command {
-	cmd := &cobra.Command{
+func (p *SoftWarePlugin) GetSoftwareCommand() *cobra.Command {
+	cmd := p.core.NewCommand(core.CommandOptions{
 		Use:   "software",
 		Short: "软件管理",
-		Long:  `📦 软件管理`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			utils.PrintCommandHelp(cmd)
-			return nil
-		},
-	}
+	})
 
-	cmd.AddCommand(newListCmd(core))
-	cmd.AddCommand(newInstallCmd(core))
-	cmd.AddCommand(newInfoCmd(core))
-	cmd.AddCommand(newStartCmd(core))
-	cmd.AddCommand(newStopCmd(core))
+	cmd.AddCommand(p.newListCmd())
+	cmd.AddCommand(p.newInstallCmd())
+	cmd.AddCommand(p.newInfoCmd())
+	cmd.AddCommand(p.newStartCmd())
+	cmd.AddCommand(p.newStopCmd())
 
 	return cmd
 }

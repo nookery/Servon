@@ -2,15 +2,13 @@ package software
 
 import (
 	"fmt"
-	"servon/core"
-	"servon/core/utils/logger"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
 // newStartCmd 返回 start 子命令
-func newStartCmd(core *core.Core) *cobra.Command {
+func (p *SoftWarePlugin) newStartCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "start [软件名称]",
 		Short: "启动指定的软件",
@@ -27,7 +25,7 @@ func newStartCmd(core *core.Core) *cobra.Command {
 				fmt.Println("[软件名称]")
 
 				// 显示支持的软件列表
-				names := core.GetAllSoftware()
+				names := p.core.GetAllSoftware()
 				fmt.Println("\n支持的软件:")
 				for _, name := range names {
 					color.New(color.FgHiWhite).Printf("  - %s\n", name)
@@ -43,7 +41,7 @@ func newStartCmd(core *core.Core) *cobra.Command {
 
 			// 检查软件是否支持
 			supported := false
-			for _, sw := range core.GetAllSoftware() {
+			for _, sw := range p.core.GetAllSoftware() {
 				if sw == name {
 					supported = true
 					break
@@ -53,23 +51,23 @@ func newStartCmd(core *core.Core) *cobra.Command {
 			if !supported {
 				color.New(color.FgRed).Printf("\n❌ 不支持的软件: %s\n", name)
 				fmt.Println("\n支持的软件:")
-				for _, sw := range core.GetAllSoftware() {
+				for _, sw := range p.core.GetAllSoftware() {
 					color.New(color.FgHiWhite).Printf("  - %s\n", sw)
 				}
 				return nil
 			}
 
 			// 开始启动
-			logger.InfoTitle("🚀 %s 启动中 ...", name)
+			p.core.Infoln("🚀 %s 启动中 ...", name)
 
-			err := core.StartSoftware(name, nil)
+			err := p.core.StartSoftware(name, nil)
 			if err != nil {
-				logger.InfoTitle("❌ %s 启动失败", name)
-				logger.Error("%s", err)
+				p.core.Infoln("❌ %s 启动失败", name)
+				p.core.Error("%s", err)
 				return nil
 			}
 
-			logger.InfoTitle("✅ %s 启动成功！", name)
+			p.core.Infoln("✅ %s 启动成功！", name)
 
 			return nil
 		},

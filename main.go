@@ -14,6 +14,7 @@ import (
 	"servon/plugins/ip"
 	"servon/plugins/nodejs"
 	"servon/plugins/pnpm"
+	"servon/plugins/software"
 	"servon/plugins/version"
 	"servon/plugins/yarn"
 )
@@ -30,6 +31,7 @@ func main() {
 	ip.Setup(core)
 	version.Setup(core)
 	astro.Setup(core)
+	software.Setup(core)
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)

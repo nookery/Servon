@@ -6,20 +6,14 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"servon/core"
-	"servon/core/utils"
 )
 
 // newInfoCmd 返回 info 子命令
-func newInfoCmd(core *core.Core) *cobra.Command {
-	return &cobra.Command{
+func (p *SoftWarePlugin) newInfoCmd() *cobra.Command {
+	return p.core.NewCommand(core.CommandOptions{
 		Use:   "info [软件名称]",
 		Short: "显示软件详细信息",
-		Long: `显示指定软件的详细信息，包括安装状态、版本等。
-
-示例：
-  servon software info nginx    # 显示 nginx 的详细信息
-  servon software info mysql    # 显示 mysql 的详细信息`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				color.New(color.FgRed).Println("\n❌ 缺少软件名称参数")
 				fmt.Println("\n用法:")
@@ -27,17 +21,17 @@ func newInfoCmd(core *core.Core) *cobra.Command {
 				fmt.Println("[软件名称]")
 
 				// 显示支持的软件列表
-				names := core.GetAllSoftware()
-				utils.PrintList(names, "支持的软件列表")
+				names := p.core.GetAllSoftware()
+				p.core.PrintList(names, "支持的软件列表")
 
-				return nil
+				return
 			}
 
 			name := args[0]
 
 			// 检查软件是否支持
 			supported := false
-			for _, sw := range core.GetAllSoftware() {
+			for _, sw := range p.core.GetAllSoftware() {
 				if sw == name {
 					supported = true
 					break
@@ -47,17 +41,17 @@ func newInfoCmd(core *core.Core) *cobra.Command {
 			if !supported {
 				color.New(color.FgRed).Printf("\n❌ 不支持的软件: %s\n", name)
 				fmt.Println("\n支持的软件:")
-				for _, sw := range core.GetAllSoftware() {
+				for _, sw := range p.core.GetAllSoftware() {
 					color.New(color.FgHiWhite).Printf("  - %s\n", sw)
 				}
-				return nil
+				return
 			}
 
 			// 获取软件状态
-			status, err := core.GetSoftwareStatus(name)
+			status, err := p.core.GetSoftwareStatus(name)
 			if err != nil {
 				color.New(color.FgRed).Printf("\n❌ 获取软件状态失败: %v\n", err)
-				return nil
+				return
 			}
 
 			// 显示软件信息
@@ -85,7 +79,6 @@ func newInfoCmd(core *core.Core) *cobra.Command {
 			}
 
 			fmt.Println()
-			return nil
 		},
-	}
+	})
 }

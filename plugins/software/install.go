@@ -1,27 +1,20 @@
 package software
 
 import (
-	"github.com/spf13/cobra"
 	"servon/core"
-	"servon/core/utils"
+
+	"github.com/spf13/cobra"
 )
 
-func newInstallCmd(core *core.Core) *cobra.Command {
-	return &cobra.Command{
-		Use:   "install [软件名称]",
+func (p *SoftWarePlugin) newInstallCmd() *cobra.Command {
+	cmd := p.core.NewCommand(core.CommandOptions{
+		Use:   "install [software-name]",
 		Short: "安装指定的软件",
-		Long:  `安装指定的软件。`,
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 1 {
-				utils.PrintCommandHelp(cmd)
-				return
-			}
-
-			name := args[0]
-			err := core.InstallSoftware(name, nil)
-			if err != nil {
-				utils.PrintError(err)
-			}
+			p.core.Install(args[0], nil)
 		},
-	}
+	})
+
+	return cmd
 }

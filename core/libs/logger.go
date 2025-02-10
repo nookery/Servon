@@ -10,7 +10,11 @@ func Debug(format string, args ...interface{}) {
 	fmt.Printf(format, args...)
 }
 
-func Error(format string, args ...interface{}) {
+func Error(args ...interface{}) {
+	fmt.Print(args...)
+}
+
+func Errorf(format string, args ...interface{}) {
 	fmt.Printf(format, args...)
 }
 
