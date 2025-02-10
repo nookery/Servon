@@ -11,10 +11,11 @@ import (
 )
 
 type CommandOptions struct {
-	Use   string
-	Short string
-	Args  cobra.PositionalArgs
-	Run   func(cmd *cobra.Command, args []string)
+	Use     string
+	Short   string
+	Args    cobra.PositionalArgs
+	Run     func(cmd *cobra.Command, args []string)
+	Aliases []string
 }
 
 // CheckCommandArgs 检查命令参数
@@ -83,28 +84,6 @@ func joinArgs(args []string) string {
 	return result
 }
 
-// PrintList 打印列表
-func PrintList(list []string, title string) {
-	fmt.Println()
-	color.New(color.FgHiCyan).Println(title)
-	if len(list) == 0 {
-		color.New(color.FgYellow).Println("  暂无数据")
-		fmt.Println()
-		return
-	}
-	for _, item := range list {
-		color.New(color.FgCyan).Printf("  ▶️  %s\n", item)
-	}
-	fmt.Println()
-}
-
-// PrintError 打印错误信息
-func PrintError(err error) {
-	fmt.Println()
-	color.New(color.FgHiRed).Printf("❌ 错误: %s\n", err.Error())
-	fmt.Println()
-}
-
 // NewCommand 创建一个标准化的命令
 func NewCommand(opts CommandOptions) *cobra.Command {
 	setCustomErrPrefix := true
@@ -117,6 +96,7 @@ func NewCommand(opts CommandOptions) *cobra.Command {
 		SilenceErrors: false,
 		SilenceUsage:  false,
 		Args:          opts.Args,
+		Aliases:       opts.Aliases,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			// libs.Infoln("🚀 开始执行命令 PreRun")
 		},
@@ -154,7 +134,7 @@ func NewCommand(opts CommandOptions) *cobra.Command {
 
 	// 自定义错误处理
 	cmd.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
-		c.Printf("%s\n", color.New(color.FgHiRed).Sprintf("❌ 错误："+fmt.Sprintf("%v", err)))
+		c.Printf("%s\n", color.New(color.FgHiRed).Sprintf("%s", "❌ 错误："+fmt.Sprintf("%v", err)))
 		return nil
 	})
 
@@ -165,10 +145,21 @@ func NewCommand(opts CommandOptions) *cobra.Command {
 			c.Printf("📌 命令: %s\n", color.New(color.FgHiYellow).Sprintf(c.Use))
 			c.Printf("📝 描述: %s\n", color.New(color.FgHiGreen).Sprintf(c.Short))
 			c.Printf("\n%s\n", color.New(color.FgHiBlue).Sprintf("🎯 参数列表:"))
-			c.Printf("%s\n", color.New(color.FgHiCyan).Sprintf(c.LocalFlags().FlagUsages()))
+			c.Printf("%s\n", color.New(color.FgHiCyan).Sprintf("%s", c.LocalFlags().FlagUsages()))
 			c.Printf("%s\n", color.New(color.FgHiCyan).Sprintf("🎯 可用命令:"))
 			for _, command := range c.Commands() {
-				c.Printf("  %-35s %s\n", color.New(color.FgHiCyan).Sprintf(command.Use), command.Short)
+				alias := ""
+				if len(command.Aliases) > 0 {
+					alias = "(" + joinArgs(command.Aliases) + ")"
+				}
+
+				nameAndAlias := ""
+				if alias != "" {
+					nameAndAlias = fmt.Sprintf("%s %s", command.Use, alias)
+				} else {
+					nameAndAlias = command.Use
+				}
+				c.Printf("  %-35s%s\n", color.New(color.FgHiCyan).Sprintf("%s", nameAndAlias), command.Short)
 			}
 			c.Printf("%s\n", color.New(color.FgHiCyan).Sprintf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
 		})

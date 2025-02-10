@@ -13,8 +13,8 @@ import (
 	"servon/plugins/git"
 	"servon/plugins/ip"
 	"servon/plugins/nodejs"
+	"servon/plugins/npm"
 	"servon/plugins/pnpm"
-	"servon/plugins/software"
 	"servon/plugins/yarn"
 )
 
@@ -29,7 +29,7 @@ func main() {
 	clash.Setup(core)
 	ip.Setup(core)
 	astro.Setup(core)
-	software.Setup(core)
+	npm.Setup(core)
 
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)

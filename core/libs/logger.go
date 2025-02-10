@@ -46,12 +46,6 @@ func InfoChan(ch chan<- string, format string, args ...interface{}) {
 	ch <- fmt.Sprintf(format, args...)
 }
 
-func PrintAndReturnError(errMsg string) error {
-	s := fmt.Sprintf("❌ %s", errMsg)
-	fmt.Println(s)
-	return fmt.Errorf("%s", s)
-}
-
 func PrintCommandErrorAndExit(err error) error {
 	return fmt.Errorf(err.Error())
 }

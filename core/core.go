@@ -18,6 +18,7 @@ type Core struct {
 	api.Data
 	api.LogApi
 	api.DeployApi
+	api.PrintApi
 }
 
 type OSType = libs.OSType
@@ -41,9 +42,12 @@ func New() *Core {
 		Data:       api.NewData(),
 		LogApi:     api.NewLogApi(),
 		DeployApi:  api.NewDeployApi(),
+		PrintApi:   api.NewPrintApi(),
 	}
 
 	core.AddCommand(core.GetDeployCommand())
 	core.AddCommand(core.GetVersionCommand())
+	core.AddCommand(core.GetSoftwareCommand())
+
 	return core
 }
