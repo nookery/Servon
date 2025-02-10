@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+type PortManager struct {
+	ports []PortInfo
+}
+
+func NewPortManager() *PortManager {
+	return &PortManager{}
+}
+
 // PortInfo 表示端口占用信息
 type PortInfo struct {
 	Port      int    `json:"port"`      // 端口号
@@ -20,7 +28,7 @@ type PortInfo struct {
 }
 
 // GetPortList 获取系统端口占用列表
-func GetPortList() ([]PortInfo, error) {
+func (p *PortManager) GetPortList() ([]PortInfo, error) {
 	// 使用 netstat 命令获取端口信息
 	cmd := exec.Command("netstat", "-tulpn")
 	output, err := cmd.Output()

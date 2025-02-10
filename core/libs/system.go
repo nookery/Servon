@@ -10,6 +10,14 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
+type SystemResourcesManager struct {
+	SystemResources *SystemResources
+}
+
+func NewSystemResourcesManager() *SystemResourcesManager {
+	return &SystemResourcesManager{}
+}
+
 type SystemResources struct {
 	CPUUsage    float64 `json:"cpu_usage"`
 	MemoryUsage float64 `json:"memory_usage"`
@@ -17,7 +25,7 @@ type SystemResources struct {
 }
 
 // GetCurrentUser 获取当前系统用户名
-func GetCurrentUser() (string, error) {
+func (p *SystemResourcesManager) GetCurrentUser() (string, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return "", fmt.Errorf("获取当前用户失败: %v", err)
@@ -26,7 +34,7 @@ func GetCurrentUser() (string, error) {
 }
 
 // GetSystemResources 获取系统CPU和内存使用率
-func GetSystemResources() (*SystemResources, error) {
+func (p *SystemResourcesManager) GetSystemResources() (*SystemResources, error) {
 	// 获取CPU使用率
 	cpuPercent, err := cpu.Percent(time.Second, false)
 	if err != nil {

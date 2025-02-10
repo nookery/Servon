@@ -196,7 +196,7 @@ func (c *Clash) GetStatus() (map[string]string, error) {
 	}
 
 	status := "stopped"
-	if c.core.ServiceIsActive("clash") {
+	if c.core.IsActive("clash") {
 		status = "running"
 	}
 
@@ -242,7 +242,7 @@ func (c *Clash) Start(logChan chan<- string) error {
 	c.core.Info("正在启动 Clash 服务...")
 
 	// 启动服务
-	if err := c.core.ServiceStart("clash"); err != nil {
+	if err := c.core.Start("clash"); err != nil {
 		errMsg := fmt.Sprintf("启动 Clash 失败: %v", err)
 		c.core.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
@@ -253,9 +253,9 @@ func (c *Clash) Start(logChan chan<- string) error {
 }
 
 func (c *Clash) Stop() error {
-	return c.core.ServiceStop("clash")
+	return c.core.Stop("clash")
 }
 
 func (c *Clash) Reload() error {
-	return c.core.ServiceReload("clash")
+	return c.core.Reload("clash")
 }

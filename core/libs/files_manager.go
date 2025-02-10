@@ -6,6 +6,14 @@ import (
 	"strings"
 )
 
+type FilesManager struct {
+	files []FileInfo
+}
+
+func NewFilesManager() *FilesManager {
+	return &FilesManager{}
+}
+
 // FileInfo 表示文件或目录的信息
 type FileInfo struct {
 	Name    string `json:"name"`    // 文件名
@@ -17,7 +25,7 @@ type FileInfo struct {
 }
 
 // GetFileList 获取指定目录下的文件列表
-func GetFileList(dirPath string) ([]FileInfo, error) {
+func (p *FilesManager) GetFileList(dirPath string) ([]FileInfo, error) {
 	// 清理和规范化路径
 	dirPath = filepath.Clean(dirPath)
 	if !strings.HasPrefix(dirPath, "/") {

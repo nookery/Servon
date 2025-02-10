@@ -10,7 +10,7 @@ type Printer struct {
 	Color *color.Color
 }
 
-func NewPrint() *Printer {
+func NewPrinter() *Printer {
 	return &Printer{
 		Color: color.New(color.FgCyan),
 	}

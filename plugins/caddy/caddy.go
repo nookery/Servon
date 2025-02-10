@@ -127,7 +127,7 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 	}
 
 	status := "stopped"
-	if c.ServiceIsActive("caddy") {
+	if c.IsActive("caddy") {
 		status = "running"
 	}
 

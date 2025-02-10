@@ -6,7 +6,13 @@ import (
 	"strings"
 )
 
-func IsActive(serviceName string) bool {
+type ServiceManager struct{}
+
+func NewServiceManager() *ServiceManager {
+	return &ServiceManager{}
+}
+
+func (p *ServiceManager) IsActive(serviceName string) bool {
 	Debug("检查服务状态: %s", serviceName)
 
 	// 首先尝试 systemctl
@@ -30,7 +36,7 @@ func IsActive(serviceName string) bool {
 		strings.Contains(outputStr, "status=0/SUCCESS")
 }
 
-func Reload(serviceName string) error {
+func (p *ServiceManager) Reload(serviceName string) error {
 	Info("正在重载服务(container): %s", serviceName)
 
 	cmd := exec.Command("service", serviceName, "reload")
@@ -45,7 +51,7 @@ func Reload(serviceName string) error {
 
 }
 
-func Start(serviceName string) error {
+func (p *ServiceManager) Start(serviceName string) error {
 	Debug("正在启动服务: %s", serviceName)
 
 	// 尝试使用 systemctl
@@ -61,7 +67,7 @@ func Start(serviceName string) error {
 	}
 
 	// 验证服务是否成功启动
-	if !IsActive(serviceName) {
+	if !p.IsActive(serviceName) {
 		errMsg := fmt.Sprintf("%s (服务未能成功运行)", serviceName)
 		Error("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
@@ -71,7 +77,7 @@ func Start(serviceName string) error {
 	return nil
 }
 
-func Stop(serviceName string) error {
+func (p *ServiceManager) Stop(serviceName string) error {
 	Info("正在停止服务(container): %s", serviceName)
 	cmd := exec.Command("service", serviceName, "stop")
 	output, err := cmd.CombinedOutput()
@@ -81,7 +87,7 @@ func Stop(serviceName string) error {
 	}
 
 	// 验证服务是否已停止
-	if IsActive(serviceName) {
+	if p.IsActive(serviceName) {
 		errMsg := fmt.Sprintf("服务停止失败: %s (服务仍在运行)", serviceName)
 		Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
@@ -92,11 +98,11 @@ func Stop(serviceName string) error {
 }
 
 // RunBackgroundService 使用 systemd 在后台运行指定的命令作为服务
-func RunBackgroundService(command string, args []string, logChan chan<- string) (string, error) {
+func (p *ServiceManager) RunBackgroundService(command string, args []string, logChan chan<- string) (string, error) {
 	return "", nil
 }
 
 // StopBackgroundService 停止并移除后台运行的服务
-func StopBackgroundService(command string, logChan chan<- string) error {
+func (p *ServiceManager) StopBackgroundService(command string, logChan chan<- string) error {
 	return nil
 }

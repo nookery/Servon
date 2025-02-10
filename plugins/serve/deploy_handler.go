@@ -1,11 +1,9 @@
-package handler
+package serve
 
 import (
 	"io"
 	"net/http"
 	"strconv"
-
-	"servon/plugins/deploy"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +16,7 @@ func NewDeployHandler() *DeployHandler {
 
 // HandleListProjects 获取所有项目
 func (h *DeployHandler) HandleListProjects(c *gin.Context) {
-	projects, err := deploy.GetProjects()
+	projects, err := h.GetProjects()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

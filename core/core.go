@@ -13,12 +13,21 @@ const LoggerFolder = "/logs"
 type Core struct {
 	api.CommandApi
 	api.Soft
-	api.SystemApi
 	api.VersionApi
 	api.Data
 	api.LogApi
 	api.DeployApi
 	*libs.Printer
+	*libs.PortManager
+	*libs.BasicInfoManager
+	*libs.OSInfoManager
+	*libs.SystemResourcesManager
+	*libs.ProcessManager
+	*libs.FilesManager
+	*libs.NetworkManager
+	*libs.ServiceManager
+	*libs.AptManager
+	*libs.Dpkg
 }
 
 type OSType = libs.OSType
@@ -35,14 +44,23 @@ const (
 // New 创建Core实例
 func New() *Core {
 	core := &Core{
-		CommandApi: api.NewCommandApi(),
-		Soft:       api.NewSoft(),
-		SystemApi:  api.NewSystemApi(),
-		VersionApi: api.NewVersion(),
-		Data:       api.NewData(),
-		LogApi:     api.NewLogApi(),
-		DeployApi:  api.NewDeployApi(),
-		Printer:    libs.NewPrint(),
+		CommandApi:             api.NewCommandApi(),
+		Soft:                   api.NewSoft(),
+		VersionApi:             api.NewVersion(),
+		Data:                   api.NewData(),
+		LogApi:                 api.NewLogApi(),
+		DeployApi:              api.NewDeployApi(),
+		Printer:                libs.NewPrinter(),
+		PortManager:            libs.NewPortManager(),
+		BasicInfoManager:       libs.NewBasicInfoManager(),
+		OSInfoManager:          libs.NewOSInfoManager(),
+		SystemResourcesManager: libs.NewSystemResourcesManager(),
+		ProcessManager:         libs.NewProcessManager(),
+		FilesManager:           libs.NewFilesManager(),
+		NetworkManager:         libs.NewNetworkManager(),
+		ServiceManager:         libs.NewServiceManager(),
+		AptManager:             libs.NewAptManager(),
+		Dpkg:                   libs.NewDpkg(),
 	}
 
 	core.AddCommand(core.GetDeployCommand())

@@ -6,8 +6,50 @@ import (
 	"strings"
 )
 
+type OSInfoManager struct {
+	OSInfo string
+}
+
+func NewOSInfoManager() *OSInfoManager {
+	return &OSInfoManager{}
+}
+
+// OSType 表示操作系统类型
+type OSType string
+
+const (
+	Ubuntu  OSType = "ubuntu"
+	Debian  OSType = "debian"
+	CentOS  OSType = "centos"
+	RedHat  OSType = "redhat"
+	Unknown OSType = "unknown"
+)
+
+// GetOSType 获取操作系统类型
+func (p *OSInfoManager) GetOSType() OSType {
+	data, err := os.ReadFile("/etc/os-release")
+	if err != nil {
+		return Unknown
+	}
+
+	content := strings.ToLower(string(data))
+
+	switch {
+	case strings.Contains(content, "ubuntu"):
+		return Ubuntu
+	case strings.Contains(content, "debian"):
+		return Debian
+	case strings.Contains(content, "centos"):
+		return CentOS
+	case strings.Contains(content, "red hat"):
+		return RedHat
+	default:
+		return Unknown
+	}
+}
+
 // GetOSInfo 获取操作系统信息
-func GetOSInfo() (string, error) {
+func (p *OSInfoManager) GetOSInfo() (string, error) {
 	// 尝试读取 /etc/os-release
 	if data, err := os.ReadFile("/etc/os-release"); err == nil {
 		lines := strings.Split(string(data), "\n")

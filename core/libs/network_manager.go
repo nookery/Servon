@@ -6,6 +6,14 @@ import (
 	"github.com/shirou/gopsutil/v3/net"
 )
 
+type NetworkManager struct {
+	NetworkStats *NetworkStats
+}
+
+func NewNetworkManager() *NetworkManager {
+	return &NetworkManager{}
+}
+
 type NetworkStats struct {
 	DownloadSpeed int64 `json:"download_speed"` // 下载速度（字节/秒）
 	UploadSpeed   int64 `json:"upload_speed"`   // 上传速度（字节/秒）
@@ -17,7 +25,7 @@ var (
 )
 
 // GetNetworkResources 获取网络资源使用情况
-func GetNetworkResources() (*NetworkStats, error) {
+func (p *NetworkManager) GetNetworkResources() (*NetworkStats, error) {
 	// 获取当前网络统计信息
 	currentStats, err := net.IOCounters(false) // false表示获取所有网卡的总和
 	if err != nil {
