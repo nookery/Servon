@@ -8,18 +8,19 @@ import (
 	"strings"
 )
 
-type NodeJS struct {
+type NodeJSPlugin struct {
 	info contract.SoftwareInfo
-	core *core.Core
+	*core.Core
 }
 
 func Setup(core *core.Core) {
-	core.RegisterSoftware("nodejs", NewNodeJS(core))
+	nodejs := NewNodeJSPlugin(core)
+	core.RegisterSoftware("nodejs", nodejs)
 }
 
-func NewNodeJS(core *core.Core) contract.SuperSoft {
-	return &NodeJS{
-		core: core,
+func NewNodeJSPlugin(core *core.Core) contract.SuperSoft {
+	return &NodeJSPlugin{
+		Core: core,
 		info: contract.SoftwareInfo{
 			Name:        "nodejs",
 			Description: "JavaScript 运行时环境",
@@ -27,65 +28,60 @@ func NewNodeJS(core *core.Core) contract.SuperSoft {
 	}
 }
 
-func (n *NodeJS) Install(logChan chan<- string) error {
+func (n *NodeJSPlugin) Install(logChan chan<- string) error {
 	outputChan := make(chan string, 100)
-	osType := n.core.GetOSType()
+	osType := n.GetOSType()
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		n.core.InfoChan(logChan, "使用 APT 包管理器安装...")
-		n.core.InfoChan(logChan, "添加 NodeJS 官方源...")
+		n.PrintInfo("使用 APT 包管理器安装...")
+		n.PrintInfo("添加 NodeJS 官方源...")
 
 		// 下载并安装 NodeSource 设置脚本
-		curlCmd := exec.Command("sh", "-c", "curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -")
-		if output, err := curlCmd.CombinedOutput(); err != nil {
-			errMsg := fmt.Sprintf("添加 NodeJS 源失败:\n%s", string(output))
-			n.core.ErrorChan(outputChan, "%s", errMsg)
-			return fmt.Errorf("%s", errMsg)
+		if err := n.RunShell("sh", "-c", "curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -"); err != nil {
+			return err
 		}
 
 		// 安装 NodeJS
-		if err := n.core.AptInstall("nodejs"); err != nil {
-			errMsg := fmt.Sprintf("安装 NodeJS 失败: %v", err)
-			n.core.ErrorChan(outputChan, "%s", errMsg)
-			return fmt.Errorf("%s", errMsg)
+		if err := n.AptInstall("nodejs"); err != nil {
+			return err
 		}
 
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 NodeJS"
-		n.core.ErrorChan(outputChan, "%s", errMsg)
+		n.ErrorChan(outputChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		n.core.ErrorChan(outputChan, "%s", errMsg)
+		n.ErrorChan(outputChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 验证安装结果
-	if !n.core.IsInstalled("nodejs") {
+	if !n.IsInstalled("nodejs") {
 		errMsg := "NodeJS 安装验证失败，未检测到已安装的包"
-		n.core.ErrorChan(outputChan, "%s", errMsg)
+		n.ErrorChan(outputChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	n.core.InfoChan(outputChan, "NodeJS 安装完成")
+	n.PrintSuccess("NodeJS 安装完成")
 	return nil
 }
 
-func (n *NodeJS) Uninstall(logChan chan<- string) error {
+func (n *NodeJSPlugin) Uninstall(logChan chan<- string) error {
 	outputChan := make(chan string, 100)
 
 	go func() {
 		defer close(outputChan)
 
 		// 卸载软件包及其依赖
-		if err := n.core.AptRemove("nodejs"); err != nil {
+		if err := n.AptRemove("nodejs"); err != nil {
 			return
 		}
 
 		// 清理配置文件
-		if err := n.core.AptPurge("nodejs"); err != nil {
+		if err := n.AptPurge("nodejs"); err != nil {
 			return
 		}
 
@@ -109,8 +105,8 @@ func (n *NodeJS) Uninstall(logChan chan<- string) error {
 	return nil
 }
 
-func (n *NodeJS) GetStatus() (map[string]string, error) {
-	if !n.core.IsInstalled("nodejs") {
+func (n *NodeJSPlugin) GetStatus() (map[string]string, error) {
+	if !n.IsInstalled("nodejs") {
 		return map[string]string{
 			"status":  "not_installed",
 			"version": "",
@@ -130,16 +126,16 @@ func (n *NodeJS) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (n *NodeJS) GetInfo() contract.SoftwareInfo {
+func (n *NodeJSPlugin) GetInfo() contract.SoftwareInfo {
 	return n.info
 }
 
-func (n *NodeJS) Start(logChan chan<- string) error {
-	n.core.InfoChan(logChan, "NodeJS 是运行时环境，无需启动服务")
+func (n *NodeJSPlugin) Start(logChan chan<- string) error {
+	n.Info("NodeJS 是运行时环境，无需启动服务")
 	return nil
 }
 
-func (n *NodeJS) Stop() error {
-	n.core.Info("NodeJS 是运行时环境，无需停止服务")
+func (n *NodeJSPlugin) Stop() error {
+	n.Info("NodeJS 是运行时环境，无需停止服务")
 	return nil
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func NewProxyCommand(caddy *Caddy) *cobra.Command {
-	cmd := caddy.core.NewCommand(core.CommandOptions{
+	cmd := caddy.NewCommand(core.CommandOptions{
 		Use:   "proxy",
 		Short: "代理命令",
 		Run: func(cmd *cobra.Command, args []string) {

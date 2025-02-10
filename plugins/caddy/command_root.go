@@ -15,7 +15,7 @@ func NewCaddyCommand(core *core.Core) *cobra.Command {
 	})
 
 	caddy := Caddy{
-		core: core,
+		Core: core,
 		CaddyConfig: CaddyConfig{
 			BaseDir: "/data/caddy",
 		},

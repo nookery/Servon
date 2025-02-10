@@ -37,7 +37,7 @@ func PrintAndReturnError(errMsg string) error {
 
 // PrintInfo 打印信息
 func PrintInfo(format string, args ...interface{}) {
-	color.New(color.FgHiCyan).Printf(format, args...)
+	color.New(color.FgHiCyan).Printf("🍋 "+format, args...)
 	fmt.Println()
 }
 
@@ -72,5 +72,11 @@ func PrintList(list []string, title string) {
 	for _, item := range list {
 		color.New(color.FgCyan).Printf("  ▶️  %s\n", item)
 	}
+	fmt.Println()
+}
+
+// PrintSuccess 打印成功信息
+func PrintSuccess(format string, args ...interface{}) {
+	color.New(color.FgHiGreen).Printf(format, args...)
 	fmt.Println()
 }
