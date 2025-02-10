@@ -32,8 +32,15 @@ func init() {
 	cronInstance.Start()
 }
 
+type CronManager struct {
+}
+
+func NewCronManager() *CronManager {
+	return &CronManager{}
+}
+
 // GetCronTasks 获取所有定时任务
-func GetCronTasks() ([]*CronTask, error) {
+func (p *CronManager) GetCronTasks() ([]*CronTask, error) {
 	tasksMutex.RLock()
 	defer tasksMutex.RUnlock()
 
@@ -67,7 +74,7 @@ func (ve ValidationErrors) Error() string {
 }
 
 // validateTask 验证任务的各个字段
-func validateTask(task CronTask) error {
+func (p *CronManager) validateTask(task CronTask) error {
 	var errors []ValidationError
 
 	// 验证名称
@@ -110,9 +117,9 @@ func validateTask(task CronTask) error {
 }
 
 // CreateCronTask 创建定时任务
-func CreateCronTask(task CronTask) (*CronTask, error) {
+func (p *CronManager) CreateCronTask(task CronTask) (*CronTask, error) {
 	// 先进行字段验证
-	if err := validateTask(task); err != nil {
+	if err := p.validateTask(task); err != nil {
 		return nil, err
 	}
 
@@ -145,9 +152,9 @@ func CreateCronTask(task CronTask) (*CronTask, error) {
 }
 
 // UpdateCronTask 更新定时任务
-func UpdateCronTask(task CronTask) (*CronTask, error) {
+func (p *CronManager) UpdateCronTask(task CronTask) (*CronTask, error) {
 	// 先进行字段验证
-	if err := validateTask(task); err != nil {
+	if err := p.validateTask(task); err != nil {
 		return nil, err
 	}
 
@@ -180,7 +187,7 @@ func UpdateCronTask(task CronTask) (*CronTask, error) {
 }
 
 // DeleteCronTask 删除定时任务
-func DeleteCronTask(id int) error {
+func (p *CronManager) DeleteCronTask(id int) error {
 	tasksMutex.Lock()
 	defer tasksMutex.Unlock()
 
@@ -198,7 +205,7 @@ func DeleteCronTask(id int) error {
 }
 
 // ToggleCronTask 启用/禁用定时任务
-func ToggleCronTask(id int) (*CronTask, error) {
+func (p *CronManager) ToggleCronTask(id int) (*CronTask, error) {
 	tasksMutex.Lock()
 	defer tasksMutex.Unlock()
 

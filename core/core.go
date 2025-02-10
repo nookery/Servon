@@ -5,7 +5,8 @@ import (
 	"servon/core/libs"
 )
 
-// 调用关系 Core -> Core API(Public) -> Libs(Private)
+// 调用关系 Core -> Core API -> Libs
+// 或 Core -> Libs
 
 const DataRootFolder = "/data"
 const LoggerFolder = "/logs"
@@ -28,10 +29,14 @@ type Core struct {
 	*libs.ServiceManager
 	*libs.AptManager
 	*libs.Dpkg
+	*libs.CronManager
 }
 
 type OSType = libs.OSType
 type CommandOptions = api.CommandOptions
+type CronTask = libs.CronTask
+type ValidationError = libs.ValidationError
+type ValidationErrors = libs.ValidationErrors
 
 const (
 	Ubuntu  OSType = "ubuntu"
@@ -61,6 +66,7 @@ func New() *Core {
 		ServiceManager:         libs.NewServiceManager(),
 		AptManager:             libs.NewAptManager(),
 		Dpkg:                   libs.NewDpkg(),
+		CronManager:            libs.NewCronManager(),
 	}
 
 	core.AddCommand(core.GetDeployCommand())
