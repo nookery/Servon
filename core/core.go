@@ -17,6 +17,7 @@ type Core struct {
 	api.VersionApi
 	api.Data
 	api.LogApi
+	api.DeployApi
 }
 
 type OSType = libs.OSType
@@ -32,12 +33,17 @@ const (
 
 // New 创建Core实例
 func New() *Core {
-	return &Core{
+	core := &Core{
 		CommandApi: api.NewCommandApi(),
 		Soft:       api.NewSoft(),
 		SystemApi:  api.NewSystemApi(),
 		VersionApi: api.NewVersion(),
 		Data:       api.NewData(),
 		LogApi:     api.NewLogApi(),
+		DeployApi:  api.NewDeployApi(),
 	}
+
+	core.AddCommand(core.GetDeployCommand())
+
+	return core
 }

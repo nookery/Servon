@@ -32,6 +32,7 @@ func main() {
 	version.Setup(core)
 	astro.Setup(core)
 	software.Setup(core)
+
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)
