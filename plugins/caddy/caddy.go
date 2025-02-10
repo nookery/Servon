@@ -156,12 +156,12 @@ func (c *Caddy) GetInfo() contract.SoftwareInfo {
 // Reload reloads the Caddy configuration
 func (c *Caddy) Reload() error {
 	// 输出配置文件的存储目录
-	c.core.Info(fmt.Sprintf("配置文件的存储目录: %s", c.GetConfigDir()))
+	c.core.Infoln(fmt.Sprintf("配置文件的存储目录: %s", c.GetConfigDir()))
 
 	// 检查 caddy 是否在运行
 	running, err := c.isRunning()
 	if err != nil {
-		return fmt.Errorf("检查 caddy 运行状态失败: %v", err)
+		return c.core.PrintAndReturnError("检查 caddy 运行状态失败")
 	}
 
 	if !running {

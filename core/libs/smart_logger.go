@@ -40,7 +40,9 @@ func InfoChan(ch chan<- string, format string, args ...interface{}) {
 }
 
 func PrintAndReturnError(errMsg string) error {
-	return fmt.Errorf(errMsg)
+	s := fmt.Sprintf("❌ %s", errMsg)
+	fmt.Println(s)
+	return fmt.Errorf("%s", s)
 }
 
 func PrintCommandErrorAndExit(err error) error {
