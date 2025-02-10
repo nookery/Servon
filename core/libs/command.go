@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 type CommandOptions struct {
@@ -81,67 +79,6 @@ func joinArgs(args []string) string {
 		result += arg
 	}
 	return result
-}
-
-// PrintCommandHelp 打印标准格式的命令帮助信息
-func PrintCommandHelp(cmd *cobra.Command) {
-	fmt.Println()
-
-	// 首先显示 Long 描述（包含 ASCII 艺术和描述文本）
-	if cmd.Long != "" {
-		// 如果是多行，原样输出
-		if strings.Contains(cmd.Long, "\n") {
-			fmt.Println(cmd.Long)
-		} else {
-			fmt.Println(color.New(color.BgGreen).Sprintf(" ✨ %s ✨ ", cmd.Long))
-		}
-	}
-
-	// 自动获取所有子命令及其描述
-	commands := make(map[string]string)
-	for _, subCmd := range cmd.Commands() {
-		if !subCmd.Hidden {
-			commands[subCmd.Name()] = subCmd.Short
-		}
-	}
-
-	// 使用方法
-	color.New(color.FgHiWhite).Printf("\n📌 使用方法: ")
-	color.New(color.FgCyan).Printf("%s\n\n", cmd.UseLine())
-
-	// 添加参数列表展示
-	if cmd.HasFlags() {
-		color.New(color.FgHiWhite).Println("🎯 参数选项:")
-		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-			// 构建默认值字符串
-			defaultValue := ""
-			if flag.DefValue != "" {
-				defaultValue = fmt.Sprintf("(默认值: %s)", flag.DefValue)
-			}
-
-			// 构建参数名称
-			name := ""
-			if flag.Shorthand != "" && flag.Shorthand != flag.Name {
-				name = fmt.Sprintf("-%s, --%s", flag.Shorthand, flag.Name)
-			} else {
-				name = fmt.Sprintf("--%s", flag.Name)
-			}
-
-			color.New(color.FgCyan).Printf("  ▶️  %-20s", name)
-			color.New(color.FgWhite).Printf("%s %s\n", flag.Usage, defaultValue)
-		})
-	}
-
-	// 可用命令列表
-	if len(commands) > 0 {
-		color.New(color.FgHiWhite).Printf("\n🔧 可用命令:\n")
-		for name, desc := range commands {
-			color.New(color.FgCyan).Printf("  ▶️  %s", name)
-			color.New(color.FgWhite).Printf("\t%s\n", desc)
-		}
-	}
-
-	fmt.Println()
 }
 
 // PrintList 打印列表

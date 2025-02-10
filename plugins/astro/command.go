@@ -15,7 +15,7 @@ func (a *AstroPlugin) newAstroCommand() *cobra.Command {
 			port, _ := cmd.Flags().GetInt("port")
 
 			if repo == "" || storage == "" {
-				a.PrintCommandHelp(cmd)
+				cmd.Usage()
 				return
 			}
 

@@ -66,11 +66,6 @@ func (c *Command) RunShellWithOutput(command string, args ...string) (string, er
 	return libs.ExecuteWithOutput(command, args...)
 }
 
-// PrintCommandHelp 打印命令帮助
-func (c *Command) PrintCommandHelp(cmd *cobra.Command) {
-	libs.PrintCommandHelp(cmd)
-}
-
 // NewCommand 创建一个标准化的命令
 func (c *Command) NewCommand(opts CommandOptions) *cobra.Command {
 	return libs.NewCommand(opts)

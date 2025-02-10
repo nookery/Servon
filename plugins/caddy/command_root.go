@@ -6,16 +6,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type CommandOptions = core.CommandOptions
+
 func NewCaddyCommand(core *core.Core) *cobra.Command {
-	rootCmd := &cobra.Command{
+	rootCmd := core.NewCommand(CommandOptions{
 		Use:   "caddy",
 		Short: "Caddy 管理命令",
-		Long:  "Caddy 管理命令",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			core.PrintCommandHelp(cmd)
-			return nil
-		},
-	}
+	})
 
 	caddy := Caddy{
 		core: core,
