@@ -1,16 +1,16 @@
 package api
 
 import (
-	"servon/core/provider"
+	"servon/core/libs"
 )
 
 type Version struct {
-	versionProvider provider.VersionProvider
+	versionProvider libs.VersionProvider
 }
 
 func NewVersion() Version {
 	return Version{
-		versionProvider: provider.NewVersionProvider(),
+		versionProvider: libs.NewVersionProvider(),
 	}
 }
 

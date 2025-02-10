@@ -5,14 +5,11 @@ import (
 	"os/exec"
 	"servon/core"
 	"servon/core/contract"
-	"servon/core/model"
-	"servon/core/system"
-	"servon/core/utils/logger"
 	"strings"
 )
 
 func Setup(core *core.Core) {
-	core.RegisterSoftware("git", NewGit())
+	core.RegisterSoftware("git", NewGit(core))
 }
 
 // Git 实现 Software 接口
@@ -21,8 +18,9 @@ type Git struct {
 	core *core.Core
 }
 
-func NewGit() contract.SuperSoft {
+func NewGit(core *core.Core) contract.SuperSoft {
 	return &Git{
+		core: core,
 		info: contract.SoftwareInfo{
 			Name:        "git",
 			Description: "分布式版本控制系统",
@@ -32,77 +30,74 @@ func NewGit() contract.SuperSoft {
 
 // ... existing code from git.go ...
 func (g *Git) Install(logChan chan<- string) error {
-	logger.InfoChan(logChan, "正在安装 Git...")
+	g.core.InfoChan(logChan, "正在安装 Git...")
 
 	// 检查操作系统类型
 	osType := g.core.GetOSType()
-	logger.InfoChan(logChan, "检测到操作系统: %s", osType)
+	g.core.InfoChan(logChan, "检测到操作系统: %s", osType)
 
 	switch osType {
-	case model.Ubuntu, model.Debian:
-		apt := system.NewApt()
-
+	case core.Ubuntu, core.Debian:
 		// 更新软件包索引
-		if err := apt.Update(); err != nil {
+		if err := g.core.AptUpdate(); err != nil {
 			errMsg := fmt.Sprintf("更新软件包索引失败: %v", err)
-			logger.ErrorChan(logChan, "%s", errMsg)
+			g.core.ErrorChan(logChan, "%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 		// 安装 Git
-		if err := apt.Install("git"); err != nil {
+		if err := g.core.AptInstall("git"); err != nil {
 			errMsg := fmt.Sprintf("安装 Git 失败: %v", err)
-			logger.ErrorChan(logChan, "%s", errMsg)
+			g.core.ErrorChan(logChan, "%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
-	case model.CentOS, model.RedHat:
+	case core.CentOS, core.RedHat:
 		// 使用 yum 安装
 		cmd := exec.Command("yum", "install", "-y", "git")
-		if err := logger.StreamCommand(cmd); err != nil {
+		if err := g.core.StreamCommand(cmd); err != nil {
 			errMsg := fmt.Sprintf("安装 Git 失败: %v", err)
-			logger.ErrorChan(logChan, "%s", errMsg)
+			g.core.ErrorChan(logChan, "%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		logger.ErrorChan(logChan, "%s", errMsg)
+		g.core.ErrorChan(logChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	logger.InfoChan(logChan, "Git 安装完成")
+	g.core.InfoChan(logChan, "Git 安装完成")
 	return nil
 }
 
 func (g *Git) Uninstall(logChan chan<- string) error {
-	logger.InfoChan(logChan, "正在卸载 Git...")
+	g.core.InfoChan(logChan, "正在卸载 Git...")
 
 	osType := g.core.GetOSType()
 	switch osType {
-	case model.Ubuntu, model.Debian:
-		apt := system.NewApt()
-		if err := apt.Remove("git"); err != nil {
+	case core.Ubuntu, core.Debian:
+		if err := g.core.AptRemove("git"); err != nil {
 			errMsg := fmt.Sprintf("卸载 Git 失败: %v", err)
-			logger.ErrorChan(logChan, "%s", errMsg)
+			g.core.ErrorChan(logChan, "%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
-	case model.CentOS, model.RedHat:
+	case core.CentOS, core.RedHat:
 		cmd := exec.Command("yum", "remove", "-y", "git")
-		if err := logger.StreamCommand(cmd); err != nil {
+		if err := g.core.StreamCommand(cmd); err != nil {
 			errMsg := fmt.Sprintf("卸载 Git 失败: %v", err)
-			logger.ErrorChan(logChan, "%s", errMsg)
+			g.core.ErrorChan(logChan, "%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		logger.ErrorChan(logChan, "%s", errMsg)
+		g.core.ErrorChan(logChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	logger.InfoChan(logChan, "Git 卸载完成")
+	g.core.InfoChan(logChan, "Git 卸载完成")
 	return nil
 }
 
@@ -130,11 +125,11 @@ func (g *Git) GetInfo() contract.SoftwareInfo {
 }
 
 func (g *Git) Start(logChan chan<- string) error {
-	logger.InfoChan(logChan, "Git 是版本控制工具，无需启动服务")
+	g.core.InfoChan(logChan, "Git 是版本控制工具，无需启动服务")
 	return nil
 }
 
 func (g *Git) Stop() error {
-	logger.Info("Git 是版本控制工具，无需停止服务")
+	g.core.Info("Git 是版本控制工具，无需停止服务")
 	return nil
 }

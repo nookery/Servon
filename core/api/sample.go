@@ -1,15 +1,15 @@
 package api
 
 import (
-	"servon/core/provider"
+	"servon/core/libs"
 )
 
 type Sample struct {
-	sampleProvider provider.SampleProvider
+	sampleProvider libs.SampleProvider
 }
 
 func NewSample() Sample {
 	return Sample{
-		sampleProvider: provider.NewSampleProvider(),
+		sampleProvider: libs.NewSampleProvider(),
 	}
 }

@@ -2,20 +2,19 @@ package astro
 
 import (
 	"fmt"
-	"servon/core"
 
 	"github.com/fatih/color"
 )
 
-func deploy(core *core.Core, repo string, storage string, port int) error {
-	err := clone(core, repo, storage)
+func (a *AstroPlugin) deploy(repo string, storage string, port int) error {
+	err := a.clone(repo, storage)
 	if err != nil {
-		return core.PrintAndReturnError(err.Error())
+		return a.PrintAndReturnError(err.Error())
 	}
 
-	err = build(core, storage)
+	err = a.build(storage)
 	if err != nil {
-		return core.PrintAndReturnError(err.Error())
+		return a.PrintAndReturnError(err.Error())
 	}
 
 	// 设置默认端口
@@ -29,9 +28,9 @@ func deploy(core *core.Core, repo string, storage string, port int) error {
 			fmt.Println(msg)
 		}
 	}()
-	serviceFilePath, err := core.RunBackgroundService("node", []string{storage + "/index.js", "--port", fmt.Sprintf("%d", port)}, logChan)
+	serviceFilePath, err := a.RunBackgroundService("node", []string{storage + "/index.js", "--port", fmt.Sprintf("%d", port)}, logChan)
 	if err != nil {
-		return core.PrintAndReturnError(err.Error())
+		return a.PrintAndReturnError(err.Error())
 	}
 
 	// 成功提示

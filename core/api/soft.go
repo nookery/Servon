@@ -1,14 +1,14 @@
 package api
 
-import "servon/core/provider"
+import "servon/core/libs"
 
 type Soft struct {
-	softwareProvider provider.SoftwareProvider
+	softwareProvider libs.SoftwareProvider
 }
 
 func NewSoft() Soft {
 	return Soft{
-		softwareProvider: provider.NewSoftwareProvider(),
+		softwareProvider: libs.NewSoftwareProvider(),
 	}
 }
 
@@ -38,7 +38,7 @@ func (c *Soft) GetSoftwareStatus(name string) (map[string]string, error) {
 }
 
 // RegisterSoftware 注册软件
-func (c *Soft) RegisterSoftware(name string, software provider.SuperSoft) error {
+func (c *Soft) RegisterSoftware(name string, software libs.SuperSoft) error {
 	return c.softwareProvider.Register(name, software)
 }
 

@@ -1,30 +1,26 @@
 package api
 
 import (
-	"servon/core/model"
-	"servon/core/provider"
+	"fmt"
+	"servon/core/libs"
 )
 
-type System struct {
-	systemProvider provider.SystemProvider
+type SystemApi struct{}
+
+func NewSystemApi() SystemApi {
+	return SystemApi{}
 }
 
-func NewSystem(dataRootFolder string) System {
-	return System{
-		systemProvider: provider.NewSystemProvider(dataRootFolder),
-	}
+func (c *SystemApi) UninstallSoftwareUseSystem(name string) error {
+	return fmt.Errorf("not implemented")
 }
 
-func (c *System) UninstallSoftwareUseSystem(name string) error {
-	return c.systemProvider.UninstallSoftware(name, nil)
+func (c *SystemApi) GetOSType() libs.OSType {
+	return libs.GetOSType()
 }
 
-func (c *System) GetOSType() model.OSType {
-	return c.systemProvider.GetOSType()
-}
-
-func (c *System) CanUseApt() bool {
-	return c.systemProvider.CanUseApt()
+func (c *SystemApi) CanUseApt() bool {
+	return false
 }
 
 // RunBackgroundService 使用 systemd 在后台运行指定的命令作为服务
@@ -55,11 +51,57 @@ func (c *System) CanUseApt() bool {
 //  3. 如果进程崩溃会自动重启
 //  4. 日志会被写入到 /var/log/servon/{服务名}.log
 //  5. 可以使用 systemctl status/start/stop/restart 命令管理服务
-func (c *System) RunBackgroundService(command string, args []string, logChan chan<- string) (string, error) {
-	return c.systemProvider.RunBackgroundService(command, args, logChan)
+func (c *SystemApi) RunBackgroundService(command string, args []string, logChan chan<- string) (string, error) {
+	return libs.RunBackgroundService(command, args, logChan)
 }
 
 // StopBackgroundService 停止并移除后台运行的服务
-func (c *System) StopBackgroundService(command string, logChan chan<- string) error {
-	return c.systemProvider.StopBackgroundService(command, logChan)
+func (c *SystemApi) StopBackgroundService(command string, logChan chan<- string) error {
+	return libs.StopBackgroundService(command, logChan)
+}
+
+// IsInstalled 检查软件包是否已安装
+func (c *SystemApi) IsInstalled(name string) bool {
+	dpkg := libs.NewDpkg(nil)
+	return dpkg.IsInstalled(name)
+}
+
+// ServiceIsActive 检查服务是否正在运行
+func (c *SystemApi) ServiceIsActive(name string) bool {
+	return libs.IsActive(name)
+}
+
+// AptUpdate 更新软件包索引
+func (c *SystemApi) AptUpdate() error {
+	return libs.AptUpdate()
+}
+
+// AptInstall 安装指定的软件包
+func (c *SystemApi) AptInstall(packages ...string) error {
+	return libs.AptInstall(packages...)
+}
+
+// AptRemove 移除指定的软件包
+func (c *SystemApi) AptRemove(packages ...string) error {
+	return libs.AptRemove(packages...)
+}
+
+// AptPurge 完全移除软件包及其配置文件
+func (c *SystemApi) AptPurge(packages ...string) error {
+	return libs.AptPurge(packages...)
+}
+
+// ServiceReload 重载服务
+func (c *SystemApi) ServiceReload(serviceName string) error {
+	return libs.Reload(serviceName)
+}
+
+// ServiceStart 启动服务
+func (c *SystemApi) ServiceStart(serviceName string) error {
+	return libs.Start(serviceName)
+}
+
+// ServiceStop 停止服务
+func (c *SystemApi) ServiceStop(serviceName string) error {
+	return libs.Stop(serviceName)
 }

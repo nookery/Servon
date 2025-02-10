@@ -1,16 +1,16 @@
 package api
 
 import (
-	"servon/core/provider"
+	"servon/core/libs"
 )
 
 type Data struct {
-	dataProvider provider.DataProvider
+	dataProvider libs.DataProvider
 }
 
 func NewData() Data {
 	return Data{
-		dataProvider: provider.NewDataProvider(),
+		dataProvider: libs.NewDataProvider(),
 	}
 }
 

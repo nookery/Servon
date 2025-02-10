@@ -7,9 +7,6 @@ import (
 	"path/filepath"
 	"servon/core"
 	"servon/core/contract"
-	"servon/core/model"
-	"servon/core/system"
-	"servon/core/utils/logger"
 	"strings"
 )
 
@@ -51,17 +48,17 @@ func NewClash() contract.SuperSoft {
 // ... existing code from clash.go ...
 func (c *Clash) Install(logChan chan<- string) error {
 	osType := c.core.GetOSType()
-	logger.InfoChan(logChan, "检测到操作系统: %s", osType)
+	c.core.Info(fmt.Sprintf("检测到操作系统: %s", osType))
 
 	switch osType {
-	case model.Ubuntu, model.Debian:
-		logger.InfoChan(logChan, "开始安装 Clash...")
+	case core.Ubuntu, core.Debian:
+		c.core.Info("开始安装 Clash...")
 
 		// 创建安装目录
 		installDir := "/usr/local/bin"
 		if err := os.MkdirAll(installDir, 0755); err != nil {
 			errMsg := fmt.Sprintf("创建安装目录失败: %v", err)
-			logger.ErrorChan(logChan, "%s", errMsg)
+			c.core.Error(errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
@@ -69,24 +66,24 @@ func (c *Clash) Install(logChan chan<- string) error {
 		downloadCmd := exec.Command("curl", "-L",
 			"https://github.com/Dreamacro/clash/releases/download/v1.18.0/clash-linux-amd64-v1.18.0.gz",
 			"-o", "/tmp/clash.gz")
-		if err := logger.StreamCommand(downloadCmd); err != nil {
+		if err := c.core.StreamCommand(downloadCmd); err != nil {
 			return fmt.Errorf("%s", err)
 		}
 
 		// 解压
 		gunzipCmd := exec.Command("gunzip", "-f", "/tmp/clash.gz")
-		if err := logger.StreamCommand(gunzipCmd); err != nil {
+		if err := c.core.StreamCommand(gunzipCmd); err != nil {
 			return fmt.Errorf("%s", err)
 		}
 
 		// 移动到安装目录并设置权限
 		moveCmd := exec.Command("sudo", "mv", "/tmp/clash", filepath.Join(installDir, "clash"))
-		if err := logger.StreamCommand(moveCmd); err != nil {
+		if err := c.core.StreamCommand(moveCmd); err != nil {
 			return fmt.Errorf("%s", err)
 		}
 
 		chmodCmd := exec.Command("sudo", "chmod", "+x", filepath.Join(installDir, "clash"))
-		if err := logger.StreamCommand(chmodCmd); err != nil {
+		if err := c.core.StreamCommand(chmodCmd); err != nil {
 			return fmt.Errorf("%s", err)
 		}
 
@@ -105,21 +102,21 @@ WantedBy=multi-user.target`
 
 		if err := os.WriteFile("/etc/systemd/system/clash.service", []byte(serviceContent), 0644); err != nil {
 			errMsg := fmt.Sprintf("创建服务文件失败: %v", err)
-			logger.ErrorChan(logChan, "%s", errMsg)
+			c.core.Error(errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 		// 创建配置目录
 		if err := os.MkdirAll("/etc/clash", 0755); err != nil {
 			errMsg := fmt.Sprintf("创建配置目录失败: %v", err)
-			logger.ErrorChan(logChan, "%s", errMsg)
+			c.core.Error(errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 		// 创建默认配置文件
 		if err := os.WriteFile("/etc/clash/config.yaml", []byte(clashConfigTemplate), 0644); err != nil {
 			errMsg := fmt.Sprintf("创建配置文件失败: %v", err)
-			logger.ErrorChan(logChan, "%s", errMsg)
+			c.core.Error(errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
@@ -127,22 +124,22 @@ WantedBy=multi-user.target`
 		reloadCmd := exec.Command("sudo", "systemctl", "daemon-reload")
 		if output, err := reloadCmd.CombinedOutput(); err != nil {
 			errMsg := fmt.Sprintf("重载系统服务失败:\n%s", string(output))
-			logger.ErrorChan(logChan, "%s", errMsg)
+			c.core.Error(errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
-	case model.CentOS, model.RedHat:
+	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	logger.InfoChan(logChan, "Clash 安装完成")
+	c.core.Info("Clash 安装完成")
 	return nil
 }
 
@@ -199,7 +196,7 @@ func (c *Clash) GetStatus() (map[string]string, error) {
 	}
 
 	status := "stopped"
-	if system.ServiceIsActive("clash") {
+	if c.core.ServiceIsActive("clash") {
 		status = "running"
 	}
 
@@ -224,7 +221,7 @@ func (c *Clash) Start(logChan chan<- string) error {
 	// 检查是否已安装
 	if _, err := os.Stat("/usr/local/bin/clash"); os.IsNotExist(err) {
 		errMsg := "Clash 未安装，请先安装"
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
@@ -232,33 +229,33 @@ func (c *Clash) Start(logChan chan<- string) error {
 	status, err := c.GetStatus()
 	if err != nil {
 		errMsg := fmt.Sprintf("获取状态失败: %v", err)
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 如果已经在运行，则不需要启动
 	if status["status"] == "running" {
-		logger.InfoChan(logChan, "Clash 服务已在运行中")
+		c.core.Info("Clash 服务已在运行中")
 		return nil
 	}
 
-	logger.DebugChan(logChan, "正在启动 Clash 服务...")
+	c.core.Info("正在启动 Clash 服务...")
 
 	// 启动服务
-	if err := system.ServiceStart("clash"); err != nil {
+	if err := c.core.ServiceStart("clash"); err != nil {
 		errMsg := fmt.Sprintf("启动 Clash 失败: %v", err)
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	logger.DebugChan(logChan, "Clash 服务已成功启动")
+	c.core.Info("Clash 服务已成功启动")
 	return nil
 }
 
 func (c *Clash) Stop() error {
-	return system.ServiceStop("clash")
+	return c.core.ServiceStop("clash")
 }
 
 func (c *Clash) Reload() error {
-	return system.ServiceReload("clash")
+	return c.core.ServiceReload("clash")
 }

@@ -1,18 +1,16 @@
 package deploy
 
 import (
-	"servon/core/utils"
-
 	"github.com/spf13/cobra"
 	"servon/core"
 )
 
 func Setup(core *core.Core) {
-	core.AddCommand(GetDeployCommand())
+	core.AddCommand(GetDeployCommand(core))
 }
 
 // GetDeployCommand 返回 deploy 命令
-func GetDeployCommand() *cobra.Command {
+func GetDeployCommand(core *core.Core) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy",
 		Short: "部署项目",
@@ -22,7 +20,7 @@ func GetDeployCommand() *cobra.Command {
   servon deploy start    # 启动部署
   servon deploy stop     # 停止部署`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			utils.PrintCommandHelp(cmd)
+			core.PrintCommandHelp(cmd)
 			return nil
 		},
 	}

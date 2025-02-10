@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"servon/core/contract"
-	"servon/core/system"
-	"servon/core/utils/logger"
 )
 
 type Caddy struct {

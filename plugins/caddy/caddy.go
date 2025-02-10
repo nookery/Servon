@@ -5,108 +5,77 @@ import (
 	"os/exec"
 	"servon/core"
 	"servon/core/contract"
-	"servon/core/model"
-	"servon/core/system"
-	"servon/core/utils/logger"
 	"strings"
 )
 
 type Caddy struct {
-	core   *core.Core
-	info   contract.SoftwareInfo
-	config *CaddyConfig
-}
-
-type Project struct {
-	Name      string
-	Domain    string
-	Type      string
-	OutputDir string
-	Port      int
-}
-
-func Setup(core *core.Core) {
-	core.RegisterSoftware("caddy", NewCaddy(core))
-}
-
-func NewCaddy(core *core.Core) contract.SuperSoft {
-	return &Caddy{
-		core: core,
-		info: contract.SoftwareInfo{
-			Name:        "caddy",
-			Description: "现代化的 Web 服务器，支持自动 HTTPS",
-		},
-		config: NewCaddyConfig(),
-	}
+	CaddyConfig
+	CaddyTemplate
+	core *core.Core
+	info contract.SoftwareInfo
 }
 
 func (c *Caddy) Install(logChan chan<- string) error {
 	outputChan := make(chan string, 100)
-	apt := system.NewApt()
 	osType := c.core.GetOSType()
 
 	switch osType {
-	case model.Ubuntu, model.Debian:
-		logger.InfoChan(logChan, "使用 APT 包管理器安装...")
-		logger.InfoChan(logChan, "添加 Caddy 官方源...")
+	case core.Ubuntu, core.Debian:
+		c.core.Infoln("使用 APT 包管理器安装...")
+		c.core.Infoln("添加 Caddy 官方源...")
 
 		// 下载并安装 GPG 密钥
-		curlCmd := exec.Command("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg")
-		if output, err := curlCmd.CombinedOutput(); err != nil {
-			errMsg := fmt.Sprintf("下载 GPG 密钥失败:\n%s", string(output))
-			logger.ErrorChan(outputChan, "%s", errMsg)
-			return fmt.Errorf("%s", errMsg)
+		if err := c.core.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg"); err != nil {
+			return fmt.Errorf("%s", err.Error())
 		}
 
 		// 添加 Caddy 软件源
 		sourceCmd := exec.Command("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list")
 		if output, err := sourceCmd.CombinedOutput(); err != nil {
 			errMsg := fmt.Sprintf("添加源失败:\n%s", string(output))
-			logger.ErrorChan(outputChan, "%s", errMsg)
+			c.core.ErrorChan(outputChan, "%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 		// 更新软件包索引
-		if err := apt.Update(); err != nil {
+		if err := c.core.AptUpdate(); err != nil {
 			errMsg := fmt.Sprintf("更新软件包索引失败: %v", err)
-			logger.ErrorChan(outputChan, "%s", errMsg)
+			c.core.ErrorChan(outputChan, "%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 		// 安装 Caddy
-		if err := apt.Install("caddy"); err != nil {
+		if err := c.core.AptInstall("caddy"); err != nil {
 			errMsg := fmt.Sprintf("安装 Caddy 失败: %v", err)
-			logger.ErrorChan(outputChan, "%s", errMsg)
+			c.core.ErrorChan(outputChan, "%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
-	case model.CentOS, model.RedHat:
+	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Caddy"
-		logger.ErrorChan(outputChan, "%s", errMsg)
+		c.core.ErrorChan(outputChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		logger.ErrorChan(outputChan, "%s", errMsg)
+		c.core.ErrorChan(outputChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 验证安装结果
-	dpkg := system.NewDpkg(outputChan)
-	if !dpkg.IsInstalled("caddy") {
+	if !c.core.IsInstalled("caddy") {
 		errMsg := "Caddy 安装验证失败，未检测到已安装的包"
-		logger.ErrorChan(outputChan, "%s", errMsg)
+		c.core.ErrorChan(outputChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	logger.InfoChan(outputChan, "Caddy 安装完成")
+	c.core.InfoChan(outputChan, "Caddy 安装完成")
 
 	return nil
 }
 
 func (c *Caddy) Uninstall(logChan chan<- string) error {
 	outputChan := make(chan string, 100)
-	apt := system.NewApt()
 
 	go func() {
 		defer close(outputChan)
@@ -120,12 +89,12 @@ func (c *Caddy) Uninstall(logChan chan<- string) error {
 		}
 
 		// 卸载软件包及其依赖
-		if err := apt.Remove("caddy"); err != nil {
+		if err := c.core.AptRemove("caddy"); err != nil {
 			return
 		}
 
 		// 清理配置文件
-		if err := apt.Purge("caddy"); err != nil {
+		if err := c.core.AptPurge("caddy"); err != nil {
 			return
 		}
 
@@ -150,9 +119,7 @@ func (c *Caddy) Uninstall(logChan chan<- string) error {
 }
 
 func (c *Caddy) GetStatus() (map[string]string, error) {
-	dpkg := system.NewDpkg(nil)
-
-	if !dpkg.IsInstalled("caddy") {
+	if !c.core.IsInstalled("caddy") {
 		return map[string]string{
 			"status":  "not_installed",
 			"version": "",
@@ -160,7 +127,7 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 	}
 
 	status := "stopped"
-	if system.ServiceIsActive("caddy") {
+	if c.core.ServiceIsActive("caddy") {
 		status = "running"
 	}
 
@@ -179,40 +146,18 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 
 func (c *Caddy) Stop() error {
 	cmd := exec.Command("caddy", "stop")
-	return logger.StreamCommand(cmd)
+	return c.core.StreamCommand(cmd)
 }
 
 func (c *Caddy) GetInfo() contract.SoftwareInfo {
 	return c.info
 }
 
-// GetConfigDir returns the base configuration directory for Caddy
-func (c *Caddy) GetConfigDir() string {
-	return c.config.GetConfigDir()
-}
-
-// GetCaddyfilePath returns the path to the main Caddyfile
-func (c *Caddy) GetCaddyfilePath() string {
-	return c.config.GetCaddyfilePath()
-}
-
-// GetProjectConfigPath returns the configuration file path for a specific project
-func (c *Caddy) GetProjectConfigPath(projectName string) string {
-	return c.config.GetProjectConfigPath(projectName)
-}
-
-// EnsureConfigDir ensures the Caddy configuration directory exists
-func (c *Caddy) EnsureConfigDir() error {
-	return c.config.EnsureConfigDir()
-}
-
-// EnsureCaddyfile ensures the main Caddyfile exists, creating it from template if needed
-func (c *Caddy) EnsureCaddyfile() error {
-	return c.config.EnsureCaddyfile()
-}
-
 // Reload reloads the Caddy configuration
 func (c *Caddy) Reload() error {
+	// 输出配置文件的存储目录
+	c.core.Info(fmt.Sprintf("配置文件的存储目录: %s", c.GetConfigDir()))
+
 	// 检查 caddy 是否在运行
 	running, err := c.isRunning()
 	if err != nil {
@@ -220,12 +165,11 @@ func (c *Caddy) Reload() error {
 	}
 
 	if !running {
-		logger.Warn("Caddy 服务未运行，请先启动 Caddy")
-		return nil
+		return c.core.PrintAndReturnError("Caddy 服务未运行，请先启动 Caddy")
 	}
 
-	cmd := exec.Command("caddy", "reload", "--config", c.config.GetCaddyfilePath())
-	return logger.StreamCommand(cmd)
+	cmd := exec.Command("caddy", "reload", "--config", c.GetCaddyfilePath())
+	return c.core.StreamCommand(cmd)
 }
 
 // isRunning 检查 caddy 是否在运行
@@ -244,10 +188,9 @@ func (c *Caddy) isRunning() (bool, error) {
 // Start starts the Caddy service
 func (c *Caddy) Start(logChan chan<- string) error {
 	// 检查是否已安装
-	dpkg := system.NewDpkg(nil)
-	if !dpkg.IsInstalled("caddy") {
+	if !c.core.IsInstalled("caddy") {
 		errMsg := "Caddy 未安装，请先安装"
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.ErrorChan(logChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
@@ -255,39 +198,39 @@ func (c *Caddy) Start(logChan chan<- string) error {
 	status, err := c.GetStatus()
 	if err != nil {
 		errMsg := fmt.Sprintf("获取状态失败: %v", err)
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.ErrorChan(logChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 如果已经在运行，则不需要启动
 	if status["status"] == "running" {
-		logger.InfoChan(logChan, "Caddy 服务已在运行中")
+		c.core.InfoChan(logChan, "Caddy 服务已在运行中")
 		return nil
 	}
 
-	logger.DebugChan(logChan, "正在启动 Caddy 服务...")
+	c.core.InfoChan(logChan, "正在启动 Caddy 服务...")
 
 	// 确保配置目录和 Caddyfile 存在
-	if err := c.config.EnsureConfigDir(); err != nil {
+	if err := c.EnsureConfigDir(); err != nil {
 		errMsg := fmt.Sprintf("创建 Caddy 配置目录失败: %v", err)
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.ErrorChan(logChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	if err := c.config.EnsureCaddyfile(); err != nil {
+	if err := c.EnsureCaddyfile(); err != nil {
 		errMsg := fmt.Sprintf("确保 Caddyfile 存在失败: %v", err)
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.ErrorChan(logChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 使用 StreamCommand 来启动 Caddy
-	cmd := exec.Command("caddy", "start", "--config", c.config.GetCaddyfilePath())
-	if err := logger.StreamCommand(cmd); err != nil {
+	cmd := exec.Command("caddy", "start", "--config", c.GetCaddyfilePath())
+	if err := c.core.StreamCommand(cmd); err != nil {
 		errMsg := fmt.Sprintf("启动 Caddy 失败: %v", err)
-		logger.ErrorChan(logChan, "%s", errMsg)
+		c.core.ErrorChan(logChan, "%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	logger.DebugChan(logChan, "Caddy 服务已成功启动")
+	c.core.InfoChan(logChan, "Caddy 服务已成功启动")
 	return nil
 }
