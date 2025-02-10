@@ -24,6 +24,7 @@ type Core struct {
 }
 
 type OSType = libs.OSType
+type CommandOptions = api.CommandOptions
 
 const (
 	Ubuntu  OSType = "ubuntu"
