@@ -106,9 +106,11 @@ func PrintError(err error) {
 // NewCommand 创建一个标准化的命令
 func NewCommand(opts CommandOptions) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   opts.Use,
-		Short: opts.Short,
-		RunE:  opts.RunE,
+		Use:           opts.Use,
+		Short:         opts.Short,
+		SilenceErrors: true,
+		SilenceUsage:  true,
+		RunE:          opts.RunE,
 	}
 
 	// 自定义错误处理
@@ -116,6 +118,18 @@ func NewCommand(opts CommandOptions) *cobra.Command {
 		c.Printf("\x1b[1;31m❌ 错误：缺少必需的参数\x1b[0m\n")
 		c.Usage()
 		return nil
+	})
+
+	// 自定义帮助
+	cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
+		c.Printf("\x1b[1;36m🌈 命令帮助\x1b[0m\n")
+		c.Printf("\x1b[1;35m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m\n")
+		c.Printf("\x1b[1;33m📌 命令: %s\x1b[0m\n", c.Use)
+		c.Printf("\x1b[1;32m📝 描述: %s\x1b[0m\n", c.Short)
+		c.Printf("\x1b[1;34m🎯 参数列表:\x1b[0m\n")
+		c.Printf("\x1b[1;34m%s\x1b[0m\n", c.LocalFlags().FlagUsages())
+		c.Printf("\x1b[1;36m✨ 示例:\x1b[0m\n")
+		c.Printf("\x1b[1;36m%s [参数]\x1b[0m\n", c.CommandPath())
 	})
 
 	// 自定义使用说明模板
@@ -135,7 +149,7 @@ func NewCommand(opts CommandOptions) *cobra.Command {
 
 	// 确保错误不会传播到父命令
 	if cmd.Root() != nil {
-		cmd.Root().SilenceErrors = false
+		cmd.Root().SilenceErrors = true
 	}
 
 	return cmd
