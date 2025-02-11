@@ -102,11 +102,11 @@ func (c *VersionManager) GetVersionCommand() *cobra.Command {
 		Short:   "显示版本信息",
 		Aliases: []string{"v"},
 		Run: func(cmd *cobra.Command, args []string) {
-			printer.Printf("Version:     %s\n", c.Version)
-			printer.Printf("Git Commit:  %s\n", c.CommitHash)
-			printer.Printf("Built Time:  %s\n", c.BuildTime)
+			DefaultPrinter.Printf("Version:     %s\n", c.Version)
+			DefaultPrinter.Printf("Git Commit:  %s\n", c.CommitHash)
+			DefaultPrinter.Printf("Built Time:  %s\n", c.BuildTime)
 			if c.isDevVersion {
-				printer.Printf("\n%s\n", "这是开发版本，版本号来自 package.json")
+				DefaultPrinter.Printf("\n%s\n", "这是开发版本，版本号来自 package.json")
 			}
 		},
 	})

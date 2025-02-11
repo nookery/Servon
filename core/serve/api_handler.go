@@ -11,6 +11,9 @@ import (
 
 type Handler struct{}
 
+var printer = libs.DefaultPrinter
+var softManager = libs.DefaultSoftManager
+
 func NewHanlder() *Handler {
 	return &Handler{}
 }
@@ -107,10 +110,9 @@ func (h *Handler) HandleNetworkResources(c *gin.Context) {
 
 // HandleGetSoftwareList 处理获取软件列表的请求
 func (h *Handler) HandleGetSoftwareList(c *gin.Context) {
-	softwareList := libs.DefaultSoftManager.GetAllSoftware()
-	names := make([]string, len(softwareList))
-	sort.Strings(names)
-	c.JSON(200, names)
+	softwareList := softManager.GetAllSoftware()
+	sort.Strings(softwareList)
+	c.JSON(200, softwareList)
 }
 
 // HandleInstallSoftware 处理安装软件的请求

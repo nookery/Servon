@@ -29,10 +29,10 @@ func NewWebServer(host string, port int, withUI bool) *gin.Engine {
 	})
 
 	// 添加请求日志
-	router.Use(func(c *gin.Context) {
-		printer.Printf("[%s] %s\n", c.Request.Method, c.Request.URL.Path)
-		c.Next()
-	})
+	// router.Use(func(c *gin.Context) {
+	// 	DefaultPrinter.Printf("[%s] %s\n", c.Request.Method, c.Request.URL.Path)
+	// 	c.Next()
+	// })
 
 	return router
 }

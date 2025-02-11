@@ -51,7 +51,7 @@ const (
 func New() *Core {
 	core := &Core{
 		CommandApi:             api.NewCommandApi(),
-		SoftManager:            libs.NewSoftManager(),
+		SoftManager:            libs.DefaultSoftManager,
 		Data:                   api.NewData(),
 		LogApi:                 api.NewLogApi(),
 		DeployManager:          libs.NewDeployManager(),
