@@ -16,7 +16,6 @@ type Core struct {
 	api.CommandApi
 	api.Data
 	api.LogApi
-	api.DeployApi
 	*libs.Printer
 	*libs.PortManager
 	*libs.BasicInfoManager
@@ -31,6 +30,7 @@ type Core struct {
 	*libs.CronManager
 	*libs.VersionManager
 	*libs.SoftManager
+	*libs.DeployManager
 }
 
 type OSType = libs.OSType
@@ -54,7 +54,7 @@ func New() *Core {
 		SoftManager:            libs.NewSoftManager(),
 		Data:                   api.NewData(),
 		LogApi:                 api.NewLogApi(),
-		DeployApi:              api.NewDeployApi(),
+		DeployManager:          libs.NewDeployManager(),
 		Printer:                libs.NewPrinter(),
 		PortManager:            libs.NewPortManager(),
 		BasicInfoManager:       libs.NewBasicInfoManager(),

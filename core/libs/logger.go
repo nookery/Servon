@@ -78,8 +78,3 @@ func StreamCommand(cmd *exec.Cmd) error {
 
 	return cmd.Run()
 }
-
-// Warn 打印警告信息
-func Warn(format string, args ...interface{}) {
-	fmt.Printf(format, args...)
-}

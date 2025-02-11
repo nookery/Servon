@@ -95,3 +95,15 @@ func (p *Printer) PrintSuccess(format string, args ...interface{}) {
 	p.Color.Printf(format, args...)
 	p.Color.Println()
 }
+
+// PrintWarn 打印警告信息
+func (p *Printer) PrintWarn(format string, args ...interface{}) {
+	p.Color.Printf("🚨 "+format, args...)
+	p.Color.Println()
+}
+
+// PrintWarnf 打印警告信息
+func (p *Printer) PrintWarnf(format string, args ...interface{}) {
+	p.Color.Printf("🚨 "+format, args...)
+	p.Color.Println()
+}

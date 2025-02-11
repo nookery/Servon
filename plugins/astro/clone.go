@@ -29,12 +29,12 @@ func (a *AstroPlugin) clone(address string, savePath string) error {
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		if err := a.RunShell("git", "clone", address, savePath); err == nil {
-			a.Info("Astro项目克隆成功")
+			a.PrintSuccess("Astro项目克隆成功")
 			return nil
 		} else {
 			lastErr = err
 			if attempt < maxRetries {
-				a.Warn("%s", fmt.Sprintf("克隆失败 (尝试 %d/%d)，%v 秒后重试...", attempt, maxRetries, retryInterval))
+				a.PrintWarnf("克隆失败 (尝试 %d/%d)，%v 秒后重试...", attempt, maxRetries, retryInterval)
 				time.Sleep(time.Second * retryInterval)
 
 				// 如果目录已创建但克隆失败，删除它以便重试

@@ -44,8 +44,3 @@ func (c *LogApi) Infoln(format string, args ...interface{}) {
 func (c *LogApi) InfoChan(ch chan<- string, format string, args ...interface{}) {
 	libs.InfoChan(ch, format, args...)
 }
-
-// Warn 打印警告信息
-func (c *LogApi) Warn(format string, args ...interface{}) {
-	libs.Warn(format, args...)
-}
