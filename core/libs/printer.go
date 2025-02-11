@@ -51,6 +51,12 @@ func (p *Printer) PrintInfo(format string, args ...interface{}) {
 	fmt.Println()
 }
 
+// PrintInfof 打印信息
+func (p *Printer) PrintInfof(format string, args ...interface{}) {
+	p.Color.Printf("🍋 "+format, args...)
+	fmt.Println()
+}
+
 // PrintLn 打印换行
 func (p *Printer) PrintLn() {
 	p.Color.Println()
@@ -92,7 +98,7 @@ func (p *Printer) PrintList(list []string, title string) {
 
 // PrintSuccess 打印成功信息
 func (p *Printer) PrintSuccess(format string, args ...interface{}) {
-	p.Color.Printf(format, args...)
+	p.Color.Printf("✅ "+format, args...)
 	p.Color.Println()
 }
 

@@ -4,142 +4,67 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"servon/core"
 	"servon/core/contract"
 	"strings"
 )
 
 func Setup(core *core.Core) {
-	core.RegisterSoftware("clash", NewClash())
+	plugin := NewClash(core)
+
+	core.RegisterSoftware("clash", plugin)
 }
 
-// Clash 实现 Software 接口
 type Clash struct {
-	info contract.SoftwareInfo
-	core *core.Core
+	info      contract.SoftwareInfo
+	targetDir string
+	*core.Core
 }
 
-// Configuration related constants and types
-const clashConfigTemplate = `
-port: 7890
-socks-port: 7891
-allow-lan: true
-mode: Rule
-log-level: info
-external-controller: :9090
-proxies:
-  # Configure your proxy servers here
-proxy-groups:
-  # Configure your proxy groups here
-rules:
-  # Configure your rules here
-`
-
-func NewClash() contract.SuperSoft {
+func NewClash(core *core.Core) contract.SuperSoft {
 	return &Clash{
 		info: contract.SoftwareInfo{
 			Name:        "clash",
 			Description: "A rule-based tunnel in Go",
 		},
+		targetDir: core.GetDataRootFolder() + "/clash-for-linux",
+		Core:      core,
 	}
 }
 
-// ... existing code from clash.go ...
 func (c *Clash) Install(logChan chan<- string) error {
-	osType := c.core.GetOSType()
-	c.core.Info(fmt.Sprintf("检测到操作系统: %s", osType))
+	osType := c.GetOSType()
+	c.PrintInfof("检测到操作系统: %s", osType)
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		c.core.Info("开始安装 Clash...")
+		c.PrintInfo("开始安装 Clash...")
 
-		// 创建安装目录
-		installDir := "/usr/local/bin"
-		if err := os.MkdirAll(installDir, 0755); err != nil {
-			errMsg := fmt.Sprintf("创建安装目录失败: %v", err)
-			c.core.Error(errMsg)
-			return fmt.Errorf("%s", errMsg)
+		// 清理临时文件夹
+		err := os.RemoveAll(c.targetDir)
+		if err != nil {
+			return fmt.Errorf("清理临时文件夹失败: %s", err)
 		}
 
-		// 下载最新版本的 Clash
-		downloadCmd := exec.Command("curl", "-L",
-			"https://github.com/Dreamacro/clash/releases/download/v1.18.0/clash-linux-amd64-v1.18.0.gz",
-			"-o", "/tmp/clash.gz")
-		if err := c.core.StreamCommand(downloadCmd); err != nil {
-			return fmt.Errorf("%s", err)
+		// Clone clash-for-linux repository
+		err = c.RunShell("git", "clone", "https://github.com/wnlen/clash-for-linux.git", c.targetDir)
+		if err != nil {
+			return fmt.Errorf("克隆仓库失败: %s", err)
 		}
 
-		// 解压
-		gunzipCmd := exec.Command("gunzip", "-f", "/tmp/clash.gz")
-		if err := c.core.StreamCommand(gunzipCmd); err != nil {
-			return fmt.Errorf("%s", err)
-		}
-
-		// 移动到安装目录并设置权限
-		moveCmd := exec.Command("sudo", "mv", "/tmp/clash", filepath.Join(installDir, "clash"))
-		if err := c.core.StreamCommand(moveCmd); err != nil {
-			return fmt.Errorf("%s", err)
-		}
-
-		chmodCmd := exec.Command("sudo", "chmod", "+x", filepath.Join(installDir, "clash"))
-		if err := c.core.StreamCommand(chmodCmd); err != nil {
-			return fmt.Errorf("%s", err)
-		}
-
-		// 创建系统服务
-		serviceContent := `[Unit]
-Description=Clash Daemon
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/clash -d /etc/clash
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target`
-
-		if err := os.WriteFile("/etc/systemd/system/clash.service", []byte(serviceContent), 0644); err != nil {
-			errMsg := fmt.Sprintf("创建服务文件失败: %v", err)
-			c.core.Error(errMsg)
-			return fmt.Errorf("%s", errMsg)
-		}
-
-		// 创建配置目录
-		if err := os.MkdirAll("/etc/clash", 0755); err != nil {
-			errMsg := fmt.Sprintf("创建配置目录失败: %v", err)
-			c.core.Error(errMsg)
-			return fmt.Errorf("%s", errMsg)
-		}
-
-		// 创建默认配置文件
-		if err := os.WriteFile("/etc/clash/config.yaml", []byte(clashConfigTemplate), 0644); err != nil {
-			errMsg := fmt.Sprintf("创建配置文件失败: %v", err)
-			c.core.Error(errMsg)
-			return fmt.Errorf("%s", errMsg)
-		}
-
-		// 重载系统服务
-		reloadCmd := exec.Command("sudo", "systemctl", "daemon-reload")
-		if output, err := reloadCmd.CombinedOutput(); err != nil {
-			errMsg := fmt.Sprintf("重载系统服务失败:\n%s", string(output))
-			c.core.Error(errMsg)
-			return fmt.Errorf("%s", errMsg)
-		}
-
+		c.PrintSuccess("克隆仓库成功")
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"
-		c.core.Error(errMsg)
+		c.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		c.core.Error(errMsg)
+		c.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	c.core.Info("Clash 安装完成")
+	c.Info("Clash 安装完成")
 	return nil
 }
 
@@ -196,7 +121,7 @@ func (c *Clash) GetStatus() (map[string]string, error) {
 	}
 
 	status := "stopped"
-	if c.core.IsActive("clash") {
+	if c.IsActive("clash") {
 		status = "running"
 	}
 
@@ -218,44 +143,63 @@ func (c *Clash) GetInfo() contract.SoftwareInfo {
 }
 
 func (c *Clash) Start(logChan chan<- string) error {
-	// 检查是否已安装
-	if _, err := os.Stat("/usr/local/bin/clash"); os.IsNotExist(err) {
-		errMsg := "Clash 未安装，请先安装"
-		c.core.Error(errMsg)
-		return fmt.Errorf("%s", errMsg)
+	// 检查env文件是否配置
+	envFile := c.targetDir + "/.env"
+	if _, err := os.Stat(envFile); os.IsNotExist(err) {
+		return fmt.Errorf("env文件不存在，请先配置env文件")
 	}
 
-	// 获取当前状态
-	status, err := c.GetStatus()
+	c.PrintInfo("开始启动 Clash")
+	c.PrintInfof("配置文件 %s", envFile)
+
+	// 读取配置文件
+	envContent, err := os.ReadFile(envFile)
 	if err != nil {
-		errMsg := fmt.Sprintf("获取状态失败: %v", err)
-		c.core.Error(errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return fmt.Errorf("读取配置文件失败: %s", err)
 	}
 
-	// 如果已经在运行，则不需要启动
-	if status["status"] == "running" {
-		c.core.Info("Clash 服务已在运行中")
-		return nil
-	}
+	// 检查 CLASH_URL 是否已配置
+	if strings.Contains(string(envContent), "CLASH_URL='更改为你的clash订阅地址'") ||
+		strings.Contains(string(envContent), "CLASH_URL=your_subscription_url_here") ||
+		!strings.Contains(string(envContent), "CLASH_URL") {
 
-	c.core.Info("正在启动 Clash 服务...")
+		c.PrintInfo("请输入你的 Clash 订阅地址：")
+		var subscriptionURL string
+		fmt.Scanln(&subscriptionURL)
+
+		if subscriptionURL == "" {
+			return fmt.Errorf("订阅地址不能为空")
+		}
+
+		// 更新配置文件
+		newContent := strings.Replace(string(envContent),
+			"CLASH_URL='更改为你的clash订阅地址'",
+			fmt.Sprintf("CLASH_URL='%s'", subscriptionURL), -1)
+		newContent = strings.Replace(newContent,
+			"CLASH_URL=your_subscription_url_here",
+			fmt.Sprintf("CLASH_URL='%s'", subscriptionURL), -1)
+
+		err = os.WriteFile(envFile, []byte(newContent), 0644)
+		if err != nil {
+			return fmt.Errorf("更新配置文件失败: %s", err)
+		}
+
+		c.PrintSuccess("订阅地址已更新")
+	}
 
 	// 启动服务
-	if err := c.core.Start("clash"); err != nil {
-		errMsg := fmt.Sprintf("启动 Clash 失败: %v", err)
-		c.core.Error(errMsg)
-		return fmt.Errorf("%s", errMsg)
+	err = c.RunShell("bash", c.targetDir+"/start.sh")
+	if err != nil {
+		return fmt.Errorf("启动失败: %s", err)
 	}
 
-	c.core.Info("Clash 服务已成功启动")
 	return nil
 }
 
 func (c *Clash) Stop() error {
-	return c.core.Stop("clash")
+	return fmt.Errorf("not-implemented")
 }
 
 func (c *Clash) Reload() error {
-	return c.core.Reload("clash")
+	return fmt.Errorf("not-implemented")
 }
