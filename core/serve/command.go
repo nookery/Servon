@@ -2,12 +2,13 @@ package serve
 
 import (
 	"fmt"
+	"servon/core/libs"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
-func (p *ServePlugin) NewServeCommand() *cobra.Command {
+func NewServeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "启动服务器",
@@ -19,7 +20,7 @@ func (p *ServePlugin) NewServeCommand() *cobra.Command {
 			// 版本和模式信息
 			fmt.Printf("  %s    %s\n",
 				color.HiBlackString("Version:"),
-				color.HiWhiteString(p.GetVersion()))
+				color.HiWhiteString(libs.DefaultVersionManager.GetVersion()))
 			fmt.Printf("  %s    %s\n",
 				color.HiBlackString("Mode:"),
 				color.HiWhiteString(map[bool]string{true: "API Only", false: "Full Stack"}[apiOnly]))
@@ -47,8 +48,7 @@ func (p *ServePlugin) NewServeCommand() *cobra.Command {
 				color.YellowString("⚡"),
 				color.HiBlackString("Server is ready"))
 
-			server := p.NewServer(host, port, !apiOnly)
-			server.Start()
+			StartWebServer(host, port, !apiOnly)
 		},
 	}
 

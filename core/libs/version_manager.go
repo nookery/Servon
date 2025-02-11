@@ -1,10 +1,8 @@
-package api
+package libs
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"servon/core/libs"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,6 +12,14 @@ import (
 var (
 	Version = "0.1.0"
 )
+
+type VersionManager struct {
+	Version string
+}
+
+func NewVersionManager() *VersionManager {
+	return &VersionManager{}
+}
 
 type VersionApi struct {
 	version string
@@ -26,21 +32,21 @@ func NewVersion() VersionApi {
 }
 
 // GetVersionCommand 返回版本命令
-func (c *VersionApi) GetVersionCommand() *cobra.Command {
-	return libs.NewCommand(libs.CommandOptions{
+func (c *VersionManager) GetVersionCommand() *cobra.Command {
+	return NewCommand(CommandOptions{
 		Use:   "version",
 		Short: "显示版本信息",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(c.GetVersion())
+			printer.Printf("Version: %s\n", c.GetVersion())
 		},
 	})
 }
 
-func (c *VersionApi) GetVersion() string {
-	return c.version
+func (c *VersionManager) GetVersion() string {
+	return c.Version
 }
 
-func (c *VersionApi) GetLatestVersion() (string, error) {
+func (c *VersionManager) GetLatestVersion() (string, error) {
 	resp, err := http.Get("https://api.github.com/repos/nookery/servon/releases/latest")
 	if err != nil {
 		return "", err

@@ -1,26 +1,25 @@
-package api
+package libs
 
 import (
 	"fmt"
 	"servon/core/contract"
-	"servon/core/libs"
 
 	"github.com/spf13/cobra"
 )
 
-type Soft struct {
+type SoftManager struct {
 	Softwares map[string]contract.SuperSoft
 }
 
-func NewSoft() Soft {
-	return Soft{
+func NewSoftManager() *SoftManager {
+	return &SoftManager{
 		Softwares: make(map[string]contract.SuperSoft),
 	}
 }
 
 // newInfoCmd 返回 info 子命令
-func (p *Soft) newInfoCmd() *cobra.Command {
-	return libs.NewCommand(libs.CommandOptions{
+func (p *SoftManager) newInfoCmd() *cobra.Command {
+	return NewCommand(CommandOptions{
 		Use:   "info",
 		Short: "显示软件详细信息",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -95,8 +94,8 @@ func (p *Soft) newInfoCmd() *cobra.Command {
 }
 
 // GetSoftwareCommand 返回 software 命令
-func (p *Soft) GetSoftwareCommand() *cobra.Command {
-	cmd := libs.NewCommand(libs.CommandOptions{
+func (p *SoftManager) GetSoftwareCommand() *cobra.Command {
+	cmd := NewCommand(CommandOptions{
 		Use:   "software",
 		Short: "软件管理",
 	})
@@ -112,8 +111,8 @@ func (p *Soft) GetSoftwareCommand() *cobra.Command {
 }
 
 // newStartCmd 返回 start 子命令
-func (p *Soft) newStartCmd() *cobra.Command {
-	return libs.NewCommand(libs.CommandOptions{
+func (p *SoftManager) newStartCmd() *cobra.Command {
+	return NewCommand(CommandOptions{
 		Use:   "start",
 		Short: "启动指定的软件",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -158,22 +157,22 @@ func (p *Soft) newStartCmd() *cobra.Command {
 			}
 
 			// 开始启动
-			libs.Infoln("🚀 %s 启动中 ...", name)
+			Infoln("🚀 %s 启动中 ...", name)
 
 			err := p.StartSoftware(name, nil)
 			if err != nil {
-				libs.Infoln("❌ %s 启动失败", name)
-				libs.Error("%s", err)
+				Infoln("❌ %s 启动失败", name)
+				Error("%s", err)
 				return
 			}
 
-			libs.Infoln("✅ %s 启动成功！", name)
+			Infoln("✅ %s 启动成功！", name)
 		},
 	})
 }
 
-func (p *Soft) newStopCmd() *cobra.Command {
-	return libs.NewCommand(libs.CommandOptions{
+func (p *SoftManager) newStopCmd() *cobra.Command {
+	return NewCommand(CommandOptions{
 		Use:   "stop",
 		Short: "停止指定的软件",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -218,23 +217,23 @@ func (p *Soft) newStopCmd() *cobra.Command {
 			}
 
 			// 开始停止
-			libs.Infoln("🛑 %s 停止中 ...", name)
+			Infoln("🛑 %s 停止中 ...", name)
 
 			err := p.StopSoftware(name)
 			if err != nil {
-				libs.Infoln("❌ %s 停止失败", name)
-				libs.Error("%s", err)
+				Infoln("❌ %s 停止失败", name)
+				Error("%s", err)
 				return
 			}
 
-			libs.Infoln("✅ %s 已停止！", name)
+			Infoln("✅ %s 已停止！", name)
 		},
 	})
 }
 
 // newListCmd 返回 list 子命令
-func (p *Soft) newListCmd() *cobra.Command {
-	return libs.NewCommand(libs.CommandOptions{
+func (p *SoftManager) newListCmd() *cobra.Command {
+	return NewCommand(CommandOptions{
 		Use:     "list",
 		Short:   "显示支持的软件列表",
 		Aliases: []string{"l"},
@@ -246,8 +245,8 @@ func (p *Soft) newListCmd() *cobra.Command {
 	})
 }
 
-func (p *Soft) newInstallCmd() *cobra.Command {
-	cmd := libs.NewCommand(libs.CommandOptions{
+func (p *SoftManager) newInstallCmd() *cobra.Command {
+	cmd := NewCommand(CommandOptions{
 		Use:     "install",
 		Short:   "安装指定的软件",
 		Args:    cobra.ExactArgs(1),
@@ -261,8 +260,8 @@ func (p *Soft) newInstallCmd() *cobra.Command {
 }
 
 // newUninstallCmd 返回 uninstall 子命令
-func (p *Soft) newUninstallCmd() *cobra.Command {
-	return libs.NewCommand(libs.CommandOptions{
+func (p *SoftManager) newUninstallCmd() *cobra.Command {
+	return NewCommand(CommandOptions{
 		Use:     "uninstall",
 		Short:   "卸载指定的软件",
 		Aliases: []string{"u", "remove"},
@@ -273,7 +272,7 @@ func (p *Soft) newUninstallCmd() *cobra.Command {
 }
 
 // Install 安装软件, 如果提供了日志通道则输出日志
-func (c *Soft) Install(name string, logChan chan<- string) error {
+func (c *SoftManager) Install(name string, logChan chan<- string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		registeredSoftwares := make([]string, 0, len(c.Softwares))
@@ -288,7 +287,7 @@ func (c *Soft) Install(name string, logChan chan<- string) error {
 }
 
 // UninstallSoftware 卸载软件
-func (c *Soft) UninstallSoftware(name string, logChan chan<- string) error {
+func (c *SoftManager) UninstallSoftware(name string, logChan chan<- string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return printer.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
@@ -297,7 +296,7 @@ func (c *Soft) UninstallSoftware(name string, logChan chan<- string) error {
 }
 
 // StartSoftware 启动软件
-func (c *Soft) StartSoftware(name string, logChan chan<- string) error {
+func (c *SoftManager) StartSoftware(name string, logChan chan<- string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return printer.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
@@ -306,7 +305,7 @@ func (c *Soft) StartSoftware(name string, logChan chan<- string) error {
 }
 
 // StopSoftware 停止软件
-func (c *Soft) StopSoftware(name string) error {
+func (c *SoftManager) StopSoftware(name string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return printer.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
@@ -315,7 +314,7 @@ func (c *Soft) StopSoftware(name string) error {
 }
 
 // GetSoftwareStatus 获取软件状态
-func (c *Soft) GetSoftwareStatus(name string) (map[string]string, error) {
+func (c *SoftManager) GetSoftwareStatus(name string) (map[string]string, error) {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return nil, printer.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
@@ -324,7 +323,7 @@ func (c *Soft) GetSoftwareStatus(name string) (map[string]string, error) {
 }
 
 // RegisterSoftware 注册软件
-func (c *Soft) RegisterSoftware(name string, software contract.SuperSoft) error {
+func (c *SoftManager) RegisterSoftware(name string, software contract.SuperSoft) error {
 	if _, exists := c.Softwares[name]; exists {
 		return printer.PrintAndReturnError(fmt.Sprintf("软件 %s 已注册", name))
 	}
@@ -333,7 +332,7 @@ func (c *Soft) RegisterSoftware(name string, software contract.SuperSoft) error 
 }
 
 // GetAllSoftware 获取所有软件
-func (c *Soft) GetAllSoftware() []string {
+func (c *SoftManager) GetAllSoftware() []string {
 	softwareNames := make([]string, 0, len(c.Softwares))
 	for name := range c.Softwares {
 		softwareNames = append(softwareNames, name)

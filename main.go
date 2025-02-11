@@ -30,7 +30,6 @@ func main() {
 	ip.Setup(core)
 	astro.Setup(core)
 	npm.Setup(core)
-
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)

@@ -1,0 +1,16 @@
+package libs
+
+var printer = NewPrinter()
+var DefaultVersionManager = NewVersionManager()
+var DefaultSystemResourcesManager = NewSystemResourcesManager()
+var DefaultPortManager = NewPortManager()
+var DefaultBasicInfoManager = NewBasicInfoManager()
+var DefaultProcessManager = NewProcessManager()
+var DefaultFilesManager = NewFilesManager()
+var DefaultOSInfoManager = NewOSInfoManager()
+var DefaultNetworkManager = NewNetworkManager()
+var DefaultServiceManager = NewServiceManager()
+var DefaultAptManager = NewAptManager()
+var DefaultDpkg = NewDpkg()
+var DefaultCronManager = NewCronManager()
+var DefaultSoftManager = NewSoftManager()

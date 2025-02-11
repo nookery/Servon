@@ -27,9 +27,9 @@ func (d *Dpkg) IsInstalled(packageName string) bool {
 	return strings.Contains(string(output), fmt.Sprintf("ii  %s", packageName))
 }
 
-// GetVersion 获取已安装软件包的版本
+// DpkgGetVersion 获取已安装软件包的版本
 // 如果软件包未安装，返回空字符串
-func (d *Dpkg) GetVersion(packageName string) string {
+func (d *Dpkg) DpkgGetVersion(packageName string) string {
 	cmd := exec.Command("dpkg", "-l", packageName)
 	output, err := cmd.CombinedOutput()
 	if err != nil {

@@ -3,6 +3,7 @@ package core
 import (
 	"servon/core/api"
 	"servon/core/libs"
+	"servon/core/serve"
 )
 
 // 调用关系 Core -> Core API -> Libs
@@ -13,8 +14,6 @@ const LoggerFolder = "/logs"
 
 type Core struct {
 	api.CommandApi
-	api.Soft
-	api.VersionApi
 	api.Data
 	api.LogApi
 	api.DeployApi
@@ -30,6 +29,8 @@ type Core struct {
 	*libs.AptManager
 	*libs.Dpkg
 	*libs.CronManager
+	*libs.VersionManager
+	*libs.SoftManager
 }
 
 type OSType = libs.OSType
@@ -50,8 +51,7 @@ const (
 func New() *Core {
 	core := &Core{
 		CommandApi:             api.NewCommandApi(),
-		Soft:                   api.NewSoft(),
-		VersionApi:             api.NewVersion(),
+		SoftManager:            libs.NewSoftManager(),
 		Data:                   api.NewData(),
 		LogApi:                 api.NewLogApi(),
 		DeployApi:              api.NewDeployApi(),
@@ -59,7 +59,7 @@ func New() *Core {
 		PortManager:            libs.NewPortManager(),
 		BasicInfoManager:       libs.NewBasicInfoManager(),
 		OSInfoManager:          libs.NewOSInfoManager(),
-		SystemResourcesManager: libs.NewSystemResourcesManager(),
+		SystemResourcesManager: libs.DefaultSystemResourcesManager,
 		ProcessManager:         libs.NewProcessManager(),
 		FilesManager:           libs.NewFilesManager(),
 		NetworkManager:         libs.NewNetworkManager(),
@@ -67,11 +67,13 @@ func New() *Core {
 		AptManager:             libs.NewAptManager(),
 		Dpkg:                   libs.NewDpkg(),
 		CronManager:            libs.NewCronManager(),
+		VersionManager:         libs.DefaultVersionManager,
 	}
 
 	core.AddCommand(core.GetDeployCommand())
 	core.AddCommand(core.GetVersionCommand())
 	core.AddCommand(core.GetSoftwareCommand())
+	core.AddCommand(serve.NewServeCommand())
 
 	return core
 }

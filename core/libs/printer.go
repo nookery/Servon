@@ -56,6 +56,11 @@ func (p *Printer) PrintLn() {
 	p.Color.Println()
 }
 
+// Printf 打印格式化信息
+func (p *Printer) Printf(format string, args ...interface{}) {
+	p.Color.Printf(format, args...)
+}
+
 // PrintError 打印错误信息
 func (p *Printer) PrintError(err error) {
 	p.Color.Println()
