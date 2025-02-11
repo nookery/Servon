@@ -1,13 +1,9 @@
 package serve
 
-import (
-	"servon/plugins/serve/handler"
-)
-
 // setupAPIRoutes 设置所有API路由
 func (s *Server) setupAPIRoutes() {
-	h := handler.New()
-	sh := handler.NewSoftwareHandler(s.core)
+	h := New()
+	sh := s.NewSoftwareHandler()
 	dh := handler.NewDeployHandler()
 	api := s.router.Group("/web_api")
 	{

@@ -8,14 +8,11 @@ import (
 
 // Dpkg 提供dpkg包管理器的基本操作
 type Dpkg struct {
-	outputChan chan string
 }
 
 // NewDpkg 创建一个新的Dpkg实例
-func NewDpkg(outputChan chan string) *Dpkg {
-	return &Dpkg{
-		outputChan: outputChan,
-	}
+func NewDpkg() *Dpkg {
+	return &Dpkg{}
 }
 
 // IsInstalled 检查软件包是否已安装

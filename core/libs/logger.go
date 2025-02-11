@@ -4,13 +4,20 @@ import (
 	"bufio"
 	"fmt"
 	"os/exec"
+
+	"github.com/fatih/color"
 )
 
 func Debug(format string, args ...interface{}) {
 	fmt.Printf(format, args...)
 }
 
-func Error(format string, args ...interface{}) {
+func Error(args ...interface{}) {
+	fmt.Println(append([]interface{}{color.RedString("❌")}, args...)...)
+}
+
+func Errorf(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
 	fmt.Printf(format, args...)
 }
 
@@ -37,10 +44,6 @@ func InfoWithSpace(format string, args ...interface{}) {
 func InfoChan(ch chan<- string, format string, args ...interface{}) {
 	Info(fmt.Sprintf(format, args...))
 	ch <- fmt.Sprintf(format, args...)
-}
-
-func PrintAndReturnError(errMsg string) error {
-	return fmt.Errorf(errMsg)
 }
 
 func PrintCommandErrorAndExit(err error) error {
@@ -74,4 +77,9 @@ func StreamCommand(cmd *exec.Cmd) error {
 	}()
 
 	return cmd.Run()
+}
+
+// Warn 打印警告信息
+func Warn(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
 }

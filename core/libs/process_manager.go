@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+type ProcessManager struct {
+	processes []Process
+}
+
+func NewProcessManager() *ProcessManager {
+	return &ProcessManager{}
+}
+
 type Process struct {
 	PID     int     `json:"pid"`
 	User    string  `json:"user"`
@@ -16,7 +24,7 @@ type Process struct {
 }
 
 // GetProcessList 返回系统当前运行的进程列表
-func GetProcessList() ([]Process, error) {
+func (p *ProcessManager) GetProcessList() ([]Process, error) {
 	// 使用 ps 命令获取进程信息
 	cmd := exec.Command("ps", "aux", "--no-headers")
 	output, err := cmd.Output()

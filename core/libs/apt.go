@@ -5,8 +5,14 @@ import (
 	"os/exec"
 )
 
+type AptManager struct{}
+
+func NewAptManager() *AptManager {
+	return &AptManager{}
+}
+
 // AptUpdate 更新软件包索引
-func AptUpdate() error {
+func (p *AptManager) AptUpdate() error {
 	cmd := exec.Command("sudo", "apt-get", "update")
 	if err := StreamCommand(cmd); err != nil {
 		return fmt.Errorf("更新索引失败: %v", err)
@@ -15,7 +21,7 @@ func AptUpdate() error {
 }
 
 // AptInstall 安装指定的软件包
-func AptInstall(packages ...string) error {
+func (p *AptManager) AptInstall(packages ...string) error {
 	args := append([]string{"apt-get", "install", "-y"}, packages...)
 	cmd := exec.Command("sudo", args...)
 
@@ -29,7 +35,7 @@ func AptInstall(packages ...string) error {
 }
 
 // AptRemove 移除指定的软件包
-func AptRemove(packages ...string) error {
+func (p *AptManager) AptRemove(packages ...string) error {
 	args := append([]string{"apt-get", "remove", "-y"}, packages...)
 	cmd := exec.Command("sudo", args...)
 	if err := StreamCommand(cmd); err != nil {
@@ -39,7 +45,7 @@ func AptRemove(packages ...string) error {
 }
 
 // AptPurge 完全移除软件包及其配置文件
-func AptPurge(packages ...string) error {
+func (p *AptManager) AptPurge(packages ...string) error {
 	args := append([]string{"apt-get", "purge", "-y"}, packages...)
 	cmd := exec.Command("sudo", args...)
 	if err := StreamCommand(cmd); err != nil {
@@ -49,7 +55,7 @@ func AptPurge(packages ...string) error {
 }
 
 // AptIsInstalled 检查软件包是否已安装
-func AptIsInstalled(packageName string) bool {
+func (p *AptManager) AptIsInstalled(packageName string) bool {
 	cmd := exec.Command("dpkg", "-l", packageName)
 	return cmd.Run() == nil
 }

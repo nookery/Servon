@@ -4,6 +4,16 @@ import (
 	"servon/core"
 )
 
+type ServePlugin struct {
+	*core.Core
+}
+
+func NewServePlugin(core *core.Core) *ServePlugin {
+	return &ServePlugin{Core: core}
+}
+
 func Setup(core *core.Core) {
-	core.AddCommand(NewServeCommand(core))
+	plugin := NewServePlugin(core)
+
+	core.AddCommand(plugin.NewServeCommand())
 }

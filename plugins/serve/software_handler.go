@@ -1,4 +1,4 @@
-package handler
+package serve
 
 import (
 	"sort"
@@ -10,23 +10,23 @@ import (
 
 // SoftwareHandler 处理软件相关的 HTTP 请求
 type SoftwareHandler struct {
-	core *core.Core
+	*core.Core
 }
 
 // NewSoftwareHandler 创建软件处理器实例
-func NewSoftwareHandler(core *core.Core) *SoftwareHandler {
-	if core == nil {
+func (p *ServePlugin) NewSoftwareHandler() *SoftwareHandler {
+	if p.Core == nil {
 		panic("core is nil")
 	}
 
 	return &SoftwareHandler{
-		core: core,
+		Core: p.Core,
 	}
 }
 
 // HandleGetSoftwareList 处理获取软件列表的请求
 func (h *SoftwareHandler) HandleGetSoftwareList(c *gin.Context) {
-	softwareList := h.core.GetAllSoftware()
+	softwareList := h.GetAllSoftware()
 	names := make([]string, len(softwareList))
 	sort.Strings(names)
 	c.JSON(200, names)
@@ -36,7 +36,7 @@ func (h *SoftwareHandler) HandleGetSoftwareList(c *gin.Context) {
 func (h *SoftwareHandler) HandleInstallSoftware(c *gin.Context) {
 	name := c.Param("name")
 	msgChan := make(chan string, 100)
-	err := h.core.InstallSoftware(name, msgChan)
+	err := h.Install(name, msgChan)
 	if err != nil {
 		c.String(500, err.Error())
 		return
@@ -56,7 +56,7 @@ func (h *SoftwareHandler) HandleInstallSoftware(c *gin.Context) {
 func (h *SoftwareHandler) HandleUninstallSoftware(c *gin.Context) {
 	name := c.Param("name")
 	msgChan := make(chan string, 100)
-	err := h.core.UninstallSoftware(name, msgChan)
+	err := h.UninstallSoftware(name, msgChan)
 	if err != nil {
 		c.String(500, err.Error())
 		return
@@ -75,7 +75,7 @@ func (h *SoftwareHandler) HandleUninstallSoftware(c *gin.Context) {
 // HandleStopSoftware 处理停止软件的请求
 func (h *SoftwareHandler) HandleStopSoftware(c *gin.Context) {
 	name := c.Param("name")
-	if err := h.core.StopSoftware(name); err != nil {
+	if err := h.StopSoftware(name); err != nil {
 		c.String(500, err.Error())
 		return
 	}
@@ -85,7 +85,7 @@ func (h *SoftwareHandler) HandleStopSoftware(c *gin.Context) {
 // HandleGetSoftwareStatus 处理获取软件状态的请求
 func (h *SoftwareHandler) HandleGetSoftwareStatus(c *gin.Context) {
 	name := c.Param("name")
-	status, err := h.core.GetSoftwareStatus(name)
+	status, err := h.GetSoftwareStatus(name)
 	if err != nil {
 		c.String(500, err.Error())
 		return

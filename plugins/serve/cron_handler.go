@@ -1,4 +1,4 @@
-package handler
+package serve
 
 import (
 	"fmt"
@@ -6,8 +6,14 @@ import (
 	"strconv"
 	"time"
 
+	"servon/core"
+
 	"github.com/gin-gonic/gin"
 )
+
+type CronHandler struct {
+	*core.Core
+}
 
 // CronTask 定时任务结构
 type CronTask struct {
@@ -22,8 +28,8 @@ type CronTask struct {
 }
 
 // 将 handler 中的 CronTask 转换为 system.CronTask
-func (t *CronTask) toSystemTask() system.CronTask {
-	return system.CronTask{
+func (t *CronTask) toSystemTask() core.CronTask {
+	return core.CronTask{
 		ID:          t.ID,
 		Name:        t.Name,
 		Command:     t.Command,
@@ -36,7 +42,7 @@ func (t *CronTask) toSystemTask() system.CronTask {
 }
 
 // 将 system.CronTask 转换为 handler 中的 CronTask
-func fromSystemTask(t *system.CronTask) *CronTask {
+func fromSystemTask(t *core.CronTask) *CronTask {
 	return &CronTask{
 		ID:          t.ID,
 		Name:        t.Name,
@@ -51,13 +57,13 @@ func fromSystemTask(t *system.CronTask) *CronTask {
 
 // 添加一个辅助函数来处理错误响应
 func handleError(c *gin.Context, err error) {
-	if ve, ok := err.(system.ValidationErrors); ok {
+	if ve, ok := err.(core.ValidationErrors); ok {
 		// 处理验证错误
 		c.JSON(http.StatusBadRequest, ve)
 	} else {
 		// 处理其他错误
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"errors": []system.ValidationError{
+			"errors": []core.ValidationError{
 				{
 					Field:   "general",
 					Message: err.Error(),
@@ -69,7 +75,7 @@ func handleError(c *gin.Context, err error) {
 
 // HandleListCronTasks 获取所有定时任务
 func (h *Handler) HandleListCronTasks(c *gin.Context) {
-	tasks, err := system.GetCronTasks()
+	tasks, err := h.GetCronTasks()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -92,7 +98,7 @@ func (h *Handler) HandleCreateCronTask(c *gin.Context) {
 	}
 
 	systemTask := task.toSystemTask()
-	newTask, err := system.CreateCronTask(systemTask)
+	newTask, err := h.CreateCronTask(systemTask)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -116,7 +122,7 @@ func (h *Handler) HandleUpdateCronTask(c *gin.Context) {
 	task.ID = id
 
 	systemTask := task.toSystemTask()
-	updatedTask, err := system.UpdateCronTask(systemTask)
+	updatedTask, err := h.UpdateCronTask(systemTask)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -132,7 +138,7 @@ func (h *Handler) HandleDeleteCronTask(c *gin.Context) {
 		return
 	}
 
-	if err := system.DeleteCronTask(id); err != nil {
+	if err := h.DeleteCronTask(id); err != nil {
 		handleError(c, err)
 		return
 	}
@@ -147,7 +153,7 @@ func (h *Handler) HandleToggleCronTask(c *gin.Context) {
 		return
 	}
 
-	task, err := system.ToggleCronTask(id)
+	task, err := h.ToggleCronTask(id)
 	if err != nil {
 		handleError(c, err)
 		return

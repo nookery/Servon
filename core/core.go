@@ -1,30 +1,42 @@
 package core
 
 import (
+	"servon/core/api"
 	"servon/core/libs"
 )
 
-// 调用关系 Core -> Core API(Public) -> Libs(Private)
-
-import (
-	"servon/core/api"
-)
+// 调用关系 Core -> Core API -> Libs
+// 或 Core -> Libs
 
 const DataRootFolder = "/data"
 const LoggerFolder = "/logs"
 
 type Core struct {
-	api.Command
+	api.CommandApi
 	api.Soft
-	api.SystemApi
-	api.Version
+	api.VersionApi
 	api.Data
-	api.Sample
 	api.LogApi
+	api.DeployApi
+	*libs.Printer
+	*libs.PortManager
+	*libs.BasicInfoManager
+	*libs.OSInfoManager
+	*libs.SystemResourcesManager
+	*libs.ProcessManager
+	*libs.FilesManager
+	*libs.NetworkManager
+	*libs.ServiceManager
+	*libs.AptManager
+	*libs.Dpkg
+	*libs.CronManager
 }
 
 type OSType = libs.OSType
 type CommandOptions = api.CommandOptions
+type CronTask = libs.CronTask
+type ValidationError = libs.ValidationError
+type ValidationErrors = libs.ValidationErrors
 
 const (
 	Ubuntu  OSType = "ubuntu"
@@ -36,13 +48,30 @@ const (
 
 // New 创建Core实例
 func New() *Core {
-	return &Core{
-		Command:   api.NewCommandApi(),
-		Soft:      api.NewSoft(),
-		SystemApi: api.NewSystemApi(),
-		Version:   api.NewVersion(),
-		Data:      api.NewData(),
-		Sample:    api.NewSample(),
-		LogApi:    api.NewLogApi(),
+	core := &Core{
+		CommandApi:             api.NewCommandApi(),
+		Soft:                   api.NewSoft(),
+		VersionApi:             api.NewVersion(),
+		Data:                   api.NewData(),
+		LogApi:                 api.NewLogApi(),
+		DeployApi:              api.NewDeployApi(),
+		Printer:                libs.NewPrinter(),
+		PortManager:            libs.NewPortManager(),
+		BasicInfoManager:       libs.NewBasicInfoManager(),
+		OSInfoManager:          libs.NewOSInfoManager(),
+		SystemResourcesManager: libs.NewSystemResourcesManager(),
+		ProcessManager:         libs.NewProcessManager(),
+		FilesManager:           libs.NewFilesManager(),
+		NetworkManager:         libs.NewNetworkManager(),
+		ServiceManager:         libs.NewServiceManager(),
+		AptManager:             libs.NewAptManager(),
+		Dpkg:                   libs.NewDpkg(),
+		CronManager:            libs.NewCronManager(),
 	}
+
+	core.AddCommand(core.GetDeployCommand())
+	core.AddCommand(core.GetVersionCommand())
+	core.AddCommand(core.GetSoftwareCommand())
+
+	return core
 }

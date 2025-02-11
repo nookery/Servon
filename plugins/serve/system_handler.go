@@ -1,21 +1,23 @@
-package handler
+package serve
 
 import (
 	"net/http"
-	"servon/core/system"
+	"servon/core"
 
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct{}
+type Handler struct {
+	*core.Core
+}
 
-func New() *Handler {
-	return &Handler{}
+func New(core *core.Core) *Handler {
+	return &Handler{Core: core}
 }
 
 // HandleSystemResources 处理系统资源监控的请求
 func (h *Handler) HandleSystemResources(c *gin.Context) {
-	resources, err := system.GetSystemResources()
+	resources, err := h.GetSystemResources()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -25,7 +27,7 @@ func (h *Handler) HandleSystemResources(c *gin.Context) {
 
 // HandleBasicInfo 处理基本系统信息的请求
 func (h *Handler) HandleBasicInfo(c *gin.Context) {
-	info, err := system.GetBasicSystemInfo()
+	info, err := h.GetBasicSystemInfo()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -35,7 +37,7 @@ func (h *Handler) HandleBasicInfo(c *gin.Context) {
 
 // HandleCurrentUser 处理获取当前用户的请求
 func (h *Handler) HandleCurrentUser(c *gin.Context) {
-	user, err := system.GetCurrentUser()
+	user, err := h.GetCurrentUser()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -45,7 +47,7 @@ func (h *Handler) HandleCurrentUser(c *gin.Context) {
 
 // HandleProcessList 处理获取进程列表的请求
 func (h *Handler) HandleProcessList(c *gin.Context) {
-	processes, err := system.GetProcessList()
+	processes, err := h.GetProcessList()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -60,7 +62,7 @@ func (h *Handler) HandleFileList(c *gin.Context) {
 		path = "/"
 	}
 
-	files, err := system.GetFileList(path)
+	files, err := h.GetFileList(path)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "获取文件列表失败: " + err.Error(),
@@ -73,7 +75,7 @@ func (h *Handler) HandleFileList(c *gin.Context) {
 
 // HandlePortList 处理获取端口列表的请求
 func (h *Handler) HandlePortList(c *gin.Context) {
-	ports, err := system.GetPortList()
+	ports, err := h.GetPortList()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "获取端口列表失败: " + err.Error(),
@@ -85,7 +87,7 @@ func (h *Handler) HandlePortList(c *gin.Context) {
 
 // HandleOSInfo 处理获取操作系统信息的请求
 func (h *Handler) HandleOSInfo(c *gin.Context) {
-	osInfo, err := system.GetOSInfo()
+	osInfo, err := h.GetOSInfo()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -95,7 +97,7 @@ func (h *Handler) HandleOSInfo(c *gin.Context) {
 
 // HandleNetworkResources 处理网络资源监控的请求
 func (h *Handler) HandleNetworkResources(c *gin.Context) {
-	networkStats, err := system.GetNetworkResources()
+	networkStats, err := h.GetNetworkResources()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

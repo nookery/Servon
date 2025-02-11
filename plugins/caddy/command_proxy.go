@@ -7,14 +7,14 @@ import (
 )
 
 func NewProxyCommand(caddy *Caddy) *cobra.Command {
-	cmd := caddy.core.NewCommand(core.CommandOptions{
+	cmd := caddy.NewCommand(core.CommandOptions{
 		Use:   "proxy",
 		Short: "代理命令",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			domain, _ := cmd.Flags().GetString("domain")
 			target, _ := cmd.Flags().GetString("target")
 
-			return caddy.AddProxy(domain, target)
+			caddy.AddProxy(domain, target)
 		},
 	})
 

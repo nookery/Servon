@@ -13,8 +13,8 @@ import (
 	"servon/plugins/git"
 	"servon/plugins/ip"
 	"servon/plugins/nodejs"
+	"servon/plugins/npm"
 	"servon/plugins/pnpm"
-	"servon/plugins/version"
 	"servon/plugins/yarn"
 )
 
@@ -28,8 +28,9 @@ func main() {
 	pnpm.Setup(core)
 	clash.Setup(core)
 	ip.Setup(core)
-	version.Setup(core)
 	astro.Setup(core)
+	npm.Setup(core)
+
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)
