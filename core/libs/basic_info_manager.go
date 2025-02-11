@@ -11,7 +11,7 @@ type BasicInfoManager struct {
 	BasicInfo *BasicInfo
 }
 
-func NewBasicInfoManager() *BasicInfoManager {
+func newBasicInfoManager() *BasicInfoManager {
 	return &BasicInfoManager{}
 }
 

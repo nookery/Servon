@@ -19,11 +19,11 @@ func (a *AstroPlugin) clone(address string, savePath string) error {
 	}
 
 	// 检查并输出代理配置
-	if out, err := a.RunShellWithOutput("git", "config", "--global", "--get", "http.proxy"); err == nil && out != "" {
-		fmt.Printf("Git HTTP 代理: %s", out)
+	if err := a.RunShell("git", "config", "--global", "--get", "http.proxy"); err == nil {
+		return err
 	}
-	if out, err := a.RunShellWithOutput("git", "config", "--global", "--get", "https.proxy"); err == nil && out != "" {
-		fmt.Printf("Git HTTPS 代理: %s", out)
+	if err := a.RunShell("git", "config", "--global", "--get", "https.proxy"); err == nil {
+		return err
 	}
 
 	// 使用重试机制执行git clone

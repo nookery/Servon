@@ -7,6 +7,8 @@ import (
 
 type AptManager struct{}
 
+var commandManager = DefaultCommandManager
+
 func NewAptManager() *AptManager {
 	return &AptManager{}
 }
@@ -25,11 +27,11 @@ func (p *AptManager) AptInstall(packages ...string) error {
 	args := append([]string{"apt-get", "install", "-y"}, packages...)
 	cmd := exec.Command("sudo", args...)
 
-	if err := StreamCommand(cmd); err != nil {
+	if err := commandManager.StreamCommand(cmd); err != nil {
 		return fmt.Errorf("安装失败: %v", err)
 	}
 
-	InfoWithSpace("%s", fmt.Sprintf("安装成功: %v", packages))
+	DefaultPrinter.PrintInfo(fmt.Sprintf("安装成功: %v", packages))
 
 	return nil
 }
@@ -38,7 +40,7 @@ func (p *AptManager) AptInstall(packages ...string) error {
 func (p *AptManager) AptRemove(packages ...string) error {
 	args := append([]string{"apt-get", "remove", "-y"}, packages...)
 	cmd := exec.Command("sudo", args...)
-	if err := StreamCommand(cmd); err != nil {
+	if err := commandManager.StreamCommand(cmd); err != nil {
 		return fmt.Errorf("移除失败: %v", err)
 	}
 	return nil
@@ -48,7 +50,7 @@ func (p *AptManager) AptRemove(packages ...string) error {
 func (p *AptManager) AptPurge(packages ...string) error {
 	args := append([]string{"apt-get", "purge", "-y"}, packages...)
 	cmd := exec.Command("sudo", args...)
-	if err := StreamCommand(cmd); err != nil {
+	if err := commandManager.StreamCommand(cmd); err != nil {
 		return fmt.Errorf("清理失败: %v", err)
 	}
 	return nil

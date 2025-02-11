@@ -11,7 +11,7 @@ type SoftManager struct {
 	Softwares map[string]contract.SuperSoft
 }
 
-func NewSoftManager() *SoftManager {
+func newSoftManager() *SoftManager {
 	return &SoftManager{
 		Softwares: make(map[string]contract.SuperSoft),
 	}
@@ -158,7 +158,7 @@ func (p *SoftManager) newStartCmd() *cobra.Command {
 			}
 
 			// 开始启动
-			Infoln("🚀 %s 启动中 ...", name)
+			DefaultPrinter.PrintInfo(fmt.Sprintf("🚀 %s 启动中 ...", name))
 
 			err := p.StartSoftware(name, nil)
 			if err != nil {
@@ -166,7 +166,7 @@ func (p *SoftManager) newStartCmd() *cobra.Command {
 				return
 			}
 
-			Infoln("✅ %s 启动成功！", name)
+			DefaultPrinter.PrintInfo(fmt.Sprintf("✅ %s 启动成功！", name))
 		},
 	})
 }
@@ -217,16 +217,16 @@ func (p *SoftManager) newStopCmd() *cobra.Command {
 			}
 
 			// 开始停止
-			Infoln("🛑 %s 停止中 ...", name)
+			DefaultPrinter.PrintInfo(fmt.Sprintf("🛑 %s 停止中 ...", name))
 
 			err := p.StopSoftware(name)
 			if err != nil {
-				Infoln("❌ %s 停止失败", name)
-				Error("%s", err)
+				DefaultPrinter.PrintErrorf("❌ %s 停止失败", name)
+				DefaultPrinter.PrintError(err)
 				return
 			}
 
-			Infoln("✅ %s 已停止！", name)
+			DefaultPrinter.PrintInfo(fmt.Sprintf("✅ %s 已停止！", name))
 		},
 	})
 }

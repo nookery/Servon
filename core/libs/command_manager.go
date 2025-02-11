@@ -1,6 +1,7 @@
 package libs
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var printer = DefaultPrinter
+
 type CommandOptions struct {
 	Use     string
 	Short   string
@@ -18,8 +21,27 @@ type CommandOptions struct {
 	Aliases []string
 }
 
+type CommandManager struct {
+	CommandOptions
+	rootCmd *cobra.Command
+}
+
+func NewCommandManager() *CommandManager {
+	commandManager := &CommandManager{}
+	commandManager.rootCmd = commandManager.NewCommand(CommandOptions{
+		Use:   "servon",
+		Short: "Servon 是一个用于管理服务器的命令行工具",
+	})
+	return commandManager
+}
+
+// AddCommand 添加一个命令
+func (c *CommandManager) AddCommand(cmd *cobra.Command) {
+	c.rootCmd.AddCommand(cmd)
+}
+
 // CheckCommandArgs 检查命令参数
-func CheckCommandArgs(cmd *cobra.Command, args []string) error {
+func (c *CommandManager) CheckCommandArgs(cmd *cobra.Command, args []string) error {
 	// 如果命令没有设置 Args 要求，则至少需要一个参数
 	if cmd.Args == nil {
 		if len(args) == 0 {
@@ -34,11 +56,11 @@ func CheckCommandArgs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("参数验证失败: %v", err)
 	}
 
-	Info("参数验证成功")
+	printer.PrintInfo("参数验证成功")
 	return nil
 }
 
-func Execute(command string, args ...string) error {
+func (c *CommandManager) Execute(command string, args ...string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("command is required")
 	}
@@ -54,7 +76,7 @@ func Execute(command string, args ...string) error {
 	return execCmd.Run()
 }
 
-func ExecuteWithOutput(command string, args ...string) (string, error) {
+func (c *CommandManager) ExecuteWithOutput(command string, args ...string) (string, error) {
 	if len(args) == 0 {
 		return "", fmt.Errorf("command is required")
 	}
@@ -85,7 +107,7 @@ func joinArgs(args []string) string {
 }
 
 // NewCommand 创建一个标准化的命令
-func NewCommand(opts CommandOptions) *cobra.Command {
+func (c *CommandManager) NewCommand(opts CommandOptions) *cobra.Command {
 	setCustomErrPrefix := true
 	setCustomUsageTemplate := true
 	setCustomHelpFunc := true
@@ -171,4 +193,38 @@ func NewCommand(opts CommandOptions) *cobra.Command {
 	}
 
 	return cmd
+}
+
+// StreamCommand 执行命令并打印输出
+func (c *CommandManager) StreamCommand(cmd *exec.Cmd) error {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("获取标准输出失败: %v", err)
+	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("获取标准错误输出失败: %v", err)
+	}
+
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
+	}()
+
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
+	}()
+
+	return cmd.Run()
+}
+
+// GetRootCommand 获取根命令
+func (c *CommandManager) GetRootCommand() *cobra.Command {
+	return c.rootCmd
 }

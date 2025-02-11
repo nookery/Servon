@@ -1,7 +1,6 @@
 package core
 
 import (
-	"servon/core/api"
 	"servon/core/libs"
 	"servon/core/serve"
 )
@@ -13,9 +12,9 @@ const DataRootFolder = "/data"
 const LoggerFolder = "/logs"
 
 type Core struct {
-	api.CommandApi
-	api.Data
-	api.LogApi
+	*libs.CommandManager
+	*libs.DataManager
+	*libs.LogManager
 	*libs.Printer
 	*libs.PortManager
 	*libs.BasicInfoManager
@@ -31,10 +30,11 @@ type Core struct {
 	*libs.VersionManager
 	*libs.SoftManager
 	*libs.DeployManager
+	*libs.ShellManager
 }
 
 type OSType = libs.OSType
-type CommandOptions = api.CommandOptions
+type CommandOptions = libs.CommandOptions
 type CronTask = libs.CronTask
 type ValidationError = libs.ValidationError
 type ValidationErrors = libs.ValidationErrors
@@ -50,23 +50,23 @@ const (
 // New 创建Core实例
 func New() *Core {
 	core := &Core{
-		CommandApi:             api.NewCommandApi(),
+		CommandManager:         libs.DefaultCommandManager,
 		SoftManager:            libs.DefaultSoftManager,
-		Data:                   api.NewData(),
-		LogApi:                 api.NewLogApi(),
-		DeployManager:          libs.NewDeployManager(),
-		Printer:                libs.NewPrinter(),
-		PortManager:            libs.NewPortManager(),
-		BasicInfoManager:       libs.NewBasicInfoManager(),
-		OSInfoManager:          libs.NewOSInfoManager(),
+		DataManager:            libs.DefaultDataManager,
+		LogManager:             libs.DefaultLogManager,
+		DeployManager:          libs.DefaultDeployManager,
+		Printer:                libs.DefaultPrinter,
+		PortManager:            libs.DefaultPortManager,
+		BasicInfoManager:       libs.DefaultBasicInfoManager,
+		OSInfoManager:          libs.DefaultOSInfoManager,
 		SystemResourcesManager: libs.DefaultSystemResourcesManager,
-		ProcessManager:         libs.NewProcessManager(),
-		FilesManager:           libs.NewFilesManager(),
-		NetworkManager:         libs.NewNetworkManager(),
-		ServiceManager:         libs.NewServiceManager(),
-		AptManager:             libs.NewAptManager(),
-		Dpkg:                   libs.NewDpkg(),
-		CronManager:            libs.NewCronManager(),
+		ProcessManager:         libs.DefaultProcessManager,
+		FilesManager:           libs.DefaultFilesManager,
+		NetworkManager:         libs.DefaultNetworkManager,
+		ServiceManager:         libs.DefaultServiceManager,
+		AptManager:             libs.DefaultAptManager,
+		Dpkg:                   libs.DefaultDpkg,
+		CronManager:            libs.DefaultCronManager,
 		VersionManager:         libs.DefaultVersionManager,
 	}
 

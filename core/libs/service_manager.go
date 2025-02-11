@@ -13,7 +13,7 @@ func NewServiceManager() *ServiceManager {
 }
 
 func (p *ServiceManager) IsActive(serviceName string) bool {
-	Debug("检查服务状态: %s", serviceName)
+	DefaultLogManager.Debug("检查服务状态: %s", serviceName)
 
 	// 首先尝试 systemctl
 	cmd := exec.Command("systemctl", "is-active", serviceName)
@@ -26,7 +26,7 @@ func (p *ServiceManager) IsActive(serviceName string) bool {
 	cmd = exec.Command("service", serviceName, "status")
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		Debug("服务 %s 未运行: %v\n输出: %s", serviceName, err, string(output))
+		DefaultLogManager.Debug("服务 %s 未运行: %v\n输出: %s", serviceName, err, string(output))
 		return false
 	}
 
@@ -37,22 +37,22 @@ func (p *ServiceManager) IsActive(serviceName string) bool {
 }
 
 func (p *ServiceManager) Reload(serviceName string) error {
-	Info("正在重载服务(container): %s", serviceName)
+	DefaultLogManager.Debug("正在重载服务(container): %s", serviceName)
 
 	cmd := exec.Command("service", serviceName, "reload")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		Error("重载服务失败 %s: %v\n输出: %s", serviceName, err, string(output))
+		DefaultLogManager.Error("重载服务失败 %s: %v\n输出: %s", serviceName, err, string(output))
 		return fmt.Errorf("重载服务失败: %v", err)
 	}
 
-	Info("服务已成功重载: %s", serviceName)
+	DefaultPrinter.PrintInfo(fmt.Sprintf("服务已成功重载: %s", serviceName))
 	return nil
 
 }
 
 func (p *ServiceManager) Start(serviceName string) error {
-	Debug("正在启动服务: %s", serviceName)
+	DefaultLogManager.Debug("正在启动服务: %s", serviceName)
 
 	// 尝试使用 systemctl
 	cmd := exec.Command("systemctl", "start", serviceName)
@@ -69,31 +69,31 @@ func (p *ServiceManager) Start(serviceName string) error {
 	// 验证服务是否成功启动
 	if !p.IsActive(serviceName) {
 		errMsg := fmt.Sprintf("%s (服务未能成功运行)", serviceName)
-		Error("%s", errMsg)
+		DefaultLogManager.Error("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	Info("服务已成功启动: %s", serviceName)
+	DefaultPrinter.PrintInfo(fmt.Sprintf("服务已成功启动: %s", serviceName))
 	return nil
 }
 
 func (p *ServiceManager) Stop(serviceName string) error {
-	Info("正在停止服务(container): %s", serviceName)
+	DefaultLogManager.Debug("正在停止服务(container): %s", serviceName)
 	cmd := exec.Command("service", serviceName, "stop")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		Error("停止服务失败 %s: %v\n输出: %s", serviceName, err, string(output))
+		DefaultLogManager.Error("停止服务失败 %s: %v\n输出: %s", serviceName, err, string(output))
 		return fmt.Errorf("停止服务失败: %v", err)
 	}
 
 	// 验证服务是否已停止
 	if p.IsActive(serviceName) {
 		errMsg := fmt.Sprintf("服务停止失败: %s (服务仍在运行)", serviceName)
-		Error(errMsg)
+		DefaultLogManager.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	Info("服务已成功停止: %s", serviceName)
+	DefaultPrinter.PrintInfo(fmt.Sprintf("服务已成功停止: %s", serviceName))
 	return nil
 }
 
