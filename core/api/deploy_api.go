@@ -31,8 +31,9 @@ func (c *DeployApi) GetMethods() []string {
 
 func (c *DeployApi) GetDeployCommand() *cobra.Command {
 	rootCmd := libs.NewCommand(libs.CommandOptions{
-		Use:   "deploy",
-		Short: "部署项目",
+		Use:     "deploy",
+		Short:   "部署项目",
+		Aliases: []string{"d"},
 	})
 
 	rootCmd.AddCommand(c.NewMethodsCommand())

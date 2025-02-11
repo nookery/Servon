@@ -79,7 +79,7 @@ func (p *SoftManager) newInfoCmd() *cobra.Command {
 			case "not_installed":
 				printer.PrintRed("未安装")
 			default:
-				printer.PrintWhite(status["status"])
+				printer.PrintWhite("%s", status["status"])
 			}
 
 			// 显示版本信息
@@ -96,8 +96,9 @@ func (p *SoftManager) newInfoCmd() *cobra.Command {
 // GetSoftwareCommand 返回 software 命令
 func (p *SoftManager) GetSoftwareCommand() *cobra.Command {
 	cmd := NewCommand(CommandOptions{
-		Use:   "software",
-		Short: "软件管理",
+		Use:     "software",
+		Short:   "软件管理",
+		Aliases: []string{"soft"},
 	})
 
 	cmd.AddCommand(p.newListCmd())

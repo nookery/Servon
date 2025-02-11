@@ -98,8 +98,9 @@ func (c *VersionManager) GetLatestVersion() (string, error) {
 // GetVersionCommand 返回版本命令
 func (c *VersionManager) GetVersionCommand() *cobra.Command {
 	return NewCommand(CommandOptions{
-		Use:   "version",
-		Short: "显示版本信息",
+		Use:     "version",
+		Short:   "显示版本信息",
+		Aliases: []string{"v"},
 		Run: func(cmd *cobra.Command, args []string) {
 			printer.Printf("Version:     %s\n", c.Version)
 			printer.Printf("Git Commit:  %s\n", c.CommitHash)
