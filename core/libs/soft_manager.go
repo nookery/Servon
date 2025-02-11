@@ -162,8 +162,7 @@ func (p *SoftManager) newStartCmd() *cobra.Command {
 
 			err := p.StartSoftware(name, nil)
 			if err != nil {
-				Infoln("❌ %s 启动失败", name)
-				Error("%s", err)
+				printer.PrintErrorf("❌ %s 启动失败", name)
 				return
 			}
 

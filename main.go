@@ -11,6 +11,7 @@ import (
 	"servon/plugins/caddy"
 	"servon/plugins/clash"
 	"servon/plugins/git"
+	"servon/plugins/github_runner"
 	"servon/plugins/ip"
 	"servon/plugins/nodejs"
 	"servon/plugins/npm"
@@ -30,6 +31,8 @@ func main() {
 	ip.Setup(core)
 	astro.Setup(core)
 	npm.Setup(core)
+	github_runner.Setup(core)
+
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)

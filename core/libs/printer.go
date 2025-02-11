@@ -74,6 +74,19 @@ func (p *Printer) PrintError(err error) {
 	p.Color.Println()
 }
 
+// PrintErrorf 打印错误信息
+func (p *Printer) PrintErrorf(format string, args ...interface{}) {
+	p.Color.Printf("❌ 错误: %s\n", fmt.Sprintf(format, args...))
+	p.Color.Println()
+}
+
+// PrintAndReturnErrorf 打印错误信息并返回错误
+func (p *Printer) PrintAndReturnErrorf(format string, args ...interface{}) error {
+	p.Color.Printf("❌ 错误: %s\n", fmt.Sprintf(format, args...))
+	p.Color.Println()
+	return fmt.Errorf("%s", fmt.Sprintf(format, args...))
+}
+
 // PrintErrorMessage 打印错误信息
 func (p *Printer) PrintErrorMessage(message string) {
 	p.Color.Println()
