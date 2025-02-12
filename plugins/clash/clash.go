@@ -56,7 +56,7 @@ func (c *Clash) Install(logChan chan<- string) error {
 
 		// Clone clash-for-linux repository
 		c.PrintInfofAndSend(logChan, "ClashPlugin: 克隆 clash-for-linux 仓库 -> %s", repoUrl)
-		err = c.RunShell("git", "clone", repoUrl, c.targetDir)
+		err = c.RunShellAndSendLog(logChan, "git", "clone", repoUrl, c.targetDir)
 		if err != nil {
 			return fmt.Errorf("克隆仓库失败: %s", err)
 		}
