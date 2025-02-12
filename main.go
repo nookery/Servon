@@ -16,6 +16,7 @@ import (
 	"servon/plugins/nodejs"
 	"servon/plugins/npm"
 	"servon/plugins/pnpm"
+	"servon/plugins/serve"
 	"servon/plugins/yarn"
 )
 
@@ -32,7 +33,7 @@ func main() {
 	astro.Setup(core)
 	npm.Setup(core)
 	github_runner.Setup(core)
-
+	serve.Setup(core)
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)

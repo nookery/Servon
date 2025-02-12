@@ -2,25 +2,15 @@ package serve
 
 import (
 	"net/http"
-	"servon/core/libs"
 	"sort"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct{}
-
-var printer = libs.DefaultPrinter
-var softManager = libs.DefaultSoftManager
-
-func NewHanlder() *Handler {
-	return &Handler{}
-}
-
 // HandleSystemResources 处理系统资源监控的请求
-func (h *Handler) HandleSystemResources(c *gin.Context) {
-	resources, err := libs.DefaultSystemResourcesManager.GetSystemResources()
+func (p *ServePlugin) HandleSystemResources(c *gin.Context) {
+	resources, err := p.GetSystemResources()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -29,8 +19,8 @@ func (h *Handler) HandleSystemResources(c *gin.Context) {
 }
 
 // HandleBasicInfo 处理基本系统信息的请求
-func (h *Handler) HandleBasicInfo(c *gin.Context) {
-	info, err := libs.DefaultBasicInfoManager.GetBasicSystemInfo()
+func (p *ServePlugin) HandleBasicInfo(c *gin.Context) {
+	info, err := p.GetBasicSystemInfo()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -39,8 +29,8 @@ func (h *Handler) HandleBasicInfo(c *gin.Context) {
 }
 
 // HandleCurrentUser 处理获取当前用户的请求
-func (h *Handler) HandleCurrentUser(c *gin.Context) {
-	user, err := libs.DefaultSystemResourcesManager.GetCurrentUser()
+func (p *ServePlugin) HandleCurrentUser(c *gin.Context) {
+	user, err := p.GetCurrentUser()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -49,8 +39,8 @@ func (h *Handler) HandleCurrentUser(c *gin.Context) {
 }
 
 // HandleProcessList 处理获取进程列表的请求
-func (h *Handler) HandleProcessList(c *gin.Context) {
-	processes, err := libs.DefaultProcessManager.GetProcessList()
+func (p *ServePlugin) HandleProcessList(c *gin.Context) {
+	processes, err := p.GetProcessList()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -59,13 +49,13 @@ func (h *Handler) HandleProcessList(c *gin.Context) {
 }
 
 // HandleFileList 处理获取文件列表的请求
-func (h *Handler) HandleFileList(c *gin.Context) {
+func (p *ServePlugin) HandleFileList(c *gin.Context) {
 	path := c.Query("path")
 	if path == "" {
 		path = "/"
 	}
 
-	files, err := libs.DefaultFilesManager.GetFileList(path)
+	files, err := p.GetFileList(path)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "获取文件列表失败: " + err.Error(),
@@ -77,8 +67,8 @@ func (h *Handler) HandleFileList(c *gin.Context) {
 }
 
 // HandlePortList 处理获取端口列表的请求
-func (h *Handler) HandlePortList(c *gin.Context) {
-	ports, err := libs.DefaultPortManager.GetPortList()
+func (p *ServePlugin) HandlePortList(c *gin.Context) {
+	ports, err := p.GetPortList()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "获取端口列表失败: " + err.Error(),
@@ -89,8 +79,8 @@ func (h *Handler) HandlePortList(c *gin.Context) {
 }
 
 // HandleOSInfo 处理获取操作系统信息的请求
-func (h *Handler) HandleOSInfo(c *gin.Context) {
-	osInfo, err := libs.DefaultOSInfoManager.GetOSInfo()
+func (p *ServePlugin) HandleOSInfo(c *gin.Context) {
+	osInfo, err := p.GetOSInfo()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -99,8 +89,8 @@ func (h *Handler) HandleOSInfo(c *gin.Context) {
 }
 
 // HandleNetworkResources 处理网络资源监控的请求
-func (h *Handler) HandleNetworkResources(c *gin.Context) {
-	networkStats, err := libs.DefaultNetworkManager.GetNetworkResources()
+func (p *ServePlugin) HandleNetworkResources(c *gin.Context) {
+	networkStats, err := p.GetNetworkResources()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -109,14 +99,14 @@ func (h *Handler) HandleNetworkResources(c *gin.Context) {
 }
 
 // HandleGetSoftwareList 处理获取软件列表的请求
-func (h *Handler) HandleGetSoftwareList(c *gin.Context) {
-	softwareList := softManager.GetAllSoftware()
+func (p *ServePlugin) HandleGetSoftwareList(c *gin.Context) {
+	softwareList := p.GetAllSoftware()
 	sort.Strings(softwareList)
 	c.JSON(200, softwareList)
 }
 
 // HandleInstallSoftware 处理安装软件的请求
-func (h *Handler) HandleInstallSoftware(c *gin.Context) {
+func (p *ServePlugin) HandleInstallSoftware(c *gin.Context) {
 	name := c.Param("name")
 	msgChan := make(chan string, 100)
 	doneChan := make(chan error, 1)
@@ -136,7 +126,7 @@ func (h *Handler) HandleInstallSoftware(c *gin.Context) {
 
 	// 在新的 goroutine 中执行安装
 	go func() {
-		err := libs.DefaultSoftManager.Install(name, msgChan)
+		err := p.Install(name, msgChan)
 		doneChan <- err
 		close(msgChan)
 	}()
@@ -173,10 +163,10 @@ func (h *Handler) HandleInstallSoftware(c *gin.Context) {
 }
 
 // HandleUninstallSoftware 处理卸载软件的请求
-func (h *Handler) HandleUninstallSoftware(c *gin.Context) {
+func (p *ServePlugin) HandleUninstallSoftware(c *gin.Context) {
 	name := c.Param("name")
 	msgChan := make(chan string, 100)
-	err := libs.DefaultSoftManager.UninstallSoftware(name, msgChan)
+	err := p.UninstallSoftware(name, msgChan)
 	if err != nil {
 		c.String(500, err.Error())
 		return
@@ -193,9 +183,9 @@ func (h *Handler) HandleUninstallSoftware(c *gin.Context) {
 }
 
 // HandleStopSoftware 处理停止软件的请求
-func (h *Handler) HandleStopSoftware(c *gin.Context) {
+func (p *ServePlugin) HandleStopSoftware(c *gin.Context) {
 	name := c.Param("name")
-	if err := libs.DefaultSoftManager.StopSoftware(name); err != nil {
+	if err := p.StopSoftware(name); err != nil {
 		c.String(500, err.Error())
 		return
 	}
@@ -203,9 +193,9 @@ func (h *Handler) HandleStopSoftware(c *gin.Context) {
 }
 
 // HandleGetSoftwareStatus 处理获取软件状态的请求
-func (h *Handler) HandleGetSoftwareStatus(c *gin.Context) {
+func (p *ServePlugin) HandleGetSoftwareStatus(c *gin.Context) {
 	name := c.Param("name")
-	status, err := libs.DefaultSoftManager.GetSoftwareStatus(name)
+	status, err := p.GetSoftwareStatus(name)
 	if err != nil {
 		c.String(500, err.Error())
 		return

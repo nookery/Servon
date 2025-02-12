@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"servon/core"
 	"servon/core/libs"
 	"strconv"
 
@@ -18,7 +19,18 @@ var (
 	apiOnly bool
 )
 
-func NewServeCommand() *cobra.Command {
+type ServePlugin struct {
+	*core.Core
+}
+
+func Setup(core *core.Core) {
+	plugin := &ServePlugin{
+		Core: core,
+	}
+	core.GetRootCommand().AddCommand(plugin.NewServeCommand())
+}
+
+func (p *ServePlugin) NewServeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "启动服务器",
@@ -34,7 +46,7 @@ func NewServeCommand() *cobra.Command {
 			printKeyValue("Environment:", color.HiGreenString("%s", appEnv))
 			fmt.Println()
 
-			StartWebServer(host, port, !apiOnly)
+			p.StartWebServer(host, port, !apiOnly)
 		},
 	}
 
@@ -58,12 +70,12 @@ func printKeyValue(key string, value string) {
 		color.HiGreenString(value))
 }
 
-func StartWebServer(host string, port int, withUI bool) {
+func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
 	appEnv := libs.DefaultEnvManager.GetEnv("APP_ENV")
 	router := libs.NewWebServer(host, port, withUI)
 
 	// 设置API路由
-	setupAPIRoutes(router)
+	p.setupAPIRoutes(router)
 
 	// 如果启用了UI，设置UI路由
 	if withUI {
@@ -94,23 +106,22 @@ func StartWebServer(host string, port int, withUI bool) {
 }
 
 // setupAPIRoutes 设置所有API路由
-func setupAPIRoutes(router *gin.Engine) {
-	h := NewHanlder()
+func (p *ServePlugin) setupAPIRoutes(router *gin.Engine) {
 	api := router.Group("/web_api")
 	{
-		api.GET("/system/resources", h.HandleSystemResources)
-		api.GET("/system/network", h.HandleNetworkResources)
-		api.GET("/system/user", h.HandleCurrentUser)
-		api.GET("/system/os", h.HandleOSInfo)
-		api.GET("/system/basic", h.HandleBasicInfo)
-		api.GET("/system/software", h.HandleGetSoftwareList)
-		api.GET("/system/software/:name/install", h.HandleInstallSoftware)
-		api.GET("/system/software/:name/uninstall", h.HandleUninstallSoftware)
-		api.POST("/system/software/:name/stop", h.HandleStopSoftware)
-		api.GET("/system/software/:name/status", h.HandleGetSoftwareStatus)
-		api.GET("/system/processes", h.HandleProcessList)
-		api.GET("/system/files", h.HandleFileList)
-		api.GET("/system/ports", h.HandlePortList)
+		api.GET("/system/resources", p.HandleSystemResources)
+		api.GET("/system/network", p.HandleNetworkResources)
+		api.GET("/system/user", p.HandleCurrentUser)
+		api.GET("/system/os", p.HandleOSInfo)
+		api.GET("/system/basic", p.HandleBasicInfo)
+		api.GET("/system/software", p.HandleGetSoftwareList)
+		api.GET("/system/software/:name/install", p.HandleInstallSoftware)
+		api.GET("/system/software/:name/uninstall", p.HandleUninstallSoftware)
+		api.POST("/system/software/:name/stop", p.HandleStopSoftware)
+		api.GET("/system/software/:name/status", p.HandleGetSoftwareStatus)
+		api.GET("/system/processes", p.HandleProcessList)
+		api.GET("/system/files", p.HandleFileList)
+		api.GET("/system/ports", p.HandlePortList)
 
 		// // 定时任务相关API
 		// api.GET("/cron/tasks", h.HandleListCronTasks)              // 获取所有定时任务

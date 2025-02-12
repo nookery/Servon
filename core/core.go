@@ -2,7 +2,6 @@ package core
 
 import (
 	"servon/core/libs"
-	"servon/core/serve"
 )
 
 // 调用关系 Core -> Core API -> Libs
@@ -80,7 +79,6 @@ func New() *Core {
 	core.AddCommand(core.GetDeployCommand())
 	core.AddCommand(core.GetVersionCommand())
 	core.AddCommand(core.GetSoftwareCommand())
-	core.AddCommand(serve.NewServeCommand())
 	core.AddCommand(core.GetUserRootCommand())
 
 	return core
