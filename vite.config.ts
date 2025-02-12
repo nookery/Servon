@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'cmd/serve/dist',
+    outDir: 'core/serve/dist',
     assetsDir: 'assets',
     emptyOutDir: false,
     rollupOptions: {

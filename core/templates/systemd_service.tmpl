@@ -1,0 +1,14 @@
+[Unit]
+Description=Servon managed service for {{.Command}}
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={{.Command}} {{.Args}}
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/servon/{{.ServiceName}}.log
+StandardError=append:/var/log/servon/{{.ServiceName}}.log
+
+[Install]
+WantedBy=multi-user.target 
