@@ -1,9 +1,9 @@
 <template>
     <div :class="[
-        'fixed right-0 top-16 h-[calc(100vh-4rem)] transition-all duration-300 z-40 terminal-container',
-        visible ? 'w-96' : 'w-0'
+        'right-0 top-16 h-[calc(100vh-4rem)] transition-all duration-300 z-40 terminal-container',
+        logViewerStore.isVisible ? 'w-full' : 'w-0'
     ]">
-        <div class="h-full flex flex-col" v-show="visible">
+        <div class="h-full flex flex-col" v-show="logViewerStore.isVisible">
             <div class="terminal-header px-4 py-2 flex items-center justify-between">
                 <h3 class="text-terminal-text font-medium">系统日志</h3>
             </div>
@@ -22,23 +22,21 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useLogViewerStore } from '../stores/logViewer'
 
 const logs = ref<string[]>([])
 const eventSource = ref<EventSource | null>(null)
-const visible = ref(false)
+const logViewerStore = useLogViewerStore()
 
-defineExpose({ visible })
-
+// 移除 visible ref 和 props，直接使用 store
 onMounted(() => {
     eventSource.value = new EventSource('/web_api/logs/default')
 
     eventSource.value.addEventListener('log', (event) => {
         logs.value.push(event.data)
-        // 保持最新的100条日志
         if (logs.value.length > 100) {
             logs.value.shift()
         }
-        // 自动滚动到底部
         setTimeout(() => {
             const container = document.getElementById('log-container')
             if (container) {

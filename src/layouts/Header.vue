@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /// <reference lib="es2015" />
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, getCurrentInstance } from 'vue'
 import axios from 'axios'
 import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
 import pkg from '../../package.json'
-import LogViewer from '../components/LogViewer.vue'
+import { useLogViewerStore } from '../stores/logViewer'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
@@ -15,11 +15,10 @@ const currentTheme = ref(localStorage.getItem('theme') || 'light')
 const downloadSpeed = ref(0)
 const uploadSpeed = ref(0)
 
-const logViewerRef = ref()
+const logViewerStore = useLogViewerStore()
+
 const toggleLogViewer = () => {
-    if (logViewerRef.value) {
-        logViewerRef.value.visible = !logViewerRef.value.visible
-    }
+    logViewerStore.toggleVisibility()
 }
 
 // 获取系统资源使用情况
@@ -160,9 +159,6 @@ onMounted(async () => {
             </div>
         </div>
     </div>
-
-    <!-- Log Viewer Component -->
-    <LogViewer ref="logViewerRef" />
 </template>
 
 <style scoped>

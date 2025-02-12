@@ -1,5 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import CronTasks from '../views/CronTasks.vue'
+import Dashboard from '../views/Dashboard.vue'
+import Software from '../views/Software.vue'
+import Processes from '../views/Processes.vue'
+import Files from '../views/Files.vue'
+import Ports from '../views/Ports.vue'
+import Deploy from '../views/Deploy.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -10,27 +16,27 @@ const router = createRouter({
         },
         {
             path: '/dashboard',
-            component: () => import('../views/Dashboard.vue')
+            component: Dashboard
         },
         {
             path: '/software',
-            component: () => import('../views/Software.vue')
+            component: Software
         },
         {
             path: '/processes',
-            component: () => import('../views/Processes.vue')
+            component: Processes
         },
         {
             path: '/files',
-            component: () => import('../views/Files.vue')
+            component: Files
         },
         {
             path: '/ports',
-            component: () => import('../views/Ports.vue')
+            component: Ports
         },
         {
             path: '/deploy',
-            component: () => import('../views/Deploy.vue')
+            component: Deploy
         },
         {
             path: '/cron',

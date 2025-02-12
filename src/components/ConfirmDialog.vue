@@ -28,7 +28,7 @@
  * ```
  */
 
-import { defineProps, defineEmits } from 'vue'
+import {defineEmits } from 'vue'
 
 interface Props {
     /** 控制对话框显示/隐藏 */

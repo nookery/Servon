@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import Header from './Header.vue'
 import Sidebar from './Sidebar.vue'
+import LogViewer from '../components/LogViewer.vue'
 import { ref } from 'vue'
+import { useLogViewerStore } from '../stores/logViewer'
 
 const collapsed = ref(false)
+const logViewerStore = useLogViewerStore()
+
+// 创建 LogViewer 的引用
+const logViewerRef = ref()
+defineExpose({ logViewerRef })
 </script>
 
 <template>
@@ -18,7 +25,7 @@ const collapsed = ref(false)
             <!-- Sidebar -->
             <div :class="[
                 'transition-all duration-300 border-r border-base-300 h-full bg-base-100 fixed left-0 top-16',
-                collapsed ? 'w-16' : 'w-60'
+                collapsed ? 'w-16' : 'w-40'
             ]">
                 <div class="sticky top-16 border-0 border-red-500 h-full">
                     <button @click="collapsed = !collapsed"
@@ -32,12 +39,21 @@ const collapsed = ref(false)
                 </div>
             </div>
 
-            <!-- Content -->
-            <div :class="[
-                'flex-1 p-4 transition-all duration-300',
-                collapsed ? 'ml-16' : 'ml-60'
-            ]">
-                <slot></slot>
+            <div class="flex flex-row w-full">
+
+                <!-- Content -->
+                <div :class="[
+                    'flex-1 p-4 transition-all duration-300',
+                    collapsed ? 'ml-16' : 'ml-40',
+                    logViewerStore.isVisible ? 'w-1/2' : 'w-full'
+                ]">
+                    <slot></slot>
+                </div>
+
+                <div class="w-1/2" v-if="logViewerStore.isVisible">
+                    <!-- Log Viewer -->
+                    <LogViewer :visible="logViewerStore.isVisible" />
+                </div>
             </div>
         </div>
     </div>
