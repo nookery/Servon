@@ -11,30 +11,25 @@ import (
 )
 
 type EnvManager struct {
-	envExample []byte
-	env        []byte
 }
 
 func NewEnvManager() *EnvManager {
 	return &EnvManager{}
 }
 
-func (e *EnvManager) LoadEnvExample() {
-	envExample, err := os.ReadFile(".env.example")
-	if err != nil {
-		log.Fatal("Error reading .env.example file")
-	}
-	e.envExample = envExample
-}
-
 func (e *EnvManager) LoadEnv() {
-	env, err := os.ReadFile(".env")
+	compareEnv := e.CompareEnv()
+	if compareEnv != nil {
+		PrintErrorf("Error: .env 文件与 .env.example 文件不一致")
+		os.Exit(1)
+	}
+
+	_, err := os.ReadFile(".env")
 	if err != nil {
 		log.Fatal("Error reading .env file")
 	}
-	e.env = env
 
-	godotenv.Load()
+	godotenv.Load(".env")
 }
 
 func (e *EnvManager) CompareEnv() error {

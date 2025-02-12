@@ -75,6 +75,8 @@ func New() *Core {
 		EnvManager:             libs.DefaultEnvManager,
 	}
 
+	core.LoadEnv()
+
 	core.AddCommand(core.GetDeployCommand())
 	core.AddCommand(core.GetVersionCommand())
 	core.AddCommand(core.GetSoftwareCommand())

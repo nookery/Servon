@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"servon/core/libs"
+	"strconv"
 
 	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
@@ -17,24 +18,10 @@ var (
 	apiOnly bool
 )
 
-var longDescription = `启动服务器，提供系统管理API。
-
-可选参数：
-  --port, -p:     指定服务器监听端口，默认为8080
-  --host:         指定服务器监听地址，默认为127.0.0.1，使用0.0.0.0监听所有地址
-  --api-only:     仅启动API服务，不提供Web界面
-
-示例：
-  servon serve                    # 在127.0.0.1:8080启动完整服务
-  servon serve --host 0.0.0.0    # 监听所有地址
-  servon serve --api-only        # 仅启动API服务
-  servon serve -p 3000           # 在3000端口启动完整服务`
-
 func NewServeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "启动服务器",
-		Long:  longDescription,
 		Run: func(cmd *cobra.Command, args []string) {
 			apiOnly, _ := cmd.Flags().GetBool("api-only")
 			appEnv := libs.DefaultEnvManager.GetEnv("APP_ENV")
@@ -51,8 +38,14 @@ func NewServeCommand() *cobra.Command {
 		},
 	}
 
+	defaultPort, err := strconv.Atoi(libs.DefaultEnvManager.GetEnv("WEB_PORT_DEFAULT"))
+	if err != nil {
+		libs.PrintErrorf("Error: 无法将 WEB_PORT_DEFAULT 转换为整数，WEB_PORT_DEFAULT 的值为 %s", libs.DefaultEnvManager.GetEnv("WEB_PORT_DEFAULT"))
+		os.Exit(1)
+	}
+
 	// 配置 serve 子命令的参数
-	cmd.Flags().IntVarP(&port, "port", "p", 7654, "服务器监听端口")
+	cmd.Flags().IntVarP(&port, "port", "p", defaultPort, "服务器监听端口")
 	cmd.Flags().StringVar(&host, "host", "127.0.0.1", "服务器监听地址")
 	cmd.Flags().BoolVar(&apiOnly, "api-only", false, "仅启动API服务")
 
@@ -77,10 +70,12 @@ func StartWebServer(host string, port int, withUI bool) {
 		// 检查是否为开发环境
 		if appEnv == "development" {
 			fmt.Println()
-			printer.PrintInfof("开发环境，启动npm dev server，负责 UI 部分")
+			libs.PrintInfof("开发环境，启动 npm dev server")
+			libs.PrintInfof("VITE_API_TARGET=http://localhost:%d", port)
 			go func() {
 				cmd := exec.Command("npm", "run", "dev")
 				cmd.Dir = "."
+				cmd.Env = append(os.Environ(), "VITE_API_TARGET=http://localhost:"+strconv.Itoa(port))
 				// 设置输出管道
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
