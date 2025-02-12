@@ -4,9 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/fatih/color"
 )
@@ -27,39 +25,6 @@ func (s *ShellManager) RunShell(command string, args ...string) error {
 	PrintInfo("📺 %s %s", command, joinArgs(args))
 
 	execCmd := exec.Command(command, args...)
-	execCmd.Stdout = os.Stdout
-	execCmd.Stderr = os.Stderr
-	execCmd.Stdin = os.Stdin
-
-	return execCmd.Run()
-}
-
-// RunShellWithOutput 运行命令并返回输出
-func (s *ShellManager) RunShellWithOutput(command string, args ...string) (string, error) {
-	if len(args) == 0 {
-		return "", fmt.Errorf("command is required")
-	}
-
-	color.Cyan("📺 %s %s", command, joinArgs(args))
-
-	execCmd := exec.Command(command, args...)
-
-	output, err := execCmd.CombinedOutput()
-
-	Print(string(output))
-
-	return string(output), err
-}
-
-// RunShellAndSendLog 运行命令并发送日志
-func (s *ShellManager) RunShellAndSendLog(logChan chan<- string, command string, args ...string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("command is required")
-	}
-
-	PrintInfo("📺 %s %s", command, joinArgs(args))
-
-	execCmd := exec.Command(command, args...)
 
 	// 创建管道用于捕获输出
 	stdoutPipe, err := execCmd.StdoutPipe()
@@ -77,39 +42,43 @@ func (s *ShellManager) RunShellAndSendLog(logChan chan<- string, command string,
 	}
 
 	// 处理标准输出
-	go func() {
-		reader := bufio.NewReader(stdoutPipe)
-		for {
-			line, err := reader.ReadString('\n')
-			if err != nil {
-				if err != io.EOF {
-					fmt.Printf("读取stdout错误: %v\n", err)
-				}
-				break
-			}
-			line = strings.TrimRight(line, "\n")
-			fmt.Println(line)
-			logChan <- line
-		}
-	}()
+	go processOutput(stdoutPipe, "stdout")
 
 	// 处理标准错误
-	go func() {
-		reader := bufio.NewReader(stderrPipe)
-		for {
-			line, err := reader.ReadString('\n')
-			if err != nil {
-				if err != io.EOF {
-					fmt.Printf("读取stderr错误: %v\n", err)
-				}
-				break
-			}
-			line = strings.TrimRight(line, "\n")
-			fmt.Println(line)
-			logChan <- line
-		}
-	}()
+	go processOutput(stderrPipe, "stderr")
 
 	// 等待命令完成
 	return execCmd.Wait()
+}
+
+// processOutput 处理输出流
+func processOutput(pipe io.ReadCloser, source string) {
+	scanner := bufio.NewScanner(pipe)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// 打印到控制台并发送到日志通道
+		fmt.Println(line)
+		DefaultPrinter.sendToChannel(line)
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("读取%s错误: %v\n", source, err)
+	}
+}
+
+// RunShellWithOutput 运行命令并返回输出
+func (s *ShellManager) RunShellWithOutput(command string, args ...string) (string, error) {
+	if len(args) == 0 {
+		return "", fmt.Errorf("command is required")
+	}
+
+	color.Cyan("📺 %s %s", command, joinArgs(args))
+
+	execCmd := exec.Command(command, args...)
+
+	output, err := execCmd.CombinedOutput()
+
+	Print(string(output))
+
+	return string(output), err
 }

@@ -7,7 +7,6 @@ import Modal from '../components/Modal.vue'
 
 const software = ref<any[]>([])
 const loading = ref(false)
-const showLogModal = ref(false)
 const currentLogs = ref<string[]>([])
 const installing = ref(false)
 const currentSoftware = ref<string>('')
@@ -20,7 +19,6 @@ const toast = useToast()
 async function handleAction(software: any) {
     currentSoftware.value = software.name
     currentLogs.value = []
-    showLogModal.value = true
     installing.value = true
     operationFailed.value = false
 
@@ -153,14 +151,5 @@ onMounted(() => {
             <pre v-else
                 class="bg-base-200 p-4 rounded-lg overflow-auto font-mono text-left whitespace-pre">{{ JSON.stringify(rawSoftwareData, null, 2) }}</pre>
         </div>
-
-        <!-- 使用 Modal 组件 -->
-        <Modal v-model:show="showLogModal"
-            :title="currentSoftware + (installing ? '操作执行中' : (operationFailed ? '操作失败' : '操作日志'))"
-            :loading="installing" :error="operationFailed">
-            <template #default>
-                <LogViewer :logs="currentLogs" />
-            </template>
-        </Modal>
     </div>
 </template>

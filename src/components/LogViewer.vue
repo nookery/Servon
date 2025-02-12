@@ -1,35 +1,48 @@
 <template>
-    <div>
-        <div class="mockup-code p-4 rounded-none font-mono text-sm h-[350px] overflow-auto">
-            <pre v-for="(log, index) in formattedLogs" :key="index" v-html="log"></pre>
-        </div>
-        <div class="flex justify-end mt-2">
-            <button class="btn btn-sm" @click="copyLogs">复制日志</button>
+    <div :class="[
+        'fixed right-0 top-16 h-[calc(100vh-4rem)] bg-base-100 border-l border-base-300 transition-all duration-300 z-40',
+        visible ? 'w-96' : 'w-0'
+    ]">
+        <div class="p-4 h-full flex flex-col" v-show="visible">
+            <h3 class="font-bold mb-2 flex items-center justify-between">
+                系统日志
+            </h3>
+            <div class="flex-1 overflow-y-auto text-sm font-mono">
+                <div v-for="(log, index) in logs" :key="index" class="py-1 border-b border-base-200 last:border-0">
+                    {{ log }}
+                </div>
+                <div v-if="logs.length === 0" class="text-base-content/50 text-center py-4">
+                    暂无日志
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, computed } from 'vue'
-import { useToast } from '../composables/useToast'
+import { ref, onMounted, onUnmounted } from 'vue'
 
-const props = defineProps<{
-    logs: string[]
-}>()
+const logs = ref<string[]>([])
+const eventSource = ref<EventSource | null>(null)
+const visible = ref(false)
 
-const toast = useToast()
+defineExpose({ visible })
 
-const formattedLogs = computed(() => {
-    return props.logs.map(log => log.replace(/\r/g, '').replace(/\n/g, '<br>'))
+onMounted(() => {
+    eventSource.value = new EventSource('/web_api/logs/default')
+
+    eventSource.value.addEventListener('log', (event) => {
+        logs.value.push(event.data)
+        // 保持最新的100条日志
+        if (logs.value.length > 100) {
+            logs.value.shift()
+        }
+    })
 })
 
-const copyLogs = () => {
-    try {
-        const plainTextLogs = props.logs.join('\n')
-        navigator.clipboard.writeText(plainTextLogs)
-        toast.success('日志已复制到剪贴板')
-    } catch (error) {
-        toast.error('复制失败')
+onUnmounted(() => {
+    if (eventSource.value) {
+        eventSource.value.close()
     }
-}
+})
 </script>

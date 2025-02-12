@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
 import pkg from '../../package.json'
+import LogViewer from '../components/LogViewer.vue'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
@@ -13,6 +14,13 @@ const osInfo = ref('')
 const currentTheme = ref(localStorage.getItem('theme') || 'light')
 const downloadSpeed = ref(0)
 const uploadSpeed = ref(0)
+
+const logViewerRef = ref()
+const toggleLogViewer = () => {
+    if (logViewerRef.value) {
+        logViewerRef.value.visible = !logViewerRef.value.visible
+    }
+}
 
 // 获取系统资源使用情况
 const fetchSystemResources = async () => {
@@ -132,6 +140,11 @@ onMounted(async () => {
                     </div>
                 </div>
 
+                <!-- Log Viewer Button -->
+                <button @click="toggleLogViewer" class="btn btn-ghost btn-circle">
+                    <i class="ri-file-list-line text-xl"></i>
+                </button>
+
                 <!-- Theme Switcher Component -->
                 <ThemeSwitcher />
 
@@ -147,6 +160,9 @@ onMounted(async () => {
             </div>
         </div>
     </div>
+
+    <!-- Log Viewer Component -->
+    <LogViewer ref="logViewerRef" />
 </template>
 
 <style scoped>

@@ -8,19 +8,57 @@ import (
 )
 
 type Printer struct {
-	Color *color.Color
+	Color   *color.Color
+	LogChan chan string // 添加日志通道
+	enabled bool        // 是否启用通道
 }
 
 func NewPrinter() *Printer {
-	return &Printer{
-		Color: color.New(color.FgCyan),
+	p := &Printer{
+		Color:   color.New(color.FgCyan),
+		LogChan: make(chan string, 100), // 使用带缓冲的通道，避免阻塞
+		enabled: true,
+	}
+
+	// go func() {
+	// 	for msg := range p.LogChan {
+	// 		fmt.Println("=====:" + msg)
+	// 	}
+	// }()
+
+	return p
+}
+
+// EnableLogging 启用日志通道
+func (p *Printer) EnableLogging(enable bool) {
+	p.enabled = enable
+}
+
+// Close 关闭日志通道
+func (p *Printer) Close() {
+	if p.LogChan != nil {
+		close(p.LogChan)
+	}
+}
+
+// sendToChannel 发送日志到通道
+func (p *Printer) sendToChannel(message string) {
+	if p.enabled && p.LogChan != nil {
+		select {
+		case p.LogChan <- message:
+			// 成功发送
+		default:
+			// 通道已满，丢弃日志
+		}
 	}
 }
 
 // Print 打印信息
 func (p *Printer) Print(format string, args ...interface{}) {
-	fmt.Printf(format, args...)
+	message := fmt.Sprintf(format, args...)
+	fmt.Printf(message)
 	fmt.Println()
+	p.sendToChannel(message)
 }
 
 // PrintCyan 打印青色信息
@@ -54,14 +92,17 @@ func (p *Printer) PrintAndReturnError(errMsg string) error {
 
 // PrintInfo 打印信息
 func (p *Printer) PrintInfo(format string, args ...interface{}) {
-	p.Color.Printf("🍋 "+format, args...)
+	message := fmt.Sprintf("🍋 "+format, args...)
+	p.Color.Print(message)
 	fmt.Println()
+	p.sendToChannel(message)
 }
 
 // PrintInfof 打印信息
 func (p *Printer) PrintInfof(format string, args ...interface{}) {
 	p.Color.Printf("🍋 "+format, args...)
 	fmt.Println()
+	p.sendToChannel(fmt.Sprintf("🍋 "+format, args...))
 }
 
 // PrintInfofAndSend 打印信息并发送
@@ -69,6 +110,7 @@ func (p *Printer) PrintInfofAndSend(logChan chan<- string, format string, args .
 	message := fmt.Sprintf("🍋 "+format, args...)
 	p.Color.Printf(message)
 	fmt.Println()
+	p.sendToChannel(message)
 	logChan <- message
 }
 
@@ -111,6 +153,8 @@ func (p *Printer) PrintErrorMessage(message string) {
 	p.Color.Printf("❌ 错误: %s\n", message)
 	p.Color.Printf("📃 位置: %s:%d\n", file, line)
 	p.Color.Println()
+	p.sendToChannel(fmt.Sprintf("❌ 错误: %s\n", message))
+	p.sendToChannel(fmt.Sprintf("📃 位置: %s:%d\n", file, line))
 }
 
 // PrintList 打印列表
@@ -132,16 +176,19 @@ func (p *Printer) PrintList(list []string, title string) {
 func (p *Printer) PrintSuccess(format string, args ...interface{}) {
 	p.Color.Printf("✅ "+format, args...)
 	p.Color.Println()
+	p.sendToChannel(fmt.Sprintf("✅ "+format, args...))
 }
 
 // PrintWarn 打印警告信息
 func (p *Printer) PrintWarn(format string, args ...interface{}) {
 	p.Color.Printf("🚨 "+format, args...)
 	p.Color.Println()
+	p.sendToChannel(fmt.Sprintf("🚨 "+format, args...))
 }
 
 // PrintWarnf 打印警告信息
 func (p *Printer) PrintWarnf(format string, args ...interface{}) {
 	p.Color.Printf("🚨 "+format, args...)
 	p.Color.Println()
+	p.sendToChannel(fmt.Sprintf("🚨 "+format, args...))
 }

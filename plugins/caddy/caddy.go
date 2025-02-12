@@ -29,7 +29,7 @@ func (c *Caddy) Install(logChan chan<- string) error {
 		}
 
 		// 添加 Caddy 软件源
-		err := c.RunShellAndSendLog(logChan, "sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list")
+		err := c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list")
 		if err != nil {
 			errMsg := fmt.Sprintf("添加源失败:\n%s", err.Error())
 			c.PrintErrorf("%s", errMsg)

@@ -33,7 +33,10 @@ const collapsed = ref(false)
             </div>
 
             <!-- Content -->
-            <div class="flex-1 p-4 ml-60">
+            <div :class="[
+                'flex-1 p-4 transition-all duration-300',
+                collapsed ? 'ml-16' : 'ml-60'
+            ]">
                 <slot></slot>
             </div>
         </div>
