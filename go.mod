@@ -1,6 +1,6 @@
 module servon
 
-go 1.23
+go 1.22
 
 toolchain go1.23.6
 
@@ -13,20 +13,9 @@ require (
 )
 
 require (
-	dario.cat/mergo v1.0.1 // indirect
-	github.com/air-verse/air v1.61.7 // indirect
-	github.com/bep/godartsass v1.2.0 // indirect
-	github.com/bep/godartsass/v2 v2.1.0 // indirect
-	github.com/bep/golibsass v1.2.0 // indirect
-	github.com/cli/safeexec v1.0.1 // indirect
-	github.com/creack/pty v1.1.23 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/gohugoio/hugo v0.134.3 // indirect
-	github.com/pelletier/go-toml v1.9.5 // indirect
-	github.com/spf13/afero v1.11.0 // indirect
-	github.com/spf13/cast v1.7.0 // indirect
-	github.com/tdewolff/parse/v2 v2.7.15 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/rogpeppe/go-internal v1.12.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
 
 require (

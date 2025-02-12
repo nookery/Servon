@@ -3,6 +3,7 @@ package libs
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -18,6 +19,26 @@ func NewEnvManager() *EnvManager {
 }
 
 func (e *EnvManager) LoadEnv() {
+	// 如果不存在 .env 文件，则从 .env.example 文件中复制
+	if _, err := os.Stat(".env"); os.IsNotExist(err) {
+		source, err := os.Open(".env.example")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer source.Close()
+
+		destination, err := os.Create(".env")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer destination.Close()
+
+		_, err = io.Copy(destination, source)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	compareEnv := e.CompareEnv()
 	if compareEnv != nil {
 		PrintErrorf("Error: .env 文件与 .env.example 文件不一致")

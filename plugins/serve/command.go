@@ -83,11 +83,11 @@ func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
 		if appEnv == "development" {
 			fmt.Println()
 			libs.PrintInfof("开发环境，启动 npm dev server")
-			libs.PrintInfof("VITE_API_TARGET=http://localhost:%d", port)
+			libs.PrintInfof("VITE_API_TARGET=http://127.0.0.1:%d", port)
 			go func() {
 				cmd := exec.Command("npm", "run", "dev")
 				cmd.Dir = "."
-				cmd.Env = append(os.Environ(), "VITE_API_TARGET=http://localhost:"+strconv.Itoa(port))
+				cmd.Env = append(os.Environ(), "VITE_API_TARGET=http://127.0.0.1:"+strconv.Itoa(port))
 				// 设置输出管道
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
