@@ -1,8 +1,8 @@
 module servon
 
-go 1.21.0
+go 1.23
 
-toolchain go1.23.4
+toolchain go1.23.6
 
 require (
 	github.com/fatih/color v1.18.0
@@ -10,6 +10,23 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/spf13/cobra v1.8.1
+)
+
+require (
+	dario.cat/mergo v1.0.1 // indirect
+	github.com/air-verse/air v1.61.7 // indirect
+	github.com/bep/godartsass v1.2.0 // indirect
+	github.com/bep/godartsass/v2 v2.1.0 // indirect
+	github.com/bep/golibsass v1.2.0 // indirect
+	github.com/cli/safeexec v1.0.1 // indirect
+	github.com/creack/pty v1.1.23 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/gobwas/glob v0.2.3 // indirect
+	github.com/gohugoio/hugo v0.134.3 // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
+	github.com/spf13/afero v1.11.0 // indirect
+	github.com/spf13/cast v1.7.0 // indirect
+	github.com/tdewolff/parse/v2 v2.7.15 // indirect
 )
 
 require (
