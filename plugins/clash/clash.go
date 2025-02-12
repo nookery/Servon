@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const repoUrl = "https://github.com/wnlen/clash-for-linux.git"
+
 func Setup(core *core.Core) {
 	plugin := NewClash(core)
 
@@ -32,39 +34,48 @@ func NewClash(core *core.Core) contract.SuperSoft {
 	}
 }
 
+// Install 安装 Clash，并发送日志到日志通道
 func (c *Clash) Install(logChan chan<- string) error {
 	osType := c.GetOSType()
-	c.PrintInfof("检测到操作系统: %s", osType)
+
+	if logChan == nil {
+		logChan = make(chan string, 100)
+	}
+
+	c.PrintInfofAndSend(logChan, "ClashPlugin: 检测到操作系统: %s", osType)
+	c.PrintInfofAndSend(logChan, "ClashPlugin: 开始安装 Clash...")
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		c.PrintInfo("开始安装 Clash...")
-
-		// 清理临时文件夹
+		c.PrintInfofAndSend(logChan, "ClashPlugin: 清理目标文件夹 - %s", c.targetDir)
 		err := os.RemoveAll(c.targetDir)
 		if err != nil {
-			return fmt.Errorf("清理临时文件夹失败: %s", err)
+			return fmt.Errorf("清理目标文件夹失败: %s", err)
 		}
+		c.PrintInfofAndSend(logChan, "ClashPlugin: 目标文件夹清理完成 - %s", c.targetDir)
 
 		// Clone clash-for-linux repository
-		err = c.RunShell("git", "clone", "https://github.com/wnlen/clash-for-linux.git", c.targetDir)
+		c.PrintInfofAndSend(logChan, "ClashPlugin: 克隆 clash-for-linux 仓库 -> %s", repoUrl)
+		err = c.RunShell("git", "clone", repoUrl, c.targetDir)
 		if err != nil {
 			return fmt.Errorf("克隆仓库失败: %s", err)
 		}
 
-		c.PrintSuccess("克隆仓库成功")
+		// 确保在 RunShellAndSendLog 完成后发送成功消息
+		c.PrintInfofAndSend(logChan, "ClashPlugin: 克隆仓库成功")
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"
-		c.Error(errMsg)
+		c.ErrorChan(logChan, errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		c.Error(errMsg)
+		c.ErrorChan(logChan, errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	c.PrintSuccess("Clash 安装完成")
+	// 确保在返回前发送完成消息
+	c.PrintInfofAndSend(logChan, "ClashPlugin: 安装完成")
 	return nil
 }
 

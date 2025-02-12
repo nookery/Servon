@@ -24,30 +24,48 @@ async function handleAction(software: any) {
     installing.value = true
     operationFailed.value = false
 
+    console.log('开始安装软件:', software.name)
+
     const eventSource = new EventSource(
         `/web_api/system/software/${software.name}/${software.status === 'not_installed' ? 'install' : 'uninstall'}`
     )
 
     eventSource.onmessage = (event) => {
-        installing.value = false
-        currentLogs.value.push(event.data)
-        currentLogs.value = [...currentLogs.value]
-        if (event.data.includes('完成')) {
+        const data = JSON.parse(event.data)
+        console.log('收到消息:', data)
+
+        if (data.type === 'log') {
+            currentLogs.value.push(data.message)
+            currentLogs.value = [...currentLogs.value]
+        } else if (data.type === 'complete') {
+            console.log('操作完成')
+            installing.value = false
             eventSource.close()
             loadSoftwareList()
             toast.success(`${software.status === 'not_installed' ? '安装' : '卸载'}完成`)
+        } else if (data.type === 'error') {
+            console.error('操作失败:', data.message)
+            installing.value = false
+            eventSource.close()
+            operationFailed.value = true
+            currentLogs.value.push(data.message)
+            currentLogs.value = [...currentLogs.value]
+            loadSoftwareList()
         }
     }
 
-    eventSource.onerror = () => {
+    eventSource.onerror = (error) => {
+        console.error('SSE错误:', error)
         eventSource.close()
         installing.value = false
-        if (!currentLogs.value[currentLogs.value.length - 1]?.includes('完成')) {
-            currentLogs.value.push('操作异常终止')
-            currentLogs.value = [...currentLogs.value]
-            operationFailed.value = true
-        }
+        currentLogs.value.push('连接异常终止')
+        currentLogs.value = [...currentLogs.value]
+        operationFailed.value = true
         loadSoftwareList()
+    }
+
+    eventSource.onopen = () => {
+        console.log('SSE连接已建立')
     }
 }
 
@@ -141,7 +159,6 @@ onMounted(() => {
             :title="currentSoftware + (installing ? '操作执行中' : (operationFailed ? '操作失败' : '操作日志'))"
             :loading="installing" :error="operationFailed">
             <template #default>
-                <div v-if="installing" class="loading loading-spinner loading-lg"></div>
                 <LogViewer :logs="currentLogs" />
             </template>
         </Modal>

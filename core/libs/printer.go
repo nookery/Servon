@@ -64,6 +64,14 @@ func (p *Printer) PrintInfof(format string, args ...interface{}) {
 	fmt.Println()
 }
 
+// PrintInfofAndSend 打印信息并发送
+func (p *Printer) PrintInfofAndSend(logChan chan<- string, format string, args ...interface{}) {
+	message := fmt.Sprintf("🍋 "+format, args...)
+	p.Color.Printf(message)
+	fmt.Println()
+	logChan <- message
+}
+
 // PrintLn 打印换行
 func (p *Printer) PrintLn() {
 	p.Color.Println()

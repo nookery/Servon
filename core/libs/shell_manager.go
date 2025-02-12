@@ -21,7 +21,7 @@ func (s *ShellManager) RunShell(command string, args ...string) error {
 	}
 
 	// 使用青色（Cyan）输出命令和参数，用空格连接参数
-	color.Cyan("📺 %s %s", command, joinArgs(args))
+	PrintInfo("📺 %s %s", command, joinArgs(args))
 
 	execCmd := exec.Command(command, args...)
 	execCmd.Stdout = os.Stdout

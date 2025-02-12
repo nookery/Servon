@@ -13,8 +13,6 @@ func NewServiceManager() *ServiceManager {
 }
 
 func (p *ServiceManager) IsActive(serviceName string) bool {
-	DefaultLogManager.Debug("检查服务状态: %s", serviceName)
-
 	// 首先尝试 systemctl
 	cmd := exec.Command("systemctl", "is-active", serviceName)
 	output, err := cmd.CombinedOutput()

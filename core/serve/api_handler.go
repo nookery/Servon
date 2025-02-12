@@ -119,19 +119,56 @@ func (h *Handler) HandleGetSoftwareList(c *gin.Context) {
 func (h *Handler) HandleInstallSoftware(c *gin.Context) {
 	name := c.Param("name")
 	msgChan := make(chan string, 100)
-	err := libs.DefaultSoftManager.Install(name, msgChan)
-	if err != nil {
-		c.String(500, err.Error())
-		return
-	}
+	doneChan := make(chan error, 1)
 
+	// 设置 SSE 头信息
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
+	c.Header("X-Accel-Buffering", "no")
 
-	for msg := range msgChan {
-		c.SSEvent("message", msg)
-		c.Writer.Flush()
+	// 发送初始消息
+	c.SSEvent("message", map[string]string{
+		"type":    "log",
+		"message": "正在准备安装...",
+	})
+	c.Writer.Flush()
+
+	// 在新的 goroutine 中执行安装
+	go func() {
+		err := libs.DefaultSoftManager.Install(name, msgChan)
+		doneChan <- err
+		close(msgChan)
+	}()
+
+	// 实时发送消息到客户端
+	for {
+		select {
+		case msg, ok := <-msgChan:
+			if !ok {
+				// msgChan 已关闭，等待 doneChan
+				continue
+			}
+			c.SSEvent("message", map[string]string{
+				"type":    "log",
+				"message": msg,
+			})
+			// 立即刷新缓冲区，确保消息实时发送
+			c.Writer.Flush()
+		case err := <-doneChan:
+			if err != nil {
+				c.SSEvent("message", map[string]string{
+					"type":    "error",
+					"message": err.Error(),
+				})
+			} else {
+				c.SSEvent("message", map[string]string{
+					"type": "complete",
+				})
+			}
+			c.Writer.Flush()
+			return
+		}
 	}
 }
 
