@@ -245,6 +245,7 @@ func (p *SoftManager) newListCmd() *cobra.Command {
 	})
 }
 
+// newInstallCmd 返回 install 子命令
 func (p *SoftManager) newInstallCmd() *cobra.Command {
 	cmd := NewCommand(CommandOptions{
 		Use:     "install",
@@ -252,7 +253,9 @@ func (p *SoftManager) newInstallCmd() *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		Aliases: []string{"i"},
 		Run: func(cmd *cobra.Command, args []string) {
-			p.Install(args[0], nil)
+			if err := p.Install(args[0], nil); err != nil {
+				DefaultPrinter.PrintErrorf("安装失败: %v", err)
+			}
 		},
 	})
 
@@ -283,6 +286,7 @@ func (c *SoftManager) Install(name string, logChan chan<- string) error {
 		DefaultPrinter.PrintList(registeredSoftwares, "可用的软件")
 		return DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
+
 	return software.Install(logChan)
 }
 

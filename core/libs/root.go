@@ -20,5 +20,14 @@ var DefaultDeployManager = NewDeployManager()
 var DefaultDataManager = NewDataManager()
 var DefaultShellManager = NewShellManager()
 
+// 以下为快捷函数
+
 var NewCommand = DefaultCommandManager.NewCommand
 var StreamCommand = DefaultCommandManager.StreamCommand
+var RunShell = DefaultShellManager.RunShell
+var PrintInfo = DefaultPrinter.PrintInfo
+var PrintInfof = DefaultPrinter.PrintInfof
+var PrintSuccess = DefaultPrinter.PrintSuccess
+var PrintError = DefaultPrinter.PrintError
+var PrintErrorf = DefaultPrinter.PrintErrorf
+var PrintList = DefaultPrinter.PrintList

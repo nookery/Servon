@@ -30,3 +30,14 @@ func (s *ShellManager) RunShell(command string, args ...string) error {
 
 	return execCmd.Run()
 }
+
+// RunShellWithOutput 运行命令并返回输出
+func (s *ShellManager) RunShellWithOutput(command string, args ...string) (string, error) {
+	if len(args) == 0 {
+		return "", fmt.Errorf("command is required")
+	}
+
+	execCmd := exec.Command(command, args...)
+	output, err := execCmd.CombinedOutput()
+	return string(output), err
+}

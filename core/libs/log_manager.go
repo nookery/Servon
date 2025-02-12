@@ -33,6 +33,7 @@ func (l *LogManager) ErrorChan(ch chan<- string, format string, args ...interfac
 // Info 打印信息
 func (l *LogManager) Info(format string, args ...interface{}) {
 	fmt.Printf(format, args...)
+	fmt.Println()
 }
 
 // Infoln 打印信息并换行

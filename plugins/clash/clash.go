@@ -64,7 +64,7 @@ func (c *Clash) Install(logChan chan<- string) error {
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	c.Info("Clash 安装完成")
+	c.PrintSuccess("Clash 安装完成")
 	return nil
 }
 

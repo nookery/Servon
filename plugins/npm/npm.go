@@ -41,8 +41,7 @@ func (n *Npm) Install(logChan chan<- string) error {
 	}
 
 	// 检查 npm 是否已安装
-	npmCmd := exec.Command("npm", "--version")
-	if err := npmCmd.Run(); err != nil {
+	if _, err := n.RunShellWithOutput("npm", "--version"); err != nil {
 		n.PrintInfo("npm 未安装，正在通过 apt 安装...")
 
 		// 使用 apt 安装 npm
@@ -53,7 +52,7 @@ func (n *Npm) Install(logChan chan<- string) error {
 		}
 	}
 
-	n.PrintInfo("npm 已安装")
+	n.PrintSuccess("npm 已安装")
 	return nil
 }
 
