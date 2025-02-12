@@ -22,6 +22,13 @@ import (
 func main() {
 	core := core.New()
 
+	if core.CompareEnv() != nil {
+		color.Red("Error: .env 文件与 .env.example 文件不一致")
+		os.Exit(1)
+	}
+
+	core.LoadEnv()
+
 	caddy.Setup(core)
 	nodejs.Setup(core)
 	yarn.Setup(core)

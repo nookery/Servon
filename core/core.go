@@ -31,6 +31,8 @@ type Core struct {
 	*libs.SoftManager
 	*libs.DeployManager
 	*libs.ShellManager
+	*libs.UserManager
+	*libs.EnvManager
 }
 
 type OSType = libs.OSType
@@ -68,12 +70,16 @@ func New() *Core {
 		Dpkg:                   libs.DefaultDpkg,
 		CronManager:            libs.DefaultCronManager,
 		VersionManager:         libs.DefaultVersionManager,
+		ShellManager:           libs.DefaultShellManager,
+		UserManager:            libs.DefaultUserManager,
+		EnvManager:             libs.DefaultEnvManager,
 	}
 
 	core.AddCommand(core.GetDeployCommand())
 	core.AddCommand(core.GetVersionCommand())
 	core.AddCommand(core.GetSoftwareCommand())
 	core.AddCommand(serve.NewServeCommand())
+	core.AddCommand(core.GetUserRootCommand())
 
 	return core
 }

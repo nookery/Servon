@@ -2,6 +2,7 @@ package libs
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/fatih/color"
 )
@@ -14,6 +15,12 @@ func NewPrinter() *Printer {
 	return &Printer{
 		Color: color.New(color.FgCyan),
 	}
+}
+
+// Print 打印信息
+func (p *Printer) Print(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
+	fmt.Println()
 }
 
 // PrintCyan 打印青色信息
@@ -69,28 +76,32 @@ func (p *Printer) Printf(format string, args ...interface{}) {
 
 // PrintError 打印错误信息
 func (p *Printer) PrintError(err error) {
-	p.Color.Println()
-	p.Color.Printf("❌ 错误: %s\n", err.Error())
-	p.Color.Println()
+	p.PrintErrorMessage(err.Error())
 }
 
 // PrintErrorf 打印错误信息
 func (p *Printer) PrintErrorf(format string, args ...interface{}) {
-	p.Color.Printf("❌ 错误: %s\n", fmt.Sprintf(format, args...))
-	p.Color.Println()
+	p.PrintErrorMessage(fmt.Sprintf(format, args...))
 }
 
 // PrintAndReturnErrorf 打印错误信息并返回错误
 func (p *Printer) PrintAndReturnErrorf(format string, args ...interface{}) error {
-	p.Color.Printf("❌ 错误: %s\n", fmt.Sprintf(format, args...))
-	p.Color.Println()
-	return fmt.Errorf("%s", fmt.Sprintf(format, args...))
+	err := fmt.Errorf("%s", fmt.Sprintf(format, args...))
+	p.PrintErrorMessage(err.Error())
+	return err
 }
 
 // PrintErrorMessage 打印错误信息
 func (p *Printer) PrintErrorMessage(message string) {
-	p.Color.Println()
+	_, thisFile, _, _ := runtime.Caller(0) // 获取当前文件路径
+	_, file, line, _ := runtime.Caller(1)
+	// 如果错误来自当前文件，则往上找一级调用者
+	if file == thisFile {
+		_, file, line, _ = runtime.Caller(2)
+	}
+
 	p.Color.Printf("❌ 错误: %s\n", message)
+	p.Color.Printf("📃 位置: %s:%d\n", file, line)
 	p.Color.Println()
 }
 

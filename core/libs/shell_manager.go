@@ -37,7 +37,13 @@ func (s *ShellManager) RunShellWithOutput(command string, args ...string) (strin
 		return "", fmt.Errorf("command is required")
 	}
 
+	color.Cyan("📺 %s %s", command, joinArgs(args))
+
 	execCmd := exec.Command(command, args...)
+
 	output, err := execCmd.CombinedOutput()
+
+	Print(string(output))
+
 	return string(output), err
 }
