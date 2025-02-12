@@ -65,12 +65,12 @@ func (c *Clash) Install(logChan chan<- string) error {
 		c.PrintInfofAndSend(logChan, "ClashPlugin: 克隆仓库成功")
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"
-		c.ErrorChan(logChan, errMsg)
+		c.PrintErrorf(errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		c.ErrorChan(logChan, errMsg)
+		c.PrintErrorf(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 

@@ -29,7 +29,6 @@ func NewNodeJSPlugin(core *core.Core) contract.SuperSoft {
 }
 
 func (n *NodeJSPlugin) Install(logChan chan<- string) error {
-	outputChan := make(chan string, 100)
 	osType := n.GetOSType()
 
 	switch osType {
@@ -49,19 +48,19 @@ func (n *NodeJSPlugin) Install(logChan chan<- string) error {
 
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 NodeJS"
-		n.ErrorChan(outputChan, "%s", errMsg)
+		n.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		n.ErrorChan(outputChan, "%s", errMsg)
+		n.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 验证安装结果
 	if !n.IsInstalled("nodejs") {
 		errMsg := "NodeJS 安装验证失败，未检测到已安装的包"
-		n.ErrorChan(outputChan, "%s", errMsg)
+		n.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
@@ -131,11 +130,11 @@ func (n *NodeJSPlugin) GetInfo() contract.SoftwareInfo {
 }
 
 func (n *NodeJSPlugin) Start(logChan chan<- string) error {
-	n.Info("NodeJS 是运行时环境，无需启动服务")
+	n.PrintInfof("NodeJS 是运行时环境，无需启动服务")
 	return nil
 }
 
 func (n *NodeJSPlugin) Stop() error {
-	n.Info("NodeJS 是运行时环境，无需停止服务")
+	n.PrintInfof("NodeJS 是运行时环境，无需停止服务")
 	return nil
 }

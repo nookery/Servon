@@ -13,7 +13,6 @@ const LoggerFolder = "/logs"
 type Core struct {
 	*libs.CommandManager
 	*libs.DataManager
-	*libs.LogManager
 	*libs.Printer
 	*libs.PortManager
 	*libs.BasicInfoManager
@@ -54,7 +53,6 @@ func New() *Core {
 		CommandManager:         libs.DefaultCommandManager,
 		SoftManager:            libs.DefaultSoftManager,
 		DataManager:            libs.DefaultDataManager,
-		LogManager:             libs.DefaultLogManager,
 		DeployManager:          libs.DefaultDeployManager,
 		Printer:                libs.DefaultPrinter,
 		PortManager:            libs.DefaultPortManager,

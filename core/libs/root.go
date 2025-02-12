@@ -1,7 +1,6 @@
 package libs
 
 var DefaultPrinter = NewPrinter()
-var DefaultLogManager = NewLogManager()
 var DefaultCommandManager = NewCommandManager()
 var DefaultVersionManager = NewVersionManager()
 var DefaultSystemResourcesManager = NewSystemResourcesManager()

@@ -35,21 +35,21 @@ func (p *Pnpm) Install(logChan chan<- string) error {
 	// 检查 nodejs 是否已安装
 	if err := p.RunShell("node", "--version"); err != nil {
 		errMsg := "请先安装 NodeJS"
-		p.ErrorChan(logChan, "%s", errMsg)
+		p.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 检查 npm 是否已安装
 	if err := p.RunShell("npm", "--version"); err != nil {
 		errMsg := "请先安装 npm"
-		p.ErrorChan(logChan, "%s", errMsg)
+		p.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 使用 StreamCommand 来执行安装并输出详细日志
 	if err := p.RunShell("npm", "install", "-g", "pnpm"); err != nil {
 		errMsg := fmt.Sprintf("安装 pnpm 失败: %v", err)
-		p.ErrorChan(logChan, "%s", errMsg)
+		p.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
@@ -62,7 +62,7 @@ func (p *Pnpm) Uninstall(logChan chan<- string) error {
 
 	if err := p.RunShell("npm", "uninstall", "-g", "pnpm"); err != nil {
 		errMsg := fmt.Sprintf("卸载 pnpm 失败: %v", err)
-		p.ErrorChan(logChan, "%s", errMsg)
+		p.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 

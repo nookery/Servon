@@ -99,7 +99,7 @@ func (g *GitHubRunner) Install(logChan chan<- string) error {
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		g.Error(errMsg)
+		g.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 }

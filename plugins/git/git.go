@@ -41,14 +41,14 @@ func (g *Git) Install(logChan chan<- string) error {
 		// 更新软件包索引
 		if err := g.AptUpdate(); err != nil {
 			errMsg := fmt.Sprintf("更新软件包索引失败: %v", err)
-			g.ErrorChan(logChan, "%s", errMsg)
+			g.PrintErrorf("%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 		// 安装 Git
 		if err := g.AptInstall("git"); err != nil {
 			errMsg := fmt.Sprintf("安装 Git 失败: %v", err)
-			g.ErrorChan(logChan, "%s", errMsg)
+			g.PrintErrorf("%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
@@ -57,13 +57,13 @@ func (g *Git) Install(logChan chan<- string) error {
 		cmd := exec.Command("yum", "install", "-y", "git")
 		if err := g.StreamCommand(cmd); err != nil {
 			errMsg := fmt.Sprintf("安装 Git 失败: %v", err)
-			g.ErrorChan(logChan, "%s", errMsg)
+			g.PrintErrorf("%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		g.ErrorChan(logChan, "%s", errMsg)
+		g.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
@@ -78,7 +78,7 @@ func (g *Git) Uninstall(logChan chan<- string) error {
 	case core.Ubuntu, core.Debian:
 		if err := g.AptRemove("git"); err != nil {
 			errMsg := fmt.Sprintf("卸载 Git 失败: %v", err)
-			g.ErrorChan(logChan, "%s", errMsg)
+			g.PrintErrorf("%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
@@ -86,13 +86,13 @@ func (g *Git) Uninstall(logChan chan<- string) error {
 		cmd := exec.Command("yum", "remove", "-y", "git")
 		if err := g.StreamCommand(cmd); err != nil {
 			errMsg := fmt.Sprintf("卸载 Git 失败: %v", err)
-			g.ErrorChan(logChan, "%s", errMsg)
+			g.PrintErrorf("%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
 		}
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		g.ErrorChan(logChan, "%s", errMsg)
+		g.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 

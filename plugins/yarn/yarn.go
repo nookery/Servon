@@ -33,14 +33,14 @@ func (y *Yarn) Install(logChan chan<- string) error {
 	// 检查 nodejs 是否已安装
 	if _, err := y.RunShellWithOutput("node", "--version"); err != nil {
 		errMsg := "请先安装 NodeJS"
-		y.ErrorChan(logChan, "%s", errMsg)
+		y.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 使用 StreamCommand 来执行安装并输出详细日志
 	if err := y.RunShell("npm", "install", "-g", "yarn"); err != nil {
 		errMsg := fmt.Sprintf("安装 Yarn 失败: %v", err)
-		y.ErrorChan(logChan, "%s", errMsg)
+		y.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
@@ -53,7 +53,7 @@ func (y *Yarn) Uninstall(logChan chan<- string) error {
 
 	if err := y.RunShell("npm", "uninstall", "-g", "yarn"); err != nil {
 		errMsg := fmt.Sprintf("卸载 Yarn 失败: %v", err)
-		y.ErrorChan(logChan, "%s", errMsg)
+		y.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
