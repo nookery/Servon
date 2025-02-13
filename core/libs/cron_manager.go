@@ -41,6 +41,7 @@ func NewCronManager() *CronManager {
 
 // GetCronTasks 获取所有定时任务
 func (p *CronManager) GetCronTasks() ([]*CronTask, error) {
+	PrintInfo("获取所有定时任务...")
 	tasksMutex.RLock()
 	defer tasksMutex.RUnlock()
 
@@ -118,6 +119,7 @@ func (p *CronManager) validateTask(task CronTask) error {
 
 // CreateCronTask 创建定时任务
 func (p *CronManager) CreateCronTask(task CronTask) (*CronTask, error) {
+	PrintInfo("创建定时任务...")
 	// 先进行字段验证
 	if err := p.validateTask(task); err != nil {
 		return nil, err
@@ -188,6 +190,7 @@ func (p *CronManager) UpdateCronTask(task CronTask) (*CronTask, error) {
 
 // DeleteCronTask 删除定时任务
 func (p *CronManager) DeleteCronTask(id int) error {
+	PrintInfo("删除定时任务...")
 	tasksMutex.Lock()
 	defer tasksMutex.Unlock()
 
@@ -206,6 +209,7 @@ func (p *CronManager) DeleteCronTask(id int) error {
 
 // ToggleCronTask 启用/禁用定时任务
 func (p *CronManager) ToggleCronTask(id int) (*CronTask, error) {
+	PrintInfo("启用/禁用定时任务...")
 	tasksMutex.Lock()
 	defer tasksMutex.Unlock()
 

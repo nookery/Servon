@@ -126,12 +126,12 @@ func (p *ServePlugin) setupAPIRoutes(router *gin.Engine) {
 		// Add new streaming logs endpoint
 		api.GET("/logs/:channel", p.HandleStreamLogs)
 
-		// // 定时任务相关API
-		// api.GET("/cron/tasks", h.HandleListCronTasks)              // 获取所有定时任务
-		// api.POST("/cron/tasks", h.HandleCreateCronTask)            // 创建定时任务
-		// api.PUT("/cron/tasks/:id", h.HandleUpdateCronTask)         // 更新定时任务
-		// api.DELETE("/cron/tasks/:id", h.HandleDeleteCronTask)      // 删除定时任务
-		// api.POST("/cron/tasks/:id/toggle", h.HandleToggleCronTask) // 启用/禁用定时任务
+		// 定时任务相关API
+		api.GET("/cron/tasks", p.HandleListCronTasks)              // 获取所有定时任务
+		api.POST("/cron/tasks", p.HandleCreateCronTask)            // 创建定时任务
+		api.PUT("/cron/tasks/:id", p.HandleUpdateCronTask)         // 更新定时任务
+		api.DELETE("/cron/tasks/:id", p.HandleDeleteCronTask)      // 删除定时任务
+		api.POST("/cron/tasks/:id/toggle", p.HandleToggleCronTask) // 启用/禁用定时任务
 	}
 
 	printKeyValue("API:", color.HiGreenString("http://localhost:%d/web_api", port)) // 仅当监听非本地地址时显示网络访问信息

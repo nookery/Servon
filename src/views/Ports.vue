@@ -10,8 +10,8 @@ async function loadPorts() {
         const res = await axios.get('/web_api/system/ports')
         ports.value = res.data
         error.value = null
-    } catch (err) {
-        error.value = '获取端口列表失败'
+    } catch (err: any) {
+        error.value = `获取端口列表失败: ${err.response?.data?.message || err.message || '未知错误'}`
     }
 }
 

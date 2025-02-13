@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import Alert from '../components/Alert.vue'
+import CronTaskForm from '../components/CronTaskForm.vue'
 
 interface CronTask {
     id: number
@@ -43,6 +44,39 @@ const taskToDelete = ref<number | null>(null)
 const showCronHelp = ref(false)
 const error = ref<string | null>(null)
 
+// 预定义的任务模板
+const taskTemplates = {
+    systemClean: {
+        name: '系统清理',
+        command: 'apt clean && apt autoremove -y',
+        description: '定期清理系统包缓存'
+    },
+    databaseBackup: {
+        name: '数据库备份',
+        command: 'mysqldump -u root -p database > backup.sql',
+        description: '数据库定时备份'
+    },
+    logClean: {
+        name: '日志清理',
+        command: 'find /var/log -type f -name "*.log" -mtime +30 -delete',
+        description: '清理30天前的日志文件'
+    },
+    systemUpdate: {
+        name: '系统更新',
+        command: 'apt update && apt upgrade -y',
+        description: '自动更新系统包'
+    }
+}
+
+// 应用任务模板
+const applyTemplate = (templateName: keyof typeof taskTemplates) => {
+    const template = taskTemplates[templateName]
+    const task = editingTask.value || newTask.value
+    task.name = template.name
+    task.command = template.command
+    task.description = template.description
+}
+
 // 获取所有定时任务
 const fetchTasks = async () => {
     try {
@@ -62,35 +96,19 @@ const clearErrors = () => {
 }
 
 // 创建或更新任务
-const saveTask = async () => {
+const saveTask = async (task: CronTask) => {
     try {
-        clearErrors()
-        const task = editingTask.value || newTask.value
         if (editingTask.value) {
             await axios.put(`/web_api/cron/tasks/${task.id}`, task)
-            showModal.value = false
-            await fetchTasks()
-            resetForm()
         } else {
             await axios.post('/web_api/cron/tasks', task)
-            showModal.value = false
-            await fetchTasks()
-            resetForm()
         }
+        showModal.value = false
+        await fetchTasks()
+        resetForm()
     } catch (error: any) {
-        if (error.response?.data?.errors) {
-            const validationErrors = error.response.data as ValidationErrors
-            validationErrors.errors.forEach(err => {
-                if (err.field === 'general') {
-                    formError.value = err.message
-                } else {
-                    fieldErrors.value[err.field] = err.message
-                }
-            })
-        } else {
-            const errorMessage = error.response?.data?.error || error.message || '未知错误'
-            formError.value = errorMessage
-        }
+        const errorMessage = error.response?.data?.error || error.message || '未知错误'
+        throw new Error(errorMessage)
     }
 }
 
@@ -220,102 +238,17 @@ onMounted(fetchTasks)
                 <h3 class="font-bold text-lg mb-4">
                     {{ editingTask ? '编辑任务' : '新建任务' }}
                 </h3>
-                <form @submit.prevent="saveTask">
-                    <div class="form-control mb-4">
-                        <label class="label">
-                            <span class="label-text">任务名称</span>
-                        </label>
-                        <input type="text" v-model="(editingTask || newTask).name" class="input input-bordered"
-                            :class="{ 'input-error': fieldErrors.name }" required />
-                        <label v-if="fieldErrors.name" class="label">
-                            <span class="label-text-alt text-error">{{ fieldErrors.name }}</span>
-                        </label>
-                    </div>
-
-                    <div class="form-control mb-4">
-                        <label class="label">
-                            <span class="label-text">执行命令</span>
-                        </label>
-                        <input type="text" v-model="(editingTask || newTask).command" class="input input-bordered"
-                            :class="{ 'input-error': fieldErrors.command }" required />
-                        <label v-if="fieldErrors.command" class="label">
-                            <span class="label-text-alt text-error">{{ fieldErrors.command }}</span>
-                        </label>
-                    </div>
-
-                    <div class="form-control mb-4">
-                        <label class="label">
-                            <span class="label-text">定时表达式</span>
-                            <span class="label-text-alt">
-                                <a href="#" @click.prevent="showCronHelp = true" class="link">
-                                    帮助
-                                </a>
-                            </span>
-                        </label>
-                        <input type="text" v-model="(editingTask || newTask).schedule" class="input input-bordered"
-                            :class="{ 'input-error': fieldErrors.schedule }" required placeholder="0 */5 * * * *" />
-                        <div class="flex flex-col gap-1 mt-1">
-                            <label class="label py-0">
-                                <span class="label-text-alt text-base-content/70">格式: 秒 分 时 日 月 星期</span>
-                            </label>
-                            <label v-if="fieldErrors.schedule" class="label py-0">
-                                <span class="label-text-alt text-error">{{ fieldErrors.schedule }}</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-control mb-4">
-                        <label class="label">
-                            <span class="label-text">描述</span>
-                        </label>
-                        <textarea v-model="(editingTask || newTask).description" class="textarea textarea-bordered"
-                            rows="3">
-                        </textarea>
-                    </div>
-
-                    <!-- 通用错误信息显示区域 -->
-                    <Alert v-if="formError" type="error" :message="formError" class="mb-4" />
-
-                    <div class="modal-action">
-                        <button type="button" class="btn" @click="showModal = false">取消</button>
-                        <button type="submit" class="btn btn-primary">保存</button>
-                    </div>
-                </form>
+                <CronTaskForm :task="editingTask || newTask" :is-editing="!!editingTask" @submit="saveTask"
+                    @cancel="showModal = false" />
             </div>
             <form method="dialog" class="modal-backdrop">
                 <button @click="showModal = false">关闭</button>
             </form>
         </dialog>
 
-        <!-- Cron 帮助对话框 -->
-        <dialog class="modal" :class="{ 'modal-open': showCronHelp }">
-            <div class="modal-box">
-                <h3 class="font-bold text-lg mb-4">Cron 表达式帮助</h3>
-                <div class="space-y-4">
-                    <p>格式：秒 分 时 日 月 星期</p>
-                    <div>
-                        <h4 class="font-semibold mb-2">常用示例：</h4>
-                        <ul class="list-disc list-inside space-y-2">
-                            <li><code>0 0 * * * *</code> - 每小时执行（在整点时）</li>
-                            <li><code>0 */5 * * * *</code> - 每5分钟执行</li>
-                            <li><code>0 0 0 * * *</code> - 每天午夜执行</li>
-                            <li><code>*/10 * * * * *</code> - 每10秒执行一次</li>
-                            <li><code>0 30 9 * * 1-5</code> - 工作日上午9:30执行</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="modal-action">
-                    <button class="btn" @click="showCronHelp = false">关闭</button>
-                </div>
-            </div>
-            <form method="dialog" class="modal-backdrop">
-                <button @click="showCronHelp = false">关闭</button>
-            </form>
-        </dialog>
-
         <!-- 使用确认对话框组件 -->
         <ConfirmDialog v-model:show="showDeleteConfirm" title="确认删除" message="该操作无法撤销，是否确认删除此任务？" type="warning"
-            confirm-text="删除" @confirm="handleConfirmDelete" />
+            confirm-text="删除" @confirm="handleDelete" />
     </div>
 </template>
 

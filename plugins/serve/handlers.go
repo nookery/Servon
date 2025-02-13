@@ -2,11 +2,14 @@ package serve
 
 import (
 	"net/http"
+	"servon/core"
 	"sort"
-	"time"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
+
+type CronTask = core.CronTask
 
 // HandleSystemResources 处理系统资源监控的请求
 func (p *ServePlugin) HandleSystemResources(c *gin.Context) {
@@ -68,8 +71,10 @@ func (p *ServePlugin) HandleFileList(c *gin.Context) {
 
 // HandlePortList 处理获取端口列表的请求
 func (p *ServePlugin) HandlePortList(c *gin.Context) {
+	p.PrintInfo("获取端口列表")
 	ports, err := p.GetPortList()
 	if err != nil {
+		p.PrintErrorMessage("获取端口列表失败: " + err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "获取端口列表失败: " + err.Error(),
 		})
@@ -194,14 +199,82 @@ func (p *ServePlugin) HandleGetSoftwareStatus(c *gin.Context) {
 	c.JSON(200, status)
 }
 
-// CronTask 定时任务结构
-type CronTask struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Command     string    `json:"command"`
-	Schedule    string    `json:"schedule"`
-	Description string    `json:"description"`
-	Enabled     bool      `json:"enabled"`
-	LastRun     time.Time `json:"last_run,omitempty"`
-	NextRun     time.Time `json:"next_run,omitempty"`
+// HandleListCronTasks 处理获取所有定时任务的请求
+func (p *ServePlugin) HandleListCronTasks(c *gin.Context) {
+	tasks, err := p.GetCronTasks()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, tasks)
+}
+
+// HandleCreateCronTask 处理创建定时任务的请求
+func (p *ServePlugin) HandleCreateCronTask(c *gin.Context) {
+	var task CronTask
+	if err := c.ShouldBindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据: " + err.Error()})
+		return
+	}
+
+	newTask, err := p.CreateCronTask(task)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, newTask)
+}
+
+// HandleUpdateCronTask 处理更新定时任务的请求
+func (p *ServePlugin) HandleUpdateCronTask(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的任务ID"})
+		return
+	}
+
+	var task CronTask
+	if err := c.ShouldBindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据: " + err.Error()})
+		return
+	}
+	task.ID = id
+
+	updatedTask, err := p.UpdateCronTask(task)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, updatedTask)
+}
+
+// HandleDeleteCronTask 处理删除定时任务的请求
+func (p *ServePlugin) HandleDeleteCronTask(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的任务ID"})
+		return
+	}
+
+	if err := p.DeleteCronTask(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
+// HandleToggleCronTask 处理启用/禁用定时任务的请求
+func (p *ServePlugin) HandleToggleCronTask(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的任务ID"})
+		return
+	}
+
+	task, err := p.ToggleCronTask(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, task)
 }
