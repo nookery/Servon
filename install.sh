@@ -51,6 +51,15 @@ run_command() {
     return $exit_code
 }
 
+# 检查并以 sudo 权限运行命令
+run_with_sudo() {
+    if [ "$(id -u)" -eq 0 ]; then
+        "$@"
+    else
+        sudo "$@"
+    fi
+}
+
 # 检查系统要求
 check_system() {
     print_info "Checking system requirements..."
@@ -75,12 +84,20 @@ check_system() {
     fi
 
     # 检查必要的命令
-    for cmd in curl sudo; do
+    for cmd in curl; do
         if ! command -v "$cmd" > /dev/null 2>&1; then
             print_error "$cmd is required but not installed"
             exit 1
         fi
     done
+
+    # 如果当前用户是 root，则不需要检查 sudo
+    if [ "$(id -u)" -ne 0 ]; then
+        if ! command -v "sudo" > /dev/null 2>&1; then
+            print_error "sudo is required but not installed"
+            exit 1
+        fi
+    fi
 
     print_success "System requirements met"
 }
@@ -93,7 +110,8 @@ create_install_dir() {
     INSTALL_DIR="/usr/local/servon"
 
     # 创建安装目录
-    sudo mkdir -p "$INSTALL_DIR"
+    run_with_sudo mkdir -p "$INSTALL_DIR"
+
     if [ $? -ne 0 ]; then
         print_error "Failed to create installation directory"
         exit 1
@@ -208,21 +226,21 @@ install_files() {
     local os=$(detect_os)
     
     # 移动二进制文件
-    sudo mv "/tmp/servon-${os}-${arch}" "$INSTALL_DIR/servon"
+    run_with_sudo mv "/tmp/servon-${os}-${arch}" "$INSTALL_DIR/servon"
     if [ $? -ne 0 ]; then
         print_error "Failed to install Servon"
         exit 1
     fi
 
     # 设置执行权限
-    sudo chmod +x "$INSTALL_DIR/servon"
+    run_with_sudo chmod +x "$INSTALL_DIR/servon"
     if [ $? -ne 0 ]; then
         print_error "Failed to set permissions"
         exit 1
     fi
 
     # 创建符号链接
-    sudo ln -sf "$INSTALL_DIR/servon" "/usr/local/bin/servon"
+    run_with_sudo ln -sf "$INSTALL_DIR/servon" "/usr/local/bin/servon"
     if [ $? -ne 0 ]; then
         print_error "Failed to create symbolic link"
         exit 1
