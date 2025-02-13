@@ -137,15 +137,12 @@ func (p *ServePlugin) HandleInstallSoftware(c *gin.Context) {
 	// 发送初始消息
 	c.JSON(http.StatusOK, gin.H{"message": "正在准备安装..."})
 
-	// 在新的 goroutine 中执行安装
-	go func() {
-		err := p.Install(name)
-		if err != nil {
-			p.PrintErrorMessage(fmt.Sprintf("安装软件 %s 失败: %s", name, err.Error()))
-			return
-		}
-		p.PrintInfo(fmt.Sprintf("软件 %s 安装完成", name))
-	}()
+	p.AddTask(core.Task{
+		ID: name,
+		Execute: func() error {
+			return p.Install(name)
+		},
+	})
 
 	c.JSON(http.StatusAccepted, gin.H{"message": "安装请求已接受，正在后台处理..."})
 }
@@ -434,4 +431,34 @@ func (p *ServePlugin) HandleStartSoftware(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusOK)
+}
+
+// HandleListTasks 处理获取任务列表的请求
+func (p *ServePlugin) HandleListTasks(c *gin.Context) {
+	p.PrintInfo("获取任务列表")
+	taskList := []string{}
+	tasks := p.GetTasks()
+	for _, task := range tasks {
+		taskList = append(taskList, task.ID)
+	}
+
+	c.JSON(http.StatusOK, taskList)
+}
+
+// HandleRemoveTask 处理删除任务的请求
+func (p *ServePlugin) HandleRemoveTask(c *gin.Context) {
+	id := c.Param("id")
+	p.RemoveTask(id)
+	c.JSON(http.StatusOK, gin.H{"message": "任务已删除"})
+}
+
+// HandleExecuteTask 处理执行任务的请求
+func (p *ServePlugin) HandleExecuteTask(c *gin.Context) {
+	id := c.Param("id")
+	err := p.ExecuteTask(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "任务已执行"})
 }

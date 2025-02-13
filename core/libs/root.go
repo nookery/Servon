@@ -21,6 +21,7 @@ var DefaultUserManager = NewUserManager()
 var DefaultDownloadManager = NewDownloadManager()
 var DefaultEnvManager = NewEnvManager()
 var DefaultGitManager = NewGitManager()
+var DefaultTaskManager = NewTaskManager()
 
 // 以下为快捷函数
 

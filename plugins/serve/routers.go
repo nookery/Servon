@@ -58,6 +58,11 @@ func (p *ServePlugin) setupAPIRoutes(router *gin.Engine) {
 		api.GET("/users", p.HandleListUsers)               // 获取用户列表
 		api.POST("/users", p.HandleCreateUser)             // 创建用户
 		api.DELETE("/users/:username", p.HandleDeleteUser) // 删除用户
+
+		// 任务管理相关API
+		api.GET("/tasks", p.HandleListTasks)                // 获取任务列表
+		api.DELETE("/tasks/:id", p.HandleRemoveTask)        // 删除任务
+		api.POST("/tasks/:id/execute", p.HandleExecuteTask) // 执行任务
 	}
 
 	printKeyValue("API:", color.HiGreenString("http://localhost:%d/web_api", port)) // 仅当监听非本地地址时显示网络访问信息
