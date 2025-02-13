@@ -78,6 +78,7 @@ func New() *Core {
 
 	core.AddCommand(core.GetDeployCommand())
 	core.AddCommand(core.GetVersionCommand())
+	core.AddCommand(core.GetUpgradeCommand())
 	core.AddCommand(core.GetSoftwareCommand())
 	core.AddCommand(core.GetUserRootCommand())
 
