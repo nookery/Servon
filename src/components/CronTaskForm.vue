@@ -13,11 +13,6 @@ interface CronTask {
     next_run?: string
 }
 
-interface ValidationError {
-    field: string
-    message: string
-}
-
 const props = defineProps<{
     task: CronTask
     isEditing: boolean

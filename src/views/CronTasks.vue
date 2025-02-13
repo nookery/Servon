@@ -16,15 +16,6 @@ interface CronTask {
     next_run?: string
 }
 
-interface ValidationError {
-    field: string
-    message: string
-}
-
-interface ValidationErrors {
-    errors: ValidationError[]
-}
-
 const tasks = ref<CronTask[]>([])
 const showModal = ref(false)
 const editingTask = ref<CronTask | null>(null)
@@ -41,41 +32,7 @@ const formError = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 const showDeleteConfirm = ref(false)
 const taskToDelete = ref<number | null>(null)
-const showCronHelp = ref(false)
 const error = ref<string | null>(null)
-
-// 预定义的任务模板
-const taskTemplates = {
-    systemClean: {
-        name: '系统清理',
-        command: 'apt clean && apt autoremove -y',
-        description: '定期清理系统包缓存'
-    },
-    databaseBackup: {
-        name: '数据库备份',
-        command: 'mysqldump -u root -p database > backup.sql',
-        description: '数据库定时备份'
-    },
-    logClean: {
-        name: '日志清理',
-        command: 'find /var/log -type f -name "*.log" -mtime +30 -delete',
-        description: '清理30天前的日志文件'
-    },
-    systemUpdate: {
-        name: '系统更新',
-        command: 'apt update && apt upgrade -y',
-        description: '自动更新系统包'
-    }
-}
-
-// 应用任务模板
-const applyTemplate = (templateName: keyof typeof taskTemplates) => {
-    const template = taskTemplates[templateName]
-    const task = editingTask.value || newTask.value
-    task.name = template.name
-    task.command = template.command
-    task.description = template.description
-}
 
 // 获取所有定时任务
 const fetchTasks = async () => {
@@ -168,10 +125,6 @@ const resetForm = () => {
 const formatTime = (time: string | undefined) => {
     if (!time) return '-'
     return new Date(time).toLocaleString()
-}
-
-const handleConfirmDelete = () => {
-    handleDelete()
 }
 
 onMounted(fetchTasks)
