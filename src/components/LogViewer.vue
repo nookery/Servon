@@ -9,8 +9,11 @@
             </div>
             <div id="log-container" class="flex-1 overflow-y-auto terminal-body p-4 font-mono text-sm">
                 <div v-for="(log, index) in logs" :key="index" class="py-0.5 terminal-line">
-                    <span class="text-terminal-prompt mr-2">></span>
-                    <span class="text-terminal-text">{{ log }}</span>
+                    <span class="text-terminal-prompt mr-2" v-if="log.type === 'command'">></span>
+                    <span class="text-terminal-prompt mr-2" v-else-if="log.type === 'error'"></span>
+                    <span class="text-terminal-prompt mr-2" v-else-if="log.type === 'info'">-</span>
+                    <span class="text-terminal-prompt mr-2" v-else>{{ log.symbol }}</span>
+                    <span :class="getLogClass(log.type)">{{ log.message }}</span>
                 </div>
                 <div v-if="logs.length === 0" class="text-terminal-text/50 text-center py-4">
                     等待日志输出...
@@ -24,25 +27,48 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useLogViewerStore } from '../stores/logViewer'
 
-const logs = ref<string[]>([])
+interface LogEntry {
+    type: string
+    symbol: string
+    message: string
+}
+
+const logs = ref<LogEntry[]>([])
 const eventSource = ref<EventSource | null>(null)
 const logViewerStore = useLogViewerStore()
 
-// 移除 visible ref 和 props，直接使用 store
+const getLogClass = (type: string) => {
+    const colorMap: Record<string, string> = {
+        'info': 'text-cyan-400',
+        'error': 'text-red-400',
+        'warn': 'text-yellow-400',
+        'success': 'text-green-400',
+        'debug': 'text-blue-400',
+        'command': 'text-purple-400',
+        'white': 'text-white',
+    }
+    return colorMap[type] || 'text-terminal-text'
+}
+
 onMounted(() => {
     eventSource.value = new EventSource('/web_api/logs/default')
 
     eventSource.value.addEventListener('log', (event) => {
-        logs.value.push(event.data)
-        if (logs.value.length > 100) {
-            logs.value.shift()
-        }
-        setTimeout(() => {
-            const container = document.getElementById('log-container')
-            if (container) {
-                container.scrollTop = container.scrollHeight
+        try {
+            const logEntry = JSON.parse(event.data)
+            logs.value.push(logEntry)
+            if (logs.value.length > 100) {
+                logs.value.shift()
             }
-        }, 0)
+            setTimeout(() => {
+                const container = document.getElementById('log-container')
+                if (container) {
+                    container.scrollTop = container.scrollHeight
+                }
+            }, 0)
+        } catch (e) {
+            console.error('Failed to parse log message:', e)
+        }
     })
 })
 

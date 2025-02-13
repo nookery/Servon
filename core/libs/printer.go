@@ -2,6 +2,7 @@ package libs
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os/exec"
@@ -11,16 +12,49 @@ import (
 	"github.com/fatih/color"
 )
 
-type PrinterType string
+type LogType struct {
+	Name   string
+	Color  *color.Color
+	Symbol string
+}
 type LocationType string
 
-const (
-	PrinterTypeInfo    PrinterType = "🍋"
-	PrinterTypeError   PrinterType = "❌"
-	PrinterTypeWarn    PrinterType = "🚨"
-	PrinterTypeSuccess PrinterType = "✅"
-	PrinterTypeDebug   PrinterType = "🔍"
-	PrinterTypeCommand PrinterType = "📺"
+var (
+	LogTypeInfo LogType = LogType{
+		Name:   "info",
+		Color:  color.New(color.FgCyan),
+		Symbol: "🍋",
+	}
+	LogTypeError LogType = LogType{
+		Name:   "error",
+		Color:  color.New(color.FgRed),
+		Symbol: "❌",
+	}
+	LogTypeWarn LogType = LogType{
+		Name:   "warn",
+		Color:  color.New(color.FgYellow),
+		Symbol: "🚨",
+	}
+	LogTypeSuccess LogType = LogType{
+		Name:   "success",
+		Color:  color.New(color.FgGreen),
+		Symbol: "✅",
+	}
+	LogTypeDebug LogType = LogType{
+		Name:   "debug",
+		Color:  color.New(color.FgBlue),
+		Symbol: "🔍",
+	}
+	LogTypeCommand LogType = LogType{
+		Name:   "command",
+		Color:  color.New(color.FgMagenta),
+		Symbol: "📺",
+	}
+	LogTypeCommandOutput LogType = LogType{
+		Name:   "command_output",
+		Color:  color.New(color.FgMagenta),
+		Symbol: "",
+	}
 )
 
 const (
@@ -28,6 +62,13 @@ const (
 	LocationTypeShort LocationType = "short"
 	LocationTypeNone  LocationType = "none"
 )
+
+// Define a structured log message
+type LogMessage struct {
+	Type    string `json:"type"`    // The log type (info, error, warn, etc.)
+	Symbol  string `json:"symbol"`  // The emoji symbol
+	Message string `json:"message"` // The actual message
+}
 
 type Printer struct {
 	Color   *color.Color
@@ -64,19 +105,30 @@ func (p *Printer) Close() {
 }
 
 // sendToChannel 发送日志到通道
-func (p *Printer) sendToChannel(message string) {
+func (p *Printer) sendToChannel(message string, logType LogType) {
 	if p.enabled && p.LogChan != nil {
+		logMsg := LogMessage{
+			Type:    logType.Name,
+			Symbol:  logType.Symbol,
+			Message: message,
+		}
+
+		jsonMsg, err := json.Marshal(logMsg)
+		if err != nil {
+			return
+		}
+
 		select {
-		case p.LogChan <- message:
-			// 成功发送
+		case p.LogChan <- string(jsonMsg):
+			// Successfully sent
 		default:
-			// 通道已满，丢弃日志
+			// Channel is full, discard log
 		}
 	}
 }
 
 // print handles all printing operations
-func (p *Printer) print(level PrinterType, message string, locationType LocationType, color *color.Color, sendToChannel bool) {
+func (p *Printer) print(level LogType, message string, locationType LocationType, color *color.Color, sendToChannel bool) {
 	if color == nil {
 		color = p.Color
 	}
@@ -105,47 +157,47 @@ func (p *Printer) print(level PrinterType, message string, locationType Location
 	}
 
 	// 生成消息
-	messageWithLevel = fmt.Sprintf("%s %s", level, message)
+	messageWithLevel = fmt.Sprintf("%s %s", level.Symbol, message)
 
 	color.Print(callerInfo + messageWithLevel)
 	fmt.Println()
 
 	if sendToChannel {
-		p.sendToChannel(messageWithLevel)
+		p.sendToChannel(message, level)
 	}
 }
 
 // PrintCyan 打印青色信息
 func (p *Printer) PrintCyan(format string, args ...interface{}) {
-	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgCyan), true)
+	p.print(LogTypeInfo, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgCyan), true)
 }
 
 func (p *Printer) PrintGreen(format string, args ...interface{}) {
-	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgGreen), true)
+	p.print(LogTypeSuccess, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgGreen), true)
 }
 
 // PrintRed 打印红色信息
 func (p *Printer) PrintRed(format string, args ...interface{}) {
-	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgRed), true)
+	p.print(LogTypeError, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgRed), true)
 }
 
 // PrintWhite 打印白色信息
 func (p *Printer) PrintWhite(format string, args ...interface{}) {
-	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgWhite), true)
+	p.print(LogTypeDebug, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgWhite), true)
 }
 
 func (p *Printer) PrintYellow(format string, args ...interface{}) {
-	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgYellow), true)
+	p.print(LogTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgYellow), true)
 }
 
 func (p *Printer) PrintAndReturnError(errMsg string) error {
-	p.print(PrinterTypeError, fmt.Sprintf("错误: %s", errMsg), LocationTypeNone, p.Color, true)
+	p.print(LogTypeError, fmt.Sprintf("错误: %s", errMsg), LocationTypeNone, p.Color, true)
 	return fmt.Errorf("%s", errMsg)
 }
 
 // PrintInfo 打印信息
 func (p *Printer) PrintInfo(info string) {
-	p.print(PrinterTypeInfo, info, LocationTypeLong, p.Color, true)
+	p.print(LogTypeInfo, info, LocationTypeLong, p.Color, true)
 }
 
 // PrintInfof 打印信息
@@ -160,7 +212,7 @@ func (p *Printer) PrintLn() {
 
 // Printf 打印格式化信息
 func (p *Printer) Printf(format string, args ...interface{}) {
-	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
+	p.print(LogTypeDebug, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
 }
 
 // PrintError 打印错误信息
@@ -175,7 +227,7 @@ func (p *Printer) PrintErrorf(format string, args ...interface{}) {
 
 // PrintAndReturnErrorf 打印错误信息并返回错误
 func (p *Printer) PrintAndReturnErrorf(format string, args ...interface{}) error {
-	p.print(PrinterTypeError, fmt.Sprintf("错误: %s", fmt.Sprintf(format, args...)), LocationTypeNone, p.Color, true)
+	p.print(LogTypeError, fmt.Sprintf("错误: %s", fmt.Sprintf(format, args...)), LocationTypeNone, p.Color, true)
 	return fmt.Errorf("%s", fmt.Sprintf(format, args...))
 }
 
@@ -193,8 +245,7 @@ func (p *Printer) PrintErrorMessage(message string) {
 	p.Color.Printf("📃 位置: %s:%d\n", file, line)
 	p.Color.Println()
 
-	p.sendToChannel(fmt.Sprintf("\n❌ 错误: %s\n", message))
-	p.sendToChannel(fmt.Sprintf("📃 位置: %s:%d\n", file, line))
+	p.sendToChannel(fmt.Sprintf("\n错误: %s\n位置: %s:%d\n\n", message, file, line), LogTypeError)
 }
 
 // PrintList 打印列表
@@ -213,27 +264,27 @@ func (p *Printer) PrintList(list []string, title string) {
 
 // PrintSuccess 打印成功信息
 func (p *Printer) PrintSuccess(format string) {
-	p.print(PrinterTypeSuccess, format, LocationTypeLong, p.Color, true)
+	p.print(LogTypeSuccess, format, LocationTypeLong, p.Color, true)
 }
 
 // PrintSuccessf 打印成功信息
 func (p *Printer) PrintSuccessf(format string, args ...interface{}) {
-	p.print(PrinterTypeSuccess, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
+	p.print(LogTypeSuccess, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
 }
 
 // PrintWarn 打印警告信息
 func (p *Printer) PrintWarn(format string) {
-	p.print(PrinterTypeWarn, format, LocationTypeNone, p.Color, true)
+	p.print(LogTypeWarn, format, LocationTypeNone, p.Color, true)
 }
 
 // PrintWarnf 打印警告信息
 func (p *Printer) PrintWarnf(format string, args ...interface{}) {
-	p.print(PrinterTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
+	p.print(LogTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
 }
 
 // PrintCommand 打印命令信息
 func (p *Printer) PrintCommand(command string) {
-	p.print(PrinterTypeCommand, command, LocationTypeLong, color.New(color.FgMagenta), true)
+	p.print(LogTypeCommand, command, LocationTypeLong, color.New(color.FgMagenta), true)
 }
 
 func (p *Printer) RunShell(command string, args ...string) error {
@@ -277,7 +328,7 @@ func processOutput(pipe io.ReadCloser, source string) {
 		line := scanner.Text()
 		// 打印到控制台并发送到日志通道
 		fmt.Println(line)
-		DefaultPrinter.sendToChannel(line)
+		DefaultPrinter.sendToChannel(line, LogTypeCommandOutput)
 	}
 
 	if err := scanner.Err(); err != nil {
