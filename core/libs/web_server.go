@@ -1,6 +1,8 @@
 package libs
 
 import (
+	"io"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,7 +13,10 @@ func NewWebServer(host string, port int, withUI bool) *gin.Engine {
 	router.RedirectFixedPath = false
 	router.HandleMethodNotAllowed = false
 	router.SetTrustedProxies(nil)
-	router.Use(gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/favicon.ico"}}))
+	router.Use(gin.LoggerWithConfig(gin.LoggerConfig{
+		SkipPaths: []string{"/favicon.ico"},
+		Output:    io.Discard,
+	}))
 	router.Use(gin.Recovery())
 
 	// 配置 CORS

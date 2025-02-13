@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-
-	"github.com/fatih/color"
 )
 
 type ShellManager struct {
@@ -21,8 +19,7 @@ func (s *ShellManager) RunShell(command string, args ...string) error {
 		return fmt.Errorf("command is required")
 	}
 
-	// 使用青色（Cyan）输出命令和参数，用空格连接参数
-	PrintInfo("📺 %s %s", command, joinArgs(args))
+	PrintCommandf("%s %s", command, joinArgs(args))
 
 	execCmd := exec.Command(command, args...)
 
@@ -72,13 +69,11 @@ func (s *ShellManager) RunShellWithOutput(command string, args ...string) (strin
 		return "", fmt.Errorf("command is required")
 	}
 
-	color.Cyan("📺 %s %s", command, joinArgs(args))
+	PrintCommandf("%s %s", command, joinArgs(args))
 
 	execCmd := exec.Command(command, args...)
 
 	output, err := execCmd.CombinedOutput()
-
-	Print(string(output))
 
 	return string(output), err
 }

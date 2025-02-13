@@ -170,7 +170,7 @@ func (u *UserManager) DeleteUserCommand() *cobra.Command {
 				return
 			}
 
-			PrintSuccess("用户 %s 已删除", username)
+			PrintSuccessf("用户 %s 已删除", username)
 		},
 	})
 }

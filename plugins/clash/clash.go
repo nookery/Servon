@@ -42,40 +42,40 @@ func (c *Clash) Install(logChan chan<- string) error {
 		logChan = make(chan string, 100)
 	}
 
-	c.PrintInfofAndSend(logChan, "ClashPlugin: 检测到操作系统: %s", osType)
-	c.PrintInfofAndSend(logChan, "ClashPlugin: 开始安装 Clash...")
+	c.PrintInfof("ClashPlugin: 检测到操作系统: %s", osType)
+	c.PrintInfof("ClashPlugin: 开始安装 Clash...")
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		c.PrintInfofAndSend(logChan, "ClashPlugin: 清理目标文件夹 - %s", c.targetDir)
+		c.PrintInfof("ClashPlugin: 清理目标文件夹 - %s", c.targetDir)
 		err := os.RemoveAll(c.targetDir)
 		if err != nil {
 			return fmt.Errorf("清理目标文件夹失败: %s", err)
 		}
-		c.PrintInfofAndSend(logChan, "ClashPlugin: 目标文件夹清理完成 - %s", c.targetDir)
+		c.PrintInfof("ClashPlugin: 目标文件夹清理完成 - %s", c.targetDir)
 
 		// Clone clash-for-linux repository
-		c.PrintInfofAndSend(logChan, "ClashPlugin: 克隆 clash-for-linux 仓库 -> %s", repoUrl)
+		c.PrintInfof("ClashPlugin: 克隆 clash-for-linux 仓库 -> %s", repoUrl)
 		err = c.RunShell("git", "clone", repoUrl, c.targetDir)
 		if err != nil {
 			return fmt.Errorf("克隆仓库失败: %s", err)
 		}
 
 		// 确保在 RunShellAndSendLog 完成后发送成功消息
-		c.PrintInfofAndSend(logChan, "ClashPlugin: 克隆仓库成功")
+		c.PrintInfof("ClashPlugin: 克隆仓库成功")
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"
-		c.PrintErrorf(errMsg)
+		c.PrintErrorMessage(errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		c.PrintErrorf(errMsg)
+		c.PrintErrorMessage(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 确保在返回前发送完成消息
-	c.PrintInfofAndSend(logChan, "ClashPlugin: 安装完成")
+	c.PrintInfof("ClashPlugin: 安装完成")
 	return nil
 }
 

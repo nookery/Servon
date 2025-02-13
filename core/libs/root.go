@@ -28,13 +28,17 @@ var GetOSType = DefaultOSInfoManager.GetOSType
 
 var NewCommand = DefaultCommandManager.NewCommand
 
-var Print = DefaultPrinter.Print
 var PrintInfo = DefaultPrinter.PrintInfo
 var PrintInfof = DefaultPrinter.PrintInfof
 var PrintSuccess = DefaultPrinter.PrintSuccess
+var PrintSuccessf = DefaultPrinter.PrintSuccessf
+var PrintWarn = DefaultPrinter.PrintWarn
+var PrintWarnf = DefaultPrinter.PrintWarnf
 var PrintError = DefaultPrinter.PrintError
 var PrintErrorf = DefaultPrinter.PrintErrorf
 var PrintList = DefaultPrinter.PrintList
+var PrintCommand = DefaultPrinter.PrintCommand
+var PrintCommandf = DefaultPrinter.PrintCommandf
 
 var RunShell = DefaultShellManager.RunShell
 var RunShellWithOutput = DefaultShellManager.RunShellWithOutput

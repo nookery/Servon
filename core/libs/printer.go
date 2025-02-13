@@ -3,8 +3,27 @@ package libs
 import (
 	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/fatih/color"
+)
+
+type PrinterType string
+type LocationType string
+
+const (
+	PrinterTypeInfo    PrinterType = "🚛"
+	PrinterTypeError   PrinterType = "❌"
+	PrinterTypeWarn    PrinterType = "🚨"
+	PrinterTypeSuccess PrinterType = "✅"
+	PrinterTypeDebug   PrinterType = "🔍"
+	PrinterTypeCommand PrinterType = "📺"
+)
+
+const (
+	LocationTypeLong  LocationType = "long"
+	LocationTypeShort LocationType = "short"
+	LocationTypeNone  LocationType = "none"
 )
 
 type Printer struct {
@@ -53,75 +72,92 @@ func (p *Printer) sendToChannel(message string) {
 	}
 }
 
-// Print 打印信息
-func (p *Printer) Print(format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	fmt.Printf(message)
+// print handles all printing operations
+func (p *Printer) print(level PrinterType, message string, locationType LocationType, color *color.Color, sendToChannel bool) {
+	if color == nil {
+		color = p.Color
+	}
+
+	var messageWithLevel string
+	var callerInfo string
+
+	_, thisFile, _, _ := runtime.Caller(0)
+	skip := 2
+	_, callerFile, callerLine, _ := runtime.Caller(skip)
+
+	// 持续往上追溯直到找到非当前文件的调用者
+	for callerFile == thisFile {
+		skip++
+		_, callerFile, callerLine, _ = runtime.Caller(skip)
+	}
+
+	// 生成调用者信息
+	if locationType == LocationTypeLong {
+		callerInfo = fmt.Sprintf("[%s:%d]", callerFile, callerLine)
+	} else if locationType == LocationTypeShort {
+		shortFile := callerFile[strings.LastIndex(callerFile, "/")+1:]
+		callerInfo = fmt.Sprintf("%s\n📃 位置: %s:%d", message, shortFile, callerLine)
+	} else {
+		callerInfo = ""
+	}
+
+	// 生成消息
+	messageWithLevel = fmt.Sprintf("%s %s", level, message)
+
+	color.Print(callerInfo + " " + messageWithLevel)
 	fmt.Println()
-	p.sendToChannel(message)
+
+	if sendToChannel {
+		p.sendToChannel(messageWithLevel)
+	}
 }
 
 // PrintCyan 打印青色信息
 func (p *Printer) PrintCyan(format string, args ...interface{}) {
-	p.Color.Printf(format, args...)
+	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgCyan), true)
 }
 
 func (p *Printer) PrintGreen(format string, args ...interface{}) {
-	p.Color.Printf(format, args...)
+	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgGreen), true)
 }
 
 // PrintRed 打印红色信息
 func (p *Printer) PrintRed(format string, args ...interface{}) {
-	p.Color.Printf(format, args...)
+	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgRed), true)
 }
 
 // PrintWhite 打印白色信息
 func (p *Printer) PrintWhite(format string, args ...interface{}) {
-	p.Color.Printf(format, args...)
+	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgWhite), true)
 }
 
 func (p *Printer) PrintYellow(format string, args ...interface{}) {
-	p.Color.Printf(format, args...)
+	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgYellow), true)
 }
 
 func (p *Printer) PrintAndReturnError(errMsg string) error {
-	s := p.Color.Sprintf("❌ %s", errMsg)
-	fmt.Println(s)
-	return fmt.Errorf("%s", s)
+	p.print(PrinterTypeError, fmt.Sprintf("错误: %s", errMsg), LocationTypeNone, p.Color, true)
+	return fmt.Errorf("%s", errMsg)
 }
 
 // PrintInfo 打印信息
 func (p *Printer) PrintInfo(format string, args ...interface{}) {
-	message := fmt.Sprintf("🍋 "+format, args...)
-	p.Color.Print(message)
-	fmt.Println()
-	p.sendToChannel(message)
+	p.print(PrinterTypeInfo, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
 }
 
 // PrintInfof 打印信息
 func (p *Printer) PrintInfof(format string, args ...interface{}) {
-	p.Color.Printf("🍋 "+format, args...)
-	fmt.Println()
-	p.sendToChannel(fmt.Sprintf("🍋 "+format, args...))
-}
-
-// PrintInfofAndSend 打印信息并发送
-func (p *Printer) PrintInfofAndSend(logChan chan<- string, format string, args ...interface{}) {
-	message := fmt.Sprintf("🍋 "+format, args...)
-	p.Color.Printf(message)
-	fmt.Println()
-	p.sendToChannel(message)
-	logChan <- message
+	p.print(PrinterTypeInfo, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
 }
 
 // PrintLn 打印换行
 func (p *Printer) PrintLn() {
-	p.Color.Println()
+	fmt.Println()
 }
 
 // Printf 打印格式化信息
 func (p *Printer) Printf(format string, args ...interface{}) {
-	p.Color.Printf(format, args...)
+	p.print("", fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
 }
 
 // PrintError 打印错误信息
@@ -136,9 +172,8 @@ func (p *Printer) PrintErrorf(format string, args ...interface{}) {
 
 // PrintAndReturnErrorf 打印错误信息并返回错误
 func (p *Printer) PrintAndReturnErrorf(format string, args ...interface{}) error {
-	err := fmt.Errorf("%s", fmt.Sprintf(format, args...))
-	p.PrintErrorMessage(err.Error())
-	return err
+	p.print(PrinterTypeError, fmt.Sprintf("错误: %s", fmt.Sprintf(format, args...)), LocationTypeNone, p.Color, true)
+	return fmt.Errorf("%s", fmt.Sprintf(format, args...))
 }
 
 // PrintErrorMessage 打印错误信息
@@ -162,33 +197,41 @@ func (p *Printer) PrintList(list []string, title string) {
 	p.Color.Println()
 	p.Color.Println(title)
 	if len(list) == 0 {
-		color.New(color.FgYellow).Println("  暂无数据")
-		fmt.Println()
+		p.Color.Println("  暂无数据")
 		return
 	}
 	for _, item := range list {
-		color.New(color.FgCyan).Printf("  ▶️  %s\n", item)
+		p.Color.Printf("  ▶️  %s\n", item)
 	}
 	fmt.Println()
 }
 
 // PrintSuccess 打印成功信息
-func (p *Printer) PrintSuccess(format string, args ...interface{}) {
-	p.Color.Printf("✅ "+format, args...)
-	p.Color.Println()
-	p.sendToChannel(fmt.Sprintf("✅ "+format, args...))
+func (p *Printer) PrintSuccess(format string) {
+	p.print(PrinterTypeSuccess, format, LocationTypeNone, p.Color, true)
+}
+
+// PrintSuccessf 打印成功信息
+func (p *Printer) PrintSuccessf(format string, args ...interface{}) {
+	p.print(PrinterTypeSuccess, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
 }
 
 // PrintWarn 打印警告信息
-func (p *Printer) PrintWarn(format string, args ...interface{}) {
-	p.Color.Printf("🚨 "+format, args...)
-	p.Color.Println()
-	p.sendToChannel(fmt.Sprintf("🚨 "+format, args...))
+func (p *Printer) PrintWarn(format string) {
+	p.print(PrinterTypeWarn, format, LocationTypeNone, p.Color, true)
 }
 
 // PrintWarnf 打印警告信息
 func (p *Printer) PrintWarnf(format string, args ...interface{}) {
-	p.Color.Printf("🚨 "+format, args...)
-	p.Color.Println()
-	p.sendToChannel(fmt.Sprintf("🚨 "+format, args...))
+	p.print(PrinterTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
+}
+
+// PrintCommand 打印命令信息
+func (p *Printer) PrintCommand(command string) {
+	p.print(PrinterTypeCommand, command, LocationTypeLong, color.New(color.FgMagenta), true)
+}
+
+// PrintCommandf 打印命令信息
+func (p *Printer) PrintCommandf(format string, args ...interface{}) {
+	p.PrintCommand(fmt.Sprintf(format, args...))
 }
