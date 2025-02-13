@@ -2,52 +2,41 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useToast } from '../composables/useToast'
-import LogViewer from '../components/LogViewer.vue'
-import Modal from '../components/Modal.vue'
+import Alert from '../components/Alert.vue'
 
-const software = ref<any[]>([])
+interface Software {
+    name: string
+    status: string
+}
+
+const softwares = ref<Software[]>([])
 const loading = ref(false)
-const showLogModal = ref(false)
 const currentLogs = ref<string[]>([])
 const installing = ref(false)
 const currentSoftware = ref<string>('')
-const showRawData = ref(false)
-const rawSoftwareData = ref<any>(null)
 const operationFailed = ref(false)
+const error = ref<string | null>(null)
 
 const toast = useToast()
 
-async function handleAction(software: any) {
+async function handleAction(software: Software) {
     currentSoftware.value = software.name
     currentLogs.value = []
-    showLogModal.value = true
     installing.value = true
     operationFailed.value = false
+    error.value = null
 
-    const eventSource = new EventSource(
-        `/web_api/system/software/${software.name}/${software.status === 'not_installed' ? 'install' : 'uninstall'}`
-    )
-
-    eventSource.onmessage = (event) => {
+    try {
+        await axios.post(
+            `/web_api/system/software/${software.name}/${software.status === 'not_installed' ? 'install' : 'uninstall'}`
+        )
         installing.value = false
-        currentLogs.value.push(event.data)
-        currentLogs.value = [...currentLogs.value]
-        if (event.data.includes('完成')) {
-            eventSource.close()
-            loadSoftwareList()
-            toast.success(`${software.status === 'not_installed' ? '安装' : '卸载'}完成`)
-        }
-    }
-
-    eventSource.onerror = () => {
-        eventSource.close()
+        toast.success(`${software.status === 'not_installed' ? '安装任务' : '卸载任务'}已启动`)
+    } catch (err) {
+        console.error('操作失败:', err)
         installing.value = false
-        if (!currentLogs.value[currentLogs.value.length - 1]?.includes('完成')) {
-            currentLogs.value.push('操作异常终止')
-            currentLogs.value = [...currentLogs.value]
-            operationFailed.value = true
-        }
-        loadSoftwareList()
+        operationFailed.value = true
+        error.value = '操作失败'
     }
 }
 
@@ -55,30 +44,53 @@ async function handleStop(name: string) {
     try {
         await axios.post(`/web_api/system/software/${name}/stop`)
         toast.success('服务已停止')
-        loadSoftwareList()
+        error.value = null
+    } catch (error: any) {
+        const errorMessage = error.response?.data?.error || error.message
+        error.value = `停止服务失败: ${errorMessage}`
+    }
+}
+
+async function handleStart(name: string) {
+    try {
+        await axios.post(`/web_api/system/software/${name}/start`)
+        toast.success('服务已启动')
+        error.value = null
+    } catch (err: any) {
+        const errorMessage = err.response?.data?.error || err.message
+        error.value = `启动服务失败: ${errorMessage}`
+    }
+}
+
+async function handleStatus(name: string) {
+    try {
+        const response = await axios.get(`/web_api/system/software/${name}/status`)
+        const status = response.data.status
+        // 更新软件状态
+        const software = softwares.value.find(s => s.name === name)
+        if (software) {
+            software.status = status
+        }
     } catch (error) {
-        toast.error('停止服务失败')
+        console.error('获取软件状态失败:', error)
     }
 }
 
 async function loadSoftwareList() {
+    loading.value = true
     try {
-        loading.value = true
-        const res = await axios.get('/web_api/system/software')
-        software.value = res.data.map((name: string) => ({ name }))
-        rawSoftwareData.value = res.data
+        const response = await axios.get('/web_api/system/software')
+        softwares.value = response.data.map((item: string) => ({
+            name: item,
+            status: 'not_installed'
+        }))
+        error.value = null
 
-        for (const item of software.value) {
-            try {
-                const statusRes = await axios.get(`/web_api/system/software/${item.name}/status`)
-                item.status = statusRes.data.status
-            } catch (error: any) {
-                item.status = 'error'
-                toast.error(`获取 ${item.name} 状态失败: ${error.response?.data?.message || error.message}`)
-            }
+        for (const software of softwares.value) {
+            await handleStatus(software.name)
         }
-    } catch (error) {
-        toast.error('获取软件列表失败')
+    } catch (err) {
+        error.value = '获取软件列表失败'
     } finally {
         loading.value = false
     }
@@ -94,13 +106,10 @@ onMounted(() => {
         <div class="card-body">
             <h2 class="card-title">软件管理</h2>
 
-            <div class="flex justify-end mb-4">
-                <button class="btn btn-primary" @click="showRawData = !showRawData" :disabled="loading">
-                    {{ showRawData ? '显示软件列表' : '显示原始数据' }}
-                </button>
-            </div>
+            <Alert v-if="error" type="error" :message="error" />
 
-            <div v-if="!showRawData" class="overflow-x-auto">
+
+            <div class="overflow-x-auto">
                 <table class="table table-zebra w-full">
                     <thead>
                         <tr>
@@ -110,9 +119,13 @@ onMounted(() => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="item in software" :key="item.name">
+                        <tr v-for="item in softwares" :key="item.name">
                             <td>{{ item.name }}</td>
-                            <td>{{ item.status }}</td>
+                            <td :class="{
+                                'text-info': item.status === 'not_installed',
+                                'text-warning': item.status === 'stopped',
+                                'text-success': item.status === 'running'
+                            }">{{ item.status }}</td>
                             <td>
                                 <div class="flex gap-2">
                                     <button class="btn btn-sm"
@@ -120,6 +133,10 @@ onMounted(() => {
                                         :disabled="installing && currentSoftware === item.name"
                                         @click="handleAction(item)">
                                         {{ item.status === 'not_installed' ? '安装' : '卸载' }}
+                                    </button>
+                                    <button v-if="item.status === 'stopped'" class="btn btn-sm btn-primary"
+                                        @click="handleStart(item.name)">
+                                        启动
                                     </button>
                                     <button v-if="item.status === 'running'" class="btn btn-sm"
                                         @click="handleStop(item.name)">
@@ -131,19 +148,6 @@ onMounted(() => {
                     </tbody>
                 </table>
             </div>
-
-            <pre v-else
-                class="bg-base-200 p-4 rounded-lg overflow-auto font-mono text-left whitespace-pre">{{ JSON.stringify(rawSoftwareData, null, 2) }}</pre>
         </div>
-
-        <!-- 使用 Modal 组件 -->
-        <Modal v-model:show="showLogModal"
-            :title="currentSoftware + (installing ? '操作执行中' : (operationFailed ? '操作失败' : '操作日志'))"
-            :loading="installing" :error="operationFailed">
-            <template #default>
-                <div v-if="installing" class="loading loading-spinner loading-lg"></div>
-                <LogViewer :logs="currentLogs" />
-            </template>
-        </Modal>
     </div>
 </template>

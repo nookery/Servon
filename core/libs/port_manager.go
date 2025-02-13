@@ -2,14 +2,12 @@ package libs
 
 import (
 	"fmt"
-	"os/exec"
-	"strconv"
-	"strings"
+
+	"github.com/shirou/gopsutil/v3/net"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
-type PortManager struct {
-	ports []PortInfo
-}
+type PortManager struct{}
 
 func NewPortManager() *PortManager {
 	return &PortManager{}
@@ -29,81 +27,59 @@ type PortInfo struct {
 
 // GetPortList 获取系统端口占用列表
 func (p *PortManager) GetPortList() ([]PortInfo, error) {
-	// 使用 netstat 命令获取端口信息
-	cmd := exec.Command("netstat", "-tulpn")
-	output, err := cmd.Output()
+	connections, err := net.Connections("all")
 	if err != nil {
-		return nil, fmt.Errorf("执行 netstat 命令失败: %v", err)
+		return nil, fmt.Errorf("获取网络连接信息失败: %v", err)
 	}
 
-	// 解析输出
-	lines := strings.Split(string(output), "\n")
 	var ports []PortInfo
-
-	// 跳过前两行标题
-	for _, line := range lines[2:] {
-		line = strings.TrimSpace(line)
-		if line == "" {
+	for _, conn := range connections {
+		// 只获取 LISTEN 状态的连接
+		if conn.Status != "LISTEN" {
 			continue
 		}
 
-		fields := strings.Fields(line)
-		if len(fields) < 7 {
-			continue
-		}
-
-		// 解析地址和端口
-		localAddr := fields[3]
-		addrParts := strings.Split(localAddr, ":")
-		if len(addrParts) != 2 {
-			continue
-		}
-
-		port, err := strconv.Atoi(addrParts[1])
-		if err != nil {
-			continue
-		}
-
-		// 解析 PID/进程名
-		pidProgram := fields[6]
-		var pid int
-		var process string
-
-		if pidProgram != "-" {
-			parts := strings.Split(pidProgram, "/")
-			if len(parts) == 2 {
-				pid, _ = strconv.Atoi(parts[0])
-				process = parts[1]
-			}
-		}
-
-		// 获取进程的完整命令
+		var processName string
 		var command string
-		if pid > 0 {
-			if cmd, err := exec.Command("ps", "-p", strconv.Itoa(pid), "-o", "command=").Output(); err == nil {
-				command = strings.TrimSpace(string(cmd))
-			}
-		}
-
-		// 获取进程的用户
 		var user string
-		if pid > 0 {
-			if userData, err := exec.Command("ps", "-p", strconv.Itoa(pid), "-o", "user=").Output(); err == nil {
-				user = strings.TrimSpace(string(userData))
+
+		if conn.Pid > 0 {
+			proc, err := process.NewProcess(conn.Pid)
+			if err == nil {
+				if name, err := proc.Name(); err == nil {
+					processName = name
+				}
+				if cmd, err := proc.Cmdline(); err == nil {
+					command = cmd
+				}
+				if username, err := proc.Username(); err == nil {
+					user = username
+				}
 			}
 		}
 
 		ports = append(ports, PortInfo{
-			Port:      port,
-			Protocol:  strings.ToUpper(fields[0]),
-			State:     fields[5],
-			PID:       pid,
-			Process:   process,
+			Port:      int(conn.Laddr.Port),
+			Protocol:  protocolToString(conn.Type),
+			State:     conn.Status,
+			PID:       int(conn.Pid),
+			Process:   processName,
 			Command:   command,
 			User:      user,
-			IPAddress: addrParts[0],
+			IPAddress: conn.Laddr.IP,
 		})
 	}
 
 	return ports, nil
+}
+
+func protocolToString(proto uint32) string {
+	switch proto {
+	case 6:
+		return "TCP"
+	case 17:
+		return "UDP"
+	default:
+		return "UNKNOWN"
+	}
 }

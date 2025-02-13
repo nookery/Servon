@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const repoUrl = "https://github.com/wnlen/clash-for-linux.git"
+
 func Setup(core *core.Core) {
 	plugin := NewClash(core)
 
@@ -32,22 +34,26 @@ func NewClash(core *core.Core) contract.SuperSoft {
 	}
 }
 
-func (c *Clash) Install(logChan chan<- string) error {
+// Install 安装 Clash，并发送日志到日志通道
+func (c *Clash) Install() error {
 	osType := c.GetOSType()
+
 	c.PrintInfof("检测到操作系统: %s", osType)
+	c.PrintInfof("检测到操作系统: %s", osType)
+	c.PrintInfof("开始安装 Clash...")
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		c.PrintInfo("开始安装 Clash...")
-
-		// 清理临时文件夹
+		c.PrintInfof("清理目标文件夹 - %s", c.targetDir)
 		err := os.RemoveAll(c.targetDir)
 		if err != nil {
-			return fmt.Errorf("清理临时文件夹失败: %s", err)
+			return fmt.Errorf("清理目标文件夹失败: %s", err)
 		}
+		c.PrintInfof("目标文件夹清理完成 - %s", c.targetDir)
 
-		// Clone clash-for-linux repository
-		err = c.RunShell("git", "clone", "https://github.com/wnlen/clash-for-linux.git", c.targetDir)
+		// 使用 go-git 克隆仓库
+		c.PrintInfof("克隆 clash-for-linux 仓库 -> %s", repoUrl)
+		err = c.GitManager.GitClone(repoUrl, c.targetDir)
 		if err != nil {
 			return fmt.Errorf("克隆仓库失败: %s", err)
 		}
@@ -55,59 +61,47 @@ func (c *Clash) Install(logChan chan<- string) error {
 		c.PrintSuccess("克隆仓库成功")
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"
-		c.Error(errMsg)
+		c.PrintErrorMessage(errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		c.Error(errMsg)
+		c.PrintErrorMessage(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
-	c.Info("Clash 安装完成")
+	// 确保在返回前发送完成消息
+	c.PrintInfof("ClashPlugin: 安装完成")
 	return nil
 }
 
-func (c *Clash) Uninstall(logChan chan<- string) error {
-	outputChan := make(chan string, 100)
+// Uninstall 卸载 Clash
+func (c *Clash) Uninstall() error {
+	// 停止服务
+	err := c.Stop()
+	if err != nil {
+		return fmt.Errorf("停止服务失败: %s", err)
+	}
 
-	go func() {
-		defer close(outputChan)
+	// 删除服务文件
+	rmServiceCmd := exec.Command("sudo", "rm", "/etc/systemd/system/clash.service")
+	if err := rmServiceCmd.Run(); err != nil {
+		return fmt.Errorf("删除服务文件失败: %s", err)
+	}
 
-		// 停止服务
-		outputChan <- "停止 Clash 服务..."
-		stopCmd := exec.Command("sudo", "systemctl", "stop", "clash")
-		if output, err := stopCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("停止服务失败:\n%s", string(output))
-		}
+	// 删除二进制文件
+	rmBinCmd := exec.Command("sudo", "rm", "/usr/local/bin/clash")
+	if err := rmBinCmd.Run(); err != nil {
+		return fmt.Errorf("删除二进制文件失败: %s", err)
+	}
 
-		// 禁用服务
-		disableCmd := exec.Command("sudo", "systemctl", "disable", "clash")
-		if output, err := disableCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("禁用服务失败:\n%s", string(output))
-		}
+	// 删除配置目录
+	rmConfigCmd := exec.Command("sudo", "rm", "-rf", "/etc/clash")
+	if err := rmConfigCmd.Run(); err != nil {
+		return fmt.Errorf("删除配置目录失败: %s", err)
+	}
 
-		// 删除服务文件
-		rmServiceCmd := exec.Command("sudo", "rm", "/etc/systemd/system/clash.service")
-		if output, err := rmServiceCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("删除服务文件失败:\n%s", string(output))
-		}
-
-		// 删除二进制文件
-		rmBinCmd := exec.Command("sudo", "rm", "/usr/local/bin/clash")
-		if output, err := rmBinCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("删除二进制文件失败:\n%s", string(output))
-		}
-
-		// 删除配置目录
-		rmConfigCmd := exec.Command("sudo", "rm", "-rf", "/etc/clash")
-		if output, err := rmConfigCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("删除配置目录失败:\n%s", string(output))
-		}
-
-		outputChan <- "Clash 卸载完成"
-	}()
-
+	c.PrintSuccess("Clash 卸载完成")
 	return nil
 }
 
@@ -142,7 +136,7 @@ func (c *Clash) GetInfo() contract.SoftwareInfo {
 	return c.info
 }
 
-func (c *Clash) Start(logChan chan<- string) error {
+func (c *Clash) Start() error {
 	// 检查env文件是否配置
 	envFile := c.targetDir + "/.env"
 	if _, err := os.Stat(envFile); os.IsNotExist(err) {

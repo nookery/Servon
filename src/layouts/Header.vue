@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /// <reference lib="es2015" />
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, getCurrentInstance } from 'vue'
 import axios from 'axios'
 import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
 import pkg from '../../package.json'
+import { useLogViewerStore } from '../stores/logViewer'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
@@ -13,6 +14,12 @@ const osInfo = ref('')
 const currentTheme = ref(localStorage.getItem('theme') || 'light')
 const downloadSpeed = ref(0)
 const uploadSpeed = ref(0)
+
+const logViewerStore = useLogViewerStore()
+
+const toggleLogViewer = () => {
+    logViewerStore.toggleVisibility()
+}
 
 // 获取系统资源使用情况
 const fetchSystemResources = async () => {
@@ -131,6 +138,11 @@ onMounted(async () => {
                         </span>
                     </div>
                 </div>
+
+                <!-- Log Viewer Button -->
+                <button @click="toggleLogViewer" class="btn btn-ghost btn-circle">
+                    <i class="ri-file-list-line text-xl"></i>
+                </button>
 
                 <!-- Theme Switcher Component -->
                 <ThemeSwitcher />

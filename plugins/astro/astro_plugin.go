@@ -33,7 +33,7 @@ func (a *AstroPlugin) newAstroCommand() *cobra.Command {
 
 			err := a.deploy(repo, storage, port)
 			if err != nil {
-				a.Error(err.Error())
+				a.PrintErrorf(err.Error())
 			}
 		},
 	})

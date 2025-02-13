@@ -2,12 +2,10 @@ package libs
 
 import (
 	"fmt"
-	"os/exec"
+	"strings"
 )
 
 type AptManager struct{}
-
-var commandManager = DefaultCommandManager
 
 func NewAptManager() *AptManager {
 	return &AptManager{}
@@ -15,32 +13,28 @@ func NewAptManager() *AptManager {
 
 // AptUpdate 更新软件包索引
 func (p *AptManager) AptUpdate() error {
-	cmd := exec.Command("sudo", "apt-get", "update")
-	if err := StreamCommand(cmd); err != nil {
+	PrintInfo("正在更新软件包索引...")
+	if err := RunShell("sudo", "apt-get", "update"); err != nil {
 		return fmt.Errorf("更新索引失败: %v", err)
 	}
+	PrintSuccess("软件包索引更新成功")
 	return nil
 }
 
 // AptInstall 安装指定的软件包
 func (p *AptManager) AptInstall(packages ...string) error {
-	args := append([]string{"apt-get", "install", "-y"}, packages...)
-	cmd := exec.Command("sudo", args...)
-
-	if err := commandManager.StreamCommand(cmd); err != nil {
+	if err := RunShell("sudo", "apt-get", "install", "-y", strings.Join(packages, " ")); err != nil {
 		return fmt.Errorf("安装失败: %v", err)
 	}
 
-	DefaultPrinter.PrintInfo(fmt.Sprintf("安装成功: %v", packages))
+	DefaultPrinter.PrintInfo(fmt.Sprintf("Apt 安装成功: %v", packages))
 
 	return nil
 }
 
 // AptRemove 移除指定的软件包
 func (p *AptManager) AptRemove(packages ...string) error {
-	args := append([]string{"apt-get", "remove", "-y"}, packages...)
-	cmd := exec.Command("sudo", args...)
-	if err := commandManager.StreamCommand(cmd); err != nil {
+	if err := RunShell("sudo", "apt-get", "remove", "-y", strings.Join(packages, " ")); err != nil {
 		return fmt.Errorf("移除失败: %v", err)
 	}
 	return nil
@@ -48,9 +42,7 @@ func (p *AptManager) AptRemove(packages ...string) error {
 
 // AptPurge 完全移除软件包及其配置文件
 func (p *AptManager) AptPurge(packages ...string) error {
-	args := append([]string{"apt-get", "purge", "-y"}, packages...)
-	cmd := exec.Command("sudo", args...)
-	if err := commandManager.StreamCommand(cmd); err != nil {
+	if err := RunShell("sudo", "apt-get", "purge", "-y", strings.Join(packages, " ")); err != nil {
 		return fmt.Errorf("清理失败: %v", err)
 	}
 	return nil
@@ -58,6 +50,5 @@ func (p *AptManager) AptPurge(packages ...string) error {
 
 // AptIsInstalled 检查软件包是否已安装
 func (p *AptManager) AptIsInstalled(packageName string) bool {
-	cmd := exec.Command("dpkg", "-l", packageName)
-	return cmd.Run() == nil
+	return RunShell("dpkg", "-l", packageName) == nil
 }

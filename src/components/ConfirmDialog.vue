@@ -28,8 +28,6 @@
  * ```
  */
 
-import { defineProps, defineEmits } from 'vue'
-
 interface Props {
     /** 控制对话框显示/隐藏 */
     show: boolean

@@ -160,9 +160,10 @@ func (p *SoftManager) newStartCmd() *cobra.Command {
 			// 开始启动
 			DefaultPrinter.PrintInfo(fmt.Sprintf("🚀 %s 启动中 ...", name))
 
-			err := p.StartSoftware(name, nil)
+			err := p.StartSoftware(name)
 			if err != nil {
-				DefaultPrinter.PrintErrorf("❌ %s 启动失败", name)
+				DefaultPrinter.PrintErrorf("%s 启动失败", name)
+				PrintError(err)
 				return
 			}
 
@@ -245,6 +246,7 @@ func (p *SoftManager) newListCmd() *cobra.Command {
 	})
 }
 
+// newInstallCmd 返回 install 子命令
 func (p *SoftManager) newInstallCmd() *cobra.Command {
 	cmd := NewCommand(CommandOptions{
 		Use:     "install",
@@ -252,7 +254,9 @@ func (p *SoftManager) newInstallCmd() *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		Aliases: []string{"i"},
 		Run: func(cmd *cobra.Command, args []string) {
-			p.Install(args[0], nil)
+			if err := p.Install(args[0]); err != nil {
+				DefaultPrinter.PrintErrorf("安装失败: %v", err)
+			}
 		},
 	})
 
@@ -266,13 +270,13 @@ func (p *SoftManager) newUninstallCmd() *cobra.Command {
 		Short:   "卸载指定的软件",
 		Aliases: []string{"u", "remove"},
 		Run: func(cmd *cobra.Command, args []string) {
-			p.UninstallSoftware(args[0], nil)
+			p.UninstallSoftware(args[0])
 		},
 	})
 }
 
 // Install 安装软件, 如果提供了日志通道则输出日志
-func (c *SoftManager) Install(name string, logChan chan<- string) error {
+func (c *SoftManager) Install(name string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		registeredSoftwares := make([]string, 0, len(c.Softwares))
@@ -283,25 +287,26 @@ func (c *SoftManager) Install(name string, logChan chan<- string) error {
 		DefaultPrinter.PrintList(registeredSoftwares, "可用的软件")
 		return DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
-	return software.Install(logChan)
+
+	return software.Install()
 }
 
 // UninstallSoftware 卸载软件
-func (c *SoftManager) UninstallSoftware(name string, logChan chan<- string) error {
+func (c *SoftManager) UninstallSoftware(name string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
-	return software.Uninstall(logChan)
+	return software.Uninstall()
 }
 
 // StartSoftware 启动软件
-func (c *SoftManager) StartSoftware(name string, logChan chan<- string) error {
+func (c *SoftManager) StartSoftware(name string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
-	return software.Start(logChan)
+	return software.Start()
 }
 
 // StopSoftware 停止软件

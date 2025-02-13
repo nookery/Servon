@@ -28,8 +28,7 @@ func NewNodeJSPlugin(core *core.Core) contract.SuperSoft {
 	}
 }
 
-func (n *NodeJSPlugin) Install(logChan chan<- string) error {
-	outputChan := make(chan string, 100)
+func (n *NodeJSPlugin) Install() error {
 	osType := n.GetOSType()
 
 	switch osType {
@@ -49,19 +48,19 @@ func (n *NodeJSPlugin) Install(logChan chan<- string) error {
 
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 NodeJS"
-		n.ErrorChan(outputChan, "%s", errMsg)
+		n.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		n.ErrorChan(outputChan, "%s", errMsg)
+		n.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 验证安装结果
 	if !n.IsInstalled("nodejs") {
 		errMsg := "NodeJS 安装验证失败，未检测到已安装的包"
-		n.ErrorChan(outputChan, "%s", errMsg)
+		n.PrintErrorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
@@ -69,39 +68,31 @@ func (n *NodeJSPlugin) Install(logChan chan<- string) error {
 	return nil
 }
 
-func (n *NodeJSPlugin) Uninstall(logChan chan<- string) error {
-	outputChan := make(chan string, 100)
+// Uninstall 卸载 NodeJS
+func (n *NodeJSPlugin) Uninstall() error {
+	// 卸载软件包及其依赖
+	if err := n.AptRemove("nodejs"); err != nil {
+		return err
+	}
 
-	go func() {
-		defer close(outputChan)
+	// 清理配置文件
+	if err := n.AptPurge("nodejs"); err != nil {
+		return err
+	}
 
-		// 卸载软件包及其依赖
-		if err := n.AptRemove("nodejs"); err != nil {
-			return
-		}
+	// 删除 NodeSource 源文件
+	err := n.RunShell("sudo", "rm", "/etc/apt/sources.list.d/nodesource.list")
+	if err != nil {
+		return fmt.Errorf("删除源文件失败:\n%s", err)
+	}
 
-		// 清理配置文件
-		if err := n.AptPurge("nodejs"); err != nil {
-			return
-		}
+	// 清理自动安装的依赖
+	err = n.RunShell("sudo", "apt-get", "autoremove", "-y")
+	if err != nil {
+		return fmt.Errorf("清理依赖失败:\n%s", err)
+	}
 
-		// 删除 NodeSource 源文件
-		rmSourceCmd := exec.Command("sudo", "rm", "/etc/apt/sources.list.d/nodesource.list")
-		if output, err := rmSourceCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("删除源文件失败:\n%s", string(output))
-			return
-		}
-
-		// 清理自动安装的依赖
-		cleanCmd := exec.Command("sudo", "apt-get", "autoremove", "-y")
-		if output, err := cleanCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("清理依赖失败:\n%s", string(output))
-			return
-		}
-
-		outputChan <- "NodeJS 卸载完成"
-	}()
-
+	n.PrintSuccess("NodeJS 卸载完成")
 	return nil
 }
 
@@ -130,12 +121,12 @@ func (n *NodeJSPlugin) GetInfo() contract.SoftwareInfo {
 	return n.info
 }
 
-func (n *NodeJSPlugin) Start(logChan chan<- string) error {
-	n.Info("NodeJS 是运行时环境，无需启动服务")
+func (n *NodeJSPlugin) Start() error {
+	n.PrintInfof("NodeJS 是运行时环境，无需启动服务")
 	return nil
 }
 
 func (n *NodeJSPlugin) Stop() error {
-	n.Info("NodeJS 是运行时环境，无需停止服务")
+	n.PrintInfof("NodeJS 是运行时环境，无需停止服务")
 	return nil
 }

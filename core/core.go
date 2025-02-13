@@ -2,7 +2,6 @@ package core
 
 import (
 	"servon/core/libs"
-	"servon/core/serve"
 )
 
 // 调用关系 Core -> Core API -> Libs
@@ -14,7 +13,6 @@ const LoggerFolder = "/logs"
 type Core struct {
 	*libs.CommandManager
 	*libs.DataManager
-	*libs.LogManager
 	*libs.Printer
 	*libs.PortManager
 	*libs.BasicInfoManager
@@ -30,7 +28,10 @@ type Core struct {
 	*libs.VersionManager
 	*libs.SoftManager
 	*libs.DeployManager
-	*libs.ShellManager
+	*libs.UserManager
+	*libs.EnvManager
+	*libs.DownloadManager
+	*libs.GitManager
 }
 
 type OSType = libs.OSType
@@ -53,7 +54,6 @@ func New() *Core {
 		CommandManager:         libs.DefaultCommandManager,
 		SoftManager:            libs.DefaultSoftManager,
 		DataManager:            libs.DefaultDataManager,
-		LogManager:             libs.DefaultLogManager,
 		DeployManager:          libs.DefaultDeployManager,
 		Printer:                libs.DefaultPrinter,
 		PortManager:            libs.DefaultPortManager,
@@ -68,12 +68,18 @@ func New() *Core {
 		Dpkg:                   libs.DefaultDpkg,
 		CronManager:            libs.DefaultCronManager,
 		VersionManager:         libs.DefaultVersionManager,
+		UserManager:            libs.DefaultUserManager,
+		EnvManager:             libs.DefaultEnvManager,
+		DownloadManager:        libs.DefaultDownloadManager,
+		GitManager:             libs.DefaultGitManager,
 	}
+
+	core.LoadEnv()
 
 	core.AddCommand(core.GetDeployCommand())
 	core.AddCommand(core.GetVersionCommand())
 	core.AddCommand(core.GetSoftwareCommand())
-	core.AddCommand(serve.NewServeCommand())
+	core.AddCommand(core.GetUserRootCommand())
 
 	return core
 }

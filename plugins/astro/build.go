@@ -15,14 +15,14 @@ func (a *AstroPlugin) build(path string) error {
 		return err
 	}
 
-	a.Info("pnpm install 成功")
+	a.PrintInfof("pnpm install 成功")
 
 	// pnpm build
 	if err := a.RunShell("pnpm", "build"); err != nil {
 		return err
 	}
 
-	a.Info("pnpm build 成功")
+	a.PrintInfof("pnpm build 成功")
 
 	return nil
 }

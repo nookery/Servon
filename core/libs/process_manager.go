@@ -2,14 +2,11 @@ package libs
 
 import (
 	"fmt"
-	"os/exec"
-	"strconv"
-	"strings"
+
+	"github.com/shirou/gopsutil/v3/process"
 )
 
-type ProcessManager struct {
-	processes []Process
-}
+type ProcessManager struct{}
 
 func NewProcessManager() *ProcessManager {
 	return &ProcessManager{}
@@ -25,51 +22,44 @@ type Process struct {
 
 // GetProcessList 返回系统当前运行的进程列表
 func (p *ProcessManager) GetProcessList() ([]Process, error) {
-	// 使用 ps 命令获取进程信息
-	cmd := exec.Command("ps", "aux", "--no-headers")
-	output, err := cmd.Output()
+	processes := []Process{}
+
+	procs, err := process.Processes()
 	if err != nil {
 		return nil, fmt.Errorf("获取进程列表失败: %v", err)
 	}
 
-	processes := []Process{}
-	lines := strings.Split(string(output), "\n")
-
-	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-
-		fields := strings.Fields(line)
-		if len(fields) < 11 {
-			continue
-		}
-
-		pid, err := strconv.Atoi(fields[1])
-		if err != nil {
-			continue
-		}
-
-		cpu, err := strconv.ParseFloat(fields[2], 64)
-		if err != nil {
-			cpu = 0
-		}
-
-		mem, err := strconv.ParseFloat(fields[3], 64)
-		if err != nil {
-			mem = 0
-		}
+	for _, proc := range procs {
+		cpu, _ := proc.CPUPercent()
+		mem, _ := proc.MemoryPercent()
+		username, _ := proc.Username()
+		cmdline, _ := proc.Cmdline()
 
 		process := Process{
-			PID:     pid,
-			User:    fields[0],
+			PID:     int(proc.Pid),
+			User:    username,
 			CPU:     cpu,
-			Memory:  mem,
-			Command: strings.Join(fields[10:], " "),
+			Memory:  float64(mem),
+			Command: cmdline,
 		}
 
 		processes = append(processes, process)
 	}
 
 	return processes, nil
+}
+
+// KillProcess 结束指定PID的进程
+func (p *ProcessManager) KillProcess(pid int) error {
+	proc, err := process.NewProcess(int32(pid))
+	if err != nil {
+		return fmt.Errorf("获取进程失败: %v", err)
+	}
+
+	err = proc.Kill()
+	if err != nil {
+		return fmt.Errorf("结束进程失败: %v", err)
+	}
+
+	return nil
 }

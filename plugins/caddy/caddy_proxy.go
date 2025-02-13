@@ -37,8 +37,8 @@ func (c *Caddy) AddProxy(domain string, target string) error {
 		return fmt.Errorf("写入代理配置失败: %v", err)
 	}
 
-	c.Infoln("添加反向代理配置成功")
-	c.Infoln(fmt.Sprintf("代理配置文件: %s", configPath))
+	c.PrintInfof("添加反向代理配置成功")
+	c.PrintInfof(fmt.Sprintf("代理配置文件: %s", configPath))
 
 	// 重新加载 Caddy 使配置生效
 	if err := c.Reload(); err != nil {
