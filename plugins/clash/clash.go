@@ -51,14 +51,13 @@ func (c *Clash) Install() error {
 		}
 		c.PrintInfof("目标文件夹清理完成 - %s", c.targetDir)
 
-		// Clone clash-for-linux repository
+		// 使用 go-git 克隆仓库
 		c.PrintInfof("克隆 clash-for-linux 仓库 -> %s", repoUrl)
-		err = c.RunShell("git", "clone", repoUrl, c.targetDir)
+		err = c.GitManager.GitClone(repoUrl, c.targetDir)
 		if err != nil {
 			return fmt.Errorf("克隆仓库失败: %s", err)
 		}
 
-		// 确保在 RunShellAndSendLog 完成后发送成功消息
 		c.PrintSuccess("克隆仓库成功")
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"

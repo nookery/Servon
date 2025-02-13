@@ -20,6 +20,7 @@ var DefaultDataManager = NewDataManager()
 var DefaultUserManager = NewUserManager()
 var DefaultDownloadManager = NewDownloadManager()
 var DefaultEnvManager = NewEnvManager()
+var DefaultGitManager = NewGitManager()
 
 // 以下为快捷函数
 
