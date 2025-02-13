@@ -54,11 +54,11 @@ func (p *ServiceManager) Start(serviceName string) error {
 
 	// 尝试使用 systemctl
 	cmd := exec.Command("systemctl", "start", serviceName)
-	err := StreamCommand(cmd)
+	err := RunShell(cmd.String())
 	if err != nil {
 		// 如果 systemctl 失败，尝试使用 service 命令
 		cmd = exec.Command("service", serviceName, "start")
-		err = StreamCommand(cmd)
+		err = RunShell(cmd.String())
 		if err != nil {
 			return fmt.Errorf("启动服务失败: %v", err)
 		}

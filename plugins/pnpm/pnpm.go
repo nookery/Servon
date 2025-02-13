@@ -72,7 +72,7 @@ func (p *Pnpm) Uninstall(logChan chan<- string) error {
 
 func (p *Pnpm) GetStatus() (map[string]string, error) {
 	// 检查 nodejs 是否已安装
-	if err := p.RunShell("node", "--version"); err != nil {
+	if _, err := p.RunShellWithOutput("node", "--version"); err != nil {
 		return map[string]string{
 			"status":  "nodejs_not_installed",
 			"version": "",
@@ -80,7 +80,7 @@ func (p *Pnpm) GetStatus() (map[string]string, error) {
 	}
 
 	// 检查 npm 是否已安装
-	if err := p.RunShell("npm", "--version"); err != nil {
+	if _, err := p.RunShellWithOutput("npm", "--version"); err != nil {
 		return map[string]string{
 			"status":  "npm_not_installed",
 			"version": "",

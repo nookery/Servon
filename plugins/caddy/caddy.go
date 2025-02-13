@@ -23,33 +23,45 @@ func (c *Caddy) Install(logChan chan<- string) error {
 		c.PrintInfo("使用 APT 包管理器安装...")
 		c.PrintInfo("添加 Caddy 官方源...")
 
-		// 下载并安装 GPG 密钥
-		if err := c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg"); err != nil {
-			return fmt.Errorf("%s", err.Error())
+		// 下载 GPG 密钥
+		c.PrintInfo("下载 GPG 密钥...")
+		err := c.RunShell("curl", "-1sLf", "https://dl.cloudsmith.io/public/caddy/stable/gpg.key")
+		if err != nil {
+			c.PrintErrorf("下载 GPG 密钥失败: %v", err)
+			return err
+		}
+
+		// 安装 GPG 密钥
+		c.PrintInfo("安装 GPG 密钥...")
+		err = c.RunShell("sudo", "gpg", "--dearmor", "-o", "/usr/share/keyrings/caddy-stable-archive-keyring.gpg")
+		if err != nil {
+			c.PrintErrorf("安装 GPG 密钥失败: %v", err)
+			return err
 		}
 
 		// 添加 Caddy 软件源
-		err := c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list")
+		c.PrintInfo("添加 Caddy 软件源...")
+		err = c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list")
 		if err != nil {
-			errMsg := fmt.Sprintf("添加源失败:\n%s", err.Error())
-			c.PrintErrorf("%s", errMsg)
-			return fmt.Errorf("%s", errMsg)
+			c.PrintErrorf("添加 Caddy 软件源失败: %v", err)
+			return err
 		}
 
 		// 更新软件包索引
+		c.PrintInfo("更新软件包索引...")
 		if err := c.AptUpdate(); err != nil {
-			errMsg := fmt.Sprintf("更新软件包索引失败: %v", err)
-			c.PrintErrorf("%s", errMsg)
-			return fmt.Errorf("%s", errMsg)
+			c.PrintErrorf("更新软件包索引失败: %v", err)
+			return err
 		}
 
 		// 安装 Caddy
+		c.PrintInfo("安装 Caddy...")
 		if err := c.AptInstall("caddy"); err != nil {
-			errMsg := fmt.Sprintf("安装 Caddy 失败: %v", err)
-			c.PrintErrorf("%s", errMsg)
-			return fmt.Errorf("%s", errMsg)
+			c.PrintErrorf("Caddy 安装失败: %v", err)
+			return err
 		}
 
+		c.PrintSuccess("Caddy 安装完成")
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Caddy"
 		c.PrintErrorf("%s", errMsg)

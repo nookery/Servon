@@ -1,7 +1,10 @@
 package libs
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"os/exec"
 	"runtime"
 	"strings"
 
@@ -12,7 +15,7 @@ type PrinterType string
 type LocationType string
 
 const (
-	PrinterTypeInfo    PrinterType = "🚛"
+	PrinterTypeInfo    PrinterType = "🍋"
 	PrinterTypeError   PrinterType = "❌"
 	PrinterTypeWarn    PrinterType = "🚨"
 	PrinterTypeSuccess PrinterType = "✅"
@@ -104,7 +107,7 @@ func (p *Printer) print(level PrinterType, message string, locationType Location
 	// 生成消息
 	messageWithLevel = fmt.Sprintf("%s %s", level, message)
 
-	color.Print(callerInfo + " " + messageWithLevel)
+	color.Print(callerInfo + messageWithLevel)
 	fmt.Println()
 
 	if sendToChannel {
@@ -141,13 +144,13 @@ func (p *Printer) PrintAndReturnError(errMsg string) error {
 }
 
 // PrintInfo 打印信息
-func (p *Printer) PrintInfo(format string, args ...interface{}) {
-	p.print(PrinterTypeInfo, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
+func (p *Printer) PrintInfo(info string) {
+	p.print(PrinterTypeInfo, info, LocationTypeLong, p.Color, true)
 }
 
 // PrintInfof 打印信息
 func (p *Printer) PrintInfof(format string, args ...interface{}) {
-	p.print(PrinterTypeInfo, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
+	p.PrintInfo(fmt.Sprintf(format, args...))
 }
 
 // PrintLn 打印换行
@@ -185,10 +188,12 @@ func (p *Printer) PrintErrorMessage(message string) {
 		_, file, line, _ = runtime.Caller(2)
 	}
 
+	p.Color.Println()
 	p.Color.Printf("❌ 错误: %s\n", message)
 	p.Color.Printf("📃 位置: %s:%d\n", file, line)
 	p.Color.Println()
-	p.sendToChannel(fmt.Sprintf("❌ 错误: %s\n", message))
+
+	p.sendToChannel(fmt.Sprintf("\n❌ 错误: %s\n", message))
 	p.sendToChannel(fmt.Sprintf("📃 位置: %s:%d\n", file, line))
 }
 
@@ -208,7 +213,7 @@ func (p *Printer) PrintList(list []string, title string) {
 
 // PrintSuccess 打印成功信息
 func (p *Printer) PrintSuccess(format string) {
-	p.print(PrinterTypeSuccess, format, LocationTypeNone, p.Color, true)
+	p.print(PrinterTypeSuccess, format, LocationTypeLong, p.Color, true)
 }
 
 // PrintSuccessf 打印成功信息
@@ -231,7 +236,66 @@ func (p *Printer) PrintCommand(command string) {
 	p.print(PrinterTypeCommand, command, LocationTypeLong, color.New(color.FgMagenta), true)
 }
 
-// PrintCommandf 打印命令信息
-func (p *Printer) PrintCommandf(format string, args ...interface{}) {
-	p.PrintCommand(fmt.Sprintf(format, args...))
+func (p *Printer) RunShell(command string, args ...string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("command is required")
+	}
+
+	PrintCommand(fmt.Sprintf("%s %s", command, joinArgs(args)))
+
+	execCmd := exec.Command(command, args...)
+
+	// 创建管道用于捕获输出
+	stdoutPipe, err := execCmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	stderrPipe, err := execCmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+
+	// 启动命令
+	if err := execCmd.Start(); err != nil {
+		return err
+	}
+
+	// 处理标准输出
+	go processOutput(stdoutPipe, "stdout")
+
+	// 处理标准错误
+	go processOutput(stderrPipe, "stderr")
+
+	// 等待命令完成
+	return execCmd.Wait()
+}
+
+// processOutput 处理输出流
+func processOutput(pipe io.ReadCloser, source string) {
+	scanner := bufio.NewScanner(pipe)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// 打印到控制台并发送到日志通道
+		fmt.Println(line)
+		DefaultPrinter.sendToChannel(line)
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("读取%s错误: %v\n", source, err)
+	}
+}
+
+// RunShellWithOutput 运行命令并返回输出
+func (p *Printer) RunShellWithOutput(command string, args ...string) (string, error) {
+	if len(args) == 0 {
+		return "", fmt.Errorf("command is required")
+	}
+
+	PrintCommand(fmt.Sprintf("%s %s", command, joinArgs(args)))
+
+	execCmd := exec.Command(command, args...)
+
+	output, err := execCmd.CombinedOutput()
+
+	return string(output), err
 }

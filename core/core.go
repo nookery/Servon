@@ -28,7 +28,6 @@ type Core struct {
 	*libs.VersionManager
 	*libs.SoftManager
 	*libs.DeployManager
-	*libs.ShellManager
 	*libs.UserManager
 	*libs.EnvManager
 }
@@ -67,7 +66,6 @@ func New() *Core {
 		Dpkg:                   libs.DefaultDpkg,
 		CronManager:            libs.DefaultCronManager,
 		VersionManager:         libs.DefaultVersionManager,
-		ShellManager:           libs.DefaultShellManager,
 		UserManager:            libs.DefaultUserManager,
 		EnvManager:             libs.DefaultEnvManager,
 	}

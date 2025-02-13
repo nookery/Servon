@@ -17,7 +17,6 @@ var DefaultCronManager = NewCronManager()
 var DefaultSoftManager = newSoftManager()
 var DefaultDeployManager = NewDeployManager()
 var DefaultDataManager = NewDataManager()
-var DefaultShellManager = NewShellManager()
 var DefaultUserManager = NewUserManager()
 var DefaultEnvManager = NewEnvManager()
 
@@ -38,8 +37,5 @@ var PrintError = DefaultPrinter.PrintError
 var PrintErrorf = DefaultPrinter.PrintErrorf
 var PrintList = DefaultPrinter.PrintList
 var PrintCommand = DefaultPrinter.PrintCommand
-var PrintCommandf = DefaultPrinter.PrintCommandf
-
-var RunShell = DefaultShellManager.RunShell
-var RunShellWithOutput = DefaultShellManager.RunShellWithOutput
-var StreamCommand = DefaultCommandManager.StreamCommand
+var RunShell = DefaultPrinter.RunShell
+var RunShellWithOutput = DefaultPrinter.RunShellWithOutput
