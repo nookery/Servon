@@ -29,12 +29,18 @@ func (tm *TaskManager) GetTasks() []Task {
 }
 
 // AddTask 添加任务
-func (tm *TaskManager) AddTask(task Task) {
-	PrintInfof("添加任务: %s", task.ID)
+func (tm *TaskManager) AddTask(task Task, reason string) {
+	PrintInfof("添加任务: %s, 原因: %s", task.ID, reason)
 	if tm.tasks == nil {
 		tm.tasks = make(map[string]Task)
 	}
 	tm.tasks[task.ID] = task
+}
+
+// AddTaskAndExecute 添加任务并执行
+func (tm *TaskManager) AddTaskAndExecute(task Task, reason string) {
+	tm.AddTask(task, reason)
+	tm.ExecuteTask(task.ID)
 }
 
 // RemoveTask 删除任务

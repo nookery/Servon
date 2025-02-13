@@ -137,12 +137,12 @@ func (p *ServePlugin) HandleInstallSoftware(c *gin.Context) {
 	// 发送初始消息
 	c.JSON(http.StatusOK, gin.H{"message": "正在准备安装..."})
 
-	p.AddTask(core.Task{
+	p.AddTaskAndExecute(core.Task{
 		ID: name,
 		Execute: func() error {
 			return p.Install(name)
 		},
-	})
+	}, "ServePlugin.HandleInstallSoftware")
 
 	c.JSON(http.StatusAccepted, gin.H{"message": "安装请求已接受，正在后台处理..."})
 }

@@ -55,6 +55,11 @@ var (
 		Color:  color.New(color.FgMagenta),
 		Symbol: "",
 	}
+	LogTypeRaw LogType = LogType{
+		Name:   "raw",
+		Color:  color.New(color.FgWhite),
+		Symbol: "",
+	}
 )
 
 const (
@@ -159,8 +164,11 @@ func (p *Printer) print(level LogType, message string, locationType LocationType
 	// 生成消息
 	messageWithLevel = fmt.Sprintf("%s %s", level.Symbol, message)
 
-	color.Print(callerInfo + messageWithLevel)
-	fmt.Println()
+	// Generate the complete message with newline
+	completeMessage := callerInfo + messageWithLevel + "\n"
+
+	// Print in a single operation
+	color.Print(completeMessage)
 
 	if sendToChannel {
 		p.sendToChannel(message, level)
@@ -178,7 +186,7 @@ func (p *Printer) PrintGreen(format string, args ...interface{}) {
 
 // PrintRed 打印红色信息
 func (p *Printer) PrintRed(format string, args ...interface{}) {
-	p.print(LogTypeError, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgRed), true)
+	p.print(LogTypeRaw, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgRed), true)
 }
 
 // PrintWhite 打印白色信息
@@ -240,11 +248,12 @@ func (p *Printer) PrintErrorMessage(message string) {
 		_, file, line, _ = runtime.Caller(2)
 	}
 
-	p.PrintRed("❌ 错误: %s\n", message)
-	p.PrintRed("📃 位置: %s:%d\n", file, line)
+	p.PrintLn()
+	p.PrintRed("❌ 错误: %s", message)
+	p.PrintRed("📃 位置: %s:%d", file, line)
 	p.PrintLn()
 
-	p.sendToChannel(fmt.Sprintf("\n错误: %s\n位置: %s:%d\n\n", message, file, line), LogTypeError)
+	p.sendToChannel(fmt.Sprintf("错误: %s\n位置: %s:%d", message, file, line), LogTypeError)
 }
 
 // PrintList 打印列表

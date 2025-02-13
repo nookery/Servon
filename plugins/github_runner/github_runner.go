@@ -55,6 +55,15 @@ func NewGitHubRunner(core *core.Core) contract.SuperSoft {
 
 // Install 安装 GitHub Runner
 func (g *GitHubRunner) Install() error {
+	// 先检查运行状态
+	status, err := g.GetStatus()
+	if err != nil {
+		return fmt.Errorf("检查运行状态失败: %s", err)
+	}
+	if status["status"] == "running" {
+		return fmt.Errorf("GitHub Runner 正在运行中，请先停止后再安装")
+	}
+
 	osType := g.GetOSType()
 	g.PrintInfof("检测到操作系统: %s", osType)
 
@@ -135,25 +144,43 @@ func (g *GitHubRunner) Install() error {
 			return fmt.Errorf("创建目录失败: %s", err)
 		}
 
-		// 下载最新版本的 runner
-		g.PrintInfo("开始下载 GitHub Runner...")
-		downloadUrl := fmt.Sprintf("https://github.com/actions/runner/releases/download/v%s/actions-runner-linux-x64-%s.tar.gz", version, version)
+		// 获取系统架构
+		arch, err := g.RunShellWithOutput("uname", "-m")
+		if err != nil {
+			return fmt.Errorf("获取系统架构失败: %s", err)
+		}
+		arch = strings.TrimSpace(arch)
 
-		err = g.Download(downloadUrl, g.targetDir+"/actions-runner-linux-x64.tar.gz")
+		// 确定下载的架构版本
+		var archInUrl string
+		switch arch {
+		case "x86_64":
+			archInUrl = "x64"
+		case "aarch64":
+			archInUrl = "arm64"
+		default:
+			return fmt.Errorf("不支持的系统架构: %s", arch)
+		}
+
+		g.PrintInfof("检测到系统架构: %s", arch)
+		g.PrintInfo("开始下载 GitHub Runner...")
+		downloadUrl := fmt.Sprintf("https://github.com/actions/runner/releases/download/v%s/actions-runner-linux-%s-%s.tar.gz", version, archInUrl, version)
+
+		err = g.Download(downloadUrl, g.targetDir+"/actions-runner-linux.tar.gz")
 		if err != nil {
 			return fmt.Errorf("下载 runner 失败: %s", err)
 		}
 
 		// 解压
 		g.PrintInfo("开始解压 GitHub Runner...")
-		err = g.RunShell("tar", "xzf", g.targetDir+"/actions-runner-linux-x64.tar.gz", "-C", g.targetDir)
+		err = g.RunShell("tar", "xzf", g.targetDir+"/actions-runner-linux.tar.gz", "-C", g.targetDir)
 		if err != nil {
 			return fmt.Errorf("解压失败: %s", err)
 		}
 
 		// 删除压缩包
 		g.PrintInfo("删除压缩包，因为已解压到 " + g.targetDir)
-		err = os.Remove(g.targetDir + "/actions-runner-linux-x64.tar.gz")
+		err = os.Remove(g.targetDir + "/actions-runner-linux.tar.gz")
 		if err != nil {
 			return fmt.Errorf("删除压缩包失败: %s", err)
 		}
@@ -206,7 +233,6 @@ func (g *GitHubRunner) Uninstall() error {
 func (g *GitHubRunner) GetStatus() (map[string]string, error) {
 	g.PrintInfo("获取 GitHub Runner 状态...")
 	status := "not_installed"
-	version := ""
 
 	// 检查安装目录是否存在
 	if _, err := os.Stat(g.targetDir + "/run.sh"); !os.IsNotExist(err) {
@@ -218,20 +244,13 @@ func (g *GitHubRunner) GetStatus() (map[string]string, error) {
 		if err := cmd.Run(); err == nil {
 			status = "running"
 		}
-
-		// 获取版本
-		verCmd := exec.Command(g.targetDir+"/run.sh", "--version")
-		if verOutput, err := verCmd.CombinedOutput(); err == nil {
-			version = strings.TrimSpace(string(verOutput))
-		}
 	}
 
 	g.PrintInfof("GitHub Runner 状态: %s", status)
-	g.PrintInfof("GitHub Runner 版本: %s", version)
 
 	return map[string]string{
 		"status":  status,
-		"version": version,
+		"version": "unknown",
 	}, nil
 }
 
@@ -242,8 +261,19 @@ func (g *GitHubRunner) GetInfo() contract.SoftwareInfo {
 // Start 启动 GitHub Runner
 func (g *GitHubRunner) Start() error {
 	// 检查是否为 root 用户
-	if os.Geteuid() == 0 {
-		return fmt.Errorf("GitHub Runner 不能以 root 用户运行，请使用普通用户账号")
+	if os.Geteuid() != 0 {
+		err := fmt.Errorf("启动 GitHub Runner 需要 root 权限")
+		g.PrintErrorf("%s", err.Error())
+		return err
+	}
+
+	// 检查运行状态
+	status, err := g.GetStatus()
+	if err != nil {
+		return fmt.Errorf("检查运行状态失败: %s", err)
+	}
+	if status["status"] == "running" {
+		return fmt.Errorf("GitHub Runner 已经在运行中")
 	}
 
 	// 检查是否已配置
@@ -261,15 +291,15 @@ func (g *GitHubRunner) Start() error {
 			return fmt.Errorf("URL 和令牌不能为空")
 		}
 
-		// 配置 runner
-		err = g.RunShell(g.targetDir+"/config.sh", "--url", url, "--token", token, "--unattended")
+		// 以 github-runner 用户身份配置 runner
+		err = g.RunShell("su", "-", "github-runner", "-c", fmt.Sprintf("%s/config.sh --url %s --token %s --unattended", g.targetDir, url, token))
 		if err != nil {
 			return g.PrintAndReturnErrorf("配置 runner 失败: %s", err.Error())
 		}
 	}
 
-	// 启动 runner
-	err := g.RunShell("nohup", g.targetDir+"/run.sh", "&")
+	// 以 github-runner 用户身份启动 runner
+	err = g.RunShell("su", "-", "github-runner", "-c", fmt.Sprintf("cd %s && nohup ./run.sh > runner.log 2>&1 &", g.targetDir))
 	if err != nil {
 		return fmt.Errorf("启动失败: %s", err)
 	}

@@ -131,14 +131,14 @@ onMounted(() => {
                                     <button class="btn btn-sm"
                                         :class="item.status === 'not_installed' ? 'btn-primary' : 'btn-error'"
                                         :disabled="installing && currentSoftware === item.name"
-                                        @click="handleAction(item)">
+                                        @click="handleAction(item)" v-if="item.status !== 'running'">
                                         {{ item.status === 'not_installed' ? '安装' : '卸载' }}
                                     </button>
                                     <button v-if="item.status === 'stopped'" class="btn btn-sm btn-primary"
                                         @click="handleStart(item.name)">
                                         启动
                                     </button>
-                                    <button v-if="item.status === 'running'" class="btn btn-sm"
+                                    <button v-if="item.status === 'running'" class="btn btn-sm btn-secondary"
                                         @click="handleStop(item.name)">
                                         停止
                                     </button>

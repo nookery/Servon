@@ -218,16 +218,16 @@ func (p *SoftManager) newStopCmd() *cobra.Command {
 			}
 
 			// 开始停止
-			DefaultPrinter.PrintInfo(fmt.Sprintf("🛑 %s 停止中 ...", name))
+			PrintInfof("%s 停止中 ...", name)
 
 			err := p.StopSoftware(name)
 			if err != nil {
-				DefaultPrinter.PrintErrorf("❌ %s 停止失败", name)
-				DefaultPrinter.PrintError(err)
+				PrintErrorf("%s 停止失败", name)
+				PrintError(err)
 				return
 			}
 
-			DefaultPrinter.PrintInfo(fmt.Sprintf("✅ %s 已停止！", name))
+			PrintSuccessf("%s 已停止！", name)
 		},
 	})
 }
