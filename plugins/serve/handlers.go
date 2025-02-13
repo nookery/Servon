@@ -1,7 +1,10 @@
 package serve
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"servon/core"
 	"sort"
 	"strconv"
@@ -49,6 +52,23 @@ func (p *ServePlugin) HandleProcessList(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, processes)
+}
+
+// HandleKillProcess 处理结束进程的请求
+func (p *ServePlugin) HandleKillProcess(c *gin.Context) {
+	pid, err := strconv.Atoi(c.Param("pid"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的PID"})
+		return
+	}
+
+	err = p.KillProcess(pid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }
 
 // HandleFileList 处理获取文件列表的请求
@@ -113,58 +133,21 @@ func (p *ServePlugin) HandleGetSoftwareList(c *gin.Context) {
 // HandleInstallSoftware 处理安装软件的请求
 func (p *ServePlugin) HandleInstallSoftware(c *gin.Context) {
 	name := c.Param("name")
-	msgChan := make(chan string, 100)
-	doneChan := make(chan error, 1)
-
-	// 设置 SSE 头信息
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("X-Accel-Buffering", "no")
 
 	// 发送初始消息
-	c.SSEvent("message", map[string]string{
-		"type":    "log",
-		"message": "正在准备安装...",
-	})
-	c.Writer.Flush()
+	c.JSON(http.StatusOK, gin.H{"message": "正在准备安装..."})
 
 	// 在新的 goroutine 中执行安装
 	go func() {
 		err := p.Install(name)
-		doneChan <- err
-		close(msgChan)
-	}()
-
-	// 实时发送消息到客户端
-	for {
-		select {
-		case msg, ok := <-msgChan:
-			if !ok {
-				// msgChan 已关闭，等待 doneChan
-				continue
-			}
-			c.SSEvent("message", map[string]string{
-				"type":    "log",
-				"message": msg,
-			})
-			// 立即刷新缓冲区，确保消息实时发送
-			c.Writer.Flush()
-		case err := <-doneChan:
-			if err != nil {
-				c.SSEvent("message", map[string]string{
-					"type":    "error",
-					"message": err.Error(),
-				})
-			} else {
-				c.SSEvent("message", map[string]string{
-					"type": "complete",
-				})
-			}
-			c.Writer.Flush()
+		if err != nil {
+			p.PrintErrorMessage(fmt.Sprintf("安装软件 %s 失败: %s", name, err.Error()))
 			return
 		}
-	}
+		p.PrintInfo(fmt.Sprintf("软件 %s 安装完成", name))
+	}()
+
+	c.JSON(http.StatusAccepted, gin.H{"message": "安装请求已接受，正在后台处理..."})
 }
 
 // HandleUninstallSoftware 处理卸载软件的请求
@@ -277,4 +260,178 @@ func (p *ServePlugin) HandleToggleCronTask(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, task)
+}
+
+// HandleFileDownload handles file download requests
+func (p *ServePlugin) HandleFileDownload(c *gin.Context) {
+	path := c.Query("path")
+	if path == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "path parameter is required"})
+		return
+	}
+
+	// Verify the file exists and is not a directory
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
+		return
+	}
+	if fileInfo.IsDir() {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot download directories"})
+		return
+	}
+
+	// Serve the file
+	c.File(path)
+}
+
+// HandleFileContent 处理获取文件内容的请求
+func (p *ServePlugin) HandleFileContent(c *gin.Context) {
+	path := c.Query("path")
+	if path == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "需要提供文件路径"})
+		return
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "读取文件失败: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"content": string(content)})
+}
+
+// HandleSaveFile 处理保存文件内容的请求
+func (p *ServePlugin) HandleSaveFile(c *gin.Context) {
+	var req struct {
+		Path    string `json:"path"`
+		Content string `json:"content"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
+		return
+	}
+
+	err := os.WriteFile(req.Path, []byte(req.Content), 0644)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存文件失败: " + err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+// HandleDeleteFile 处理删除文件的请求
+func (p *ServePlugin) HandleDeleteFile(c *gin.Context) {
+	path := c.Query("path")
+	if path == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "需要提供文件路径"})
+		return
+	}
+
+	err := os.Remove(path)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "删除文件失败: " + err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+// HandleCreateFile 处理创建新文件的请求
+func (p *ServePlugin) HandleCreateFile(c *gin.Context) {
+	var req struct {
+		Path string `json:"path"`
+		Type string `json:"type"` // "file" 或 "directory"
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据: " + err.Error()})
+		return
+	}
+
+	// 检查路径是否已存在
+	if _, err := os.Stat(req.Path); err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "文件或目录已存在: " + req.Path})
+		return
+	}
+
+	// 检查父目录是否存在且可写
+	parentDir := filepath.Dir(req.Path)
+	if _, err := os.Stat(parentDir); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "父目录不存在: " + parentDir})
+		return
+	}
+
+	if req.Type == "directory" {
+		err := os.MkdirAll(req.Path, 0755)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": fmt.Sprintf("创建目录失败: %v (路径: %s)", err, req.Path),
+			})
+			return
+		}
+	} else {
+		// 创建空文件
+		f, err := os.Create(req.Path)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": fmt.Sprintf("创建文件失败: %v (路径: %s)", err, req.Path),
+			})
+			return
+		}
+		f.Close()
+	}
+
+	c.Status(http.StatusOK)
+}
+
+// HandleListUsers 处理获取用户列表的请求
+func (p *ServePlugin) HandleListUsers(c *gin.Context) {
+	users, err := p.GetUserList()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, users)
+}
+
+// HandleCreateUser 处理创建用户的请求
+func (p *ServePlugin) HandleCreateUser(c *gin.Context) {
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
+		return
+	}
+
+	err := p.CreateUser(req.Username, req.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
+// HandleDeleteUser 处理删除用户的请求
+func (p *ServePlugin) HandleDeleteUser(c *gin.Context) {
+	username := c.Param("username")
+	err := p.DeleteUser(username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
+// HandleStartSoftware 处理启动软件的请求
+func (p *ServePlugin) HandleStartSoftware(c *gin.Context) {
+	name := c.Param("name")
+	if err := p.StartSoftware(name); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
 }

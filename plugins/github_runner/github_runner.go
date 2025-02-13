@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"servon/core"
 	"servon/core/contract"
 	"strings"
+	"time"
 )
 
 // ProgressReader 用于跟踪读取进度
@@ -51,29 +53,72 @@ func NewGitHubRunner(core *core.Core) contract.SuperSoft {
 	}
 }
 
+// Install 安装 GitHub Runner
 func (g *GitHubRunner) Install() error {
 	osType := g.GetOSType()
 	g.PrintInfof("检测到操作系统: %s", osType)
+
+	// 创建 runner 专用用户
+	g.PrintInfo("创建 GitHub Runner 专用用户...")
+	runnerUser := "github-runner"
+	runnerPassword := "runner" + fmt.Sprint(time.Now().Unix()) // 生成随机密码
+
+	exists, err := g.UserExists(runnerUser)
+	if err != nil {
+		return fmt.Errorf("检查用户失败: %s", err)
+	}
+
+	if !exists {
+		if err := g.CreateUser(runnerUser, runnerPassword); err != nil {
+			return fmt.Errorf("创建用户失败: %s", err)
+		}
+		g.PrintSuccessf("已创建专用用户: %s", runnerUser)
+	} else {
+		g.PrintInfo("专用用户已存在，跳过创建")
+	}
 
 	switch osType {
 	case core.Ubuntu, core.Debian, core.CentOS, core.RedHat:
 		g.PrintInfo("开始安装 GitHub Runner...")
 
 		// 获取最新版本号
-		output, err := exec.Command("curl", "-s", "https://api.github.com/repos/actions/runner/releases/latest").Output()
+		resp, err := http.Get("https://api.github.com/repos/actions/runner/releases/latest")
 		if err != nil {
 			return fmt.Errorf("获取最新版本失败: %s", err)
+		}
+		defer resp.Body.Close()
+
+		// 检查状态码
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			if resp.StatusCode == http.StatusForbidden && strings.Contains(string(body), "API rate limit exceeded") {
+				return fmt.Errorf("GitHub API 调用次数超限，请稍后再试或使用 API 令牌。状态码: %d", resp.StatusCode)
+			}
+			return fmt.Errorf("获取版本信息失败，GitHub API 返回状态码: %d，响应内容: %s", resp.StatusCode, string(body))
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("读取响应失败: %s", err)
 		}
 
 		// 解析版本号
 		var release struct {
 			TagName string `json:"tag_name"`
 		}
-		if err := json.Unmarshal(output, &release); err != nil {
+		if err := json.Unmarshal(body, &release); err != nil {
 			return fmt.Errorf("解析版本信息失败: %s", err)
 		}
 
+		if release.TagName == "" {
+			return fmt.Errorf("获取版本号失败：API 返回的版本号为空")
+		}
+
 		version := strings.TrimPrefix(release.TagName, "v")
+		if version == "" {
+			return fmt.Errorf("获取版本号失败：无效的版本号格式")
+		}
+
 		g.PrintInfof("最新版本: %s", version)
 
 		// 清理本地文件夹
@@ -120,7 +165,14 @@ func (g *GitHubRunner) Install() error {
 			return fmt.Errorf("安装依赖失败: %s", err)
 		}
 
+		// 修改目录所有权
+		g.PrintInfo("修改目录所有权...")
+		if err := g.RunShell("chown", "-R", runnerUser+":"+runnerUser, g.targetDir); err != nil {
+			return fmt.Errorf("修改目录所有权失败: %s", err)
+		}
+
 		g.PrintSuccess("GitHub Runner 安装完成")
+		g.PrintInfof("请使用 %s 用户运行 GitHub Runner", runnerUser)
 		return nil
 
 	default:
@@ -187,7 +239,13 @@ func (g *GitHubRunner) GetInfo() contract.SoftwareInfo {
 	return g.info
 }
 
+// Start 启动 GitHub Runner
 func (g *GitHubRunner) Start() error {
+	// 检查是否为 root 用户
+	if os.Geteuid() == 0 {
+		return fmt.Errorf("GitHub Runner 不能以 root 用户运行，请使用普通用户账号")
+	}
+
 	// 检查是否已配置
 	if _, err := os.Stat(g.targetDir + "/.runner"); os.IsNotExist(err) {
 		g.PrintInfo("Runner 未配置，请输入以下信息：")
@@ -233,25 +291,4 @@ func (g *GitHubRunner) Reload() error {
 		return err
 	}
 	return g.Start()
-}
-
-// formatSize 将字节大小转换为人类可读的格式
-func formatSize(bytes int64) string {
-	const (
-		B  = 1
-		KB = 1024 * B
-		MB = 1024 * KB
-		GB = 1024 * MB
-	)
-
-	switch {
-	case bytes >= GB:
-		return fmt.Sprintf("%.2f GB", float64(bytes)/float64(GB))
-	case bytes >= MB:
-		return fmt.Sprintf("%.2f MB", float64(bytes)/float64(MB))
-	case bytes >= KB:
-		return fmt.Sprintf("%.2f KB", float64(bytes)/float64(KB))
-	default:
-		return fmt.Sprintf("%d B", bytes)
-	}
 }

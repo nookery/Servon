@@ -58,8 +58,7 @@ func (n *Npm) Install() error {
 
 // Uninstall 卸载 npm
 func (n *Npm) Uninstall() error {
-	n.PrintInfo("npm 是 NodeJS 的一部分，无法单独卸载")
-	return nil
+	return fmt.Errorf("npm 是 NodeJS 的一部分，无法单独卸载")
 }
 
 func (n *Npm) GetStatus() (map[string]string, error) {
@@ -94,11 +93,9 @@ func (n *Npm) GetInfo() contract.SoftwareInfo {
 }
 
 func (n *Npm) Start() error {
-	n.PrintInfo("npm 是包管理工具，无需启动服务")
-	return nil
+	return fmt.Errorf("npm 是包管理工具，无需启动服务")
 }
 
 func (n *Npm) Stop() error {
-	n.PrintInfo("npm 是包管理工具，无需停止服务")
-	return nil
+	return fmt.Errorf("npm 是包管理工具，无需停止服务")
 }

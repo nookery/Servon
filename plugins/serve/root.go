@@ -105,41 +105,6 @@ func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
 	router.Run(fmt.Sprintf("%s:%d", host, port))
 }
 
-// setupAPIRoutes 设置所有API路由
-func (p *ServePlugin) setupAPIRoutes(router *gin.Engine) {
-	api := router.Group("/web_api")
-	{
-		api.GET("/system/resources", p.HandleSystemResources)
-		api.GET("/system/network", p.HandleNetworkResources)
-		api.GET("/system/user", p.HandleCurrentUser)
-		api.GET("/system/os", p.HandleOSInfo)
-		api.GET("/system/basic", p.HandleBasicInfo)
-		api.GET("/system/software", p.HandleGetSoftwareList)
-		api.GET("/system/software/:name/install", p.HandleInstallSoftware)
-		api.GET("/system/software/:name/uninstall", p.HandleUninstallSoftware)
-		api.POST("/system/software/:name/stop", p.HandleStopSoftware)
-		api.GET("/system/software/:name/status", p.HandleGetSoftwareStatus)
-		api.GET("/system/processes", p.HandleProcessList)
-		api.GET("/system/files", p.HandleFileList)
-		api.GET("/system/ports", p.HandlePortList)
-
-		// Add new streaming logs endpoint
-		api.GET("/logs/:channel", p.HandleStreamLogs)
-
-		// 定时任务相关API
-		api.GET("/cron/tasks", p.HandleListCronTasks)              // 获取所有定时任务
-		api.POST("/cron/tasks", p.HandleCreateCronTask)            // 创建定时任务
-		api.PUT("/cron/tasks/:id", p.HandleUpdateCronTask)         // 更新定时任务
-		api.DELETE("/cron/tasks/:id", p.HandleDeleteCronTask)      // 删除定时任务
-		api.POST("/cron/tasks/:id/toggle", p.HandleToggleCronTask) // 启用/禁用定时任务
-	}
-
-	printKeyValue("API:", color.HiGreenString("http://localhost:%d/web_api", port)) // 仅当监听非本地地址时显示网络访问信息
-	if host != "127.0.0.1" && host != "localhost" {
-		printKeyValue("Network:", color.HiGreenString("http://%s:%d", host, port))
-	}
-}
-
 // HandleStreamLogs streams logs from a specified channel using Server-Sent Events (SSE)
 func (p *ServePlugin) HandleStreamLogs(c *gin.Context) {
 	// Set headers for SSE

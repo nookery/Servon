@@ -240,10 +240,9 @@ func (p *Printer) PrintErrorMessage(message string) {
 		_, file, line, _ = runtime.Caller(2)
 	}
 
-	p.Color.Println()
-	p.Color.Printf("❌ 错误: %s\n", message)
-	p.Color.Printf("📃 位置: %s:%d\n", file, line)
-	p.Color.Println()
+	p.PrintRed("❌ 错误: %s\n", message)
+	p.PrintRed("📃 位置: %s:%d\n", file, line)
+	p.PrintLn()
 
 	p.sendToChannel(fmt.Sprintf("\n错误: %s\n位置: %s:%d\n\n", message, file, line), LogTypeError)
 }

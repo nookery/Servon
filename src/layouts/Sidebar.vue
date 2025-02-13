@@ -32,6 +32,11 @@ const menuOptions = [
         icon: 'ri-swap-line'
     },
     {
+        label: '用户管理',
+        key: 'users',
+        icon: 'ri-user-settings-line'
+    },
+    {
         label: '定时任务',
         key: 'cron',
         icon: 'ri-time-line'

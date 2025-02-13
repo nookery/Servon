@@ -5,6 +5,7 @@ import Software from '../views/Software.vue'
 import Processes from '../views/Processes.vue'
 import Files from '../views/Files.vue'
 import Ports from '../views/Ports.vue'
+import Users from '../views/Users.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -32,6 +33,10 @@ const router = createRouter({
         {
             path: '/ports',
             component: Ports
+        },
+        {
+            path: '/users',
+            component: Users
         },
         {
             path: '/cron',

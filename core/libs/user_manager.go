@@ -1,9 +1,12 @@
 package libs
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -14,30 +17,118 @@ func NewUserManager() *UserManager {
 	return &UserManager{}
 }
 
+// User 表示系统用户的结构体
+type User struct {
+	Username   string    `json:"username"`
+	Groups     []string  `json:"groups"`
+	Shell      string    `json:"shell"`
+	HomeDir    string    `json:"home_dir"`
+	CreateTime time.Time `json:"create_time"`
+	LastLogin  time.Time `json:"last_login"`
+	Sudo       bool      `json:"sudo"`
+}
+
 // GetUserList 获取系统用户列表
-func (u *UserManager) GetUserList() ([]string, error) {
-	osType := GetOSType()
-	if osType != Ubuntu {
-		return nil, fmt.Errorf("不支持的操作系统类型: %s", osType)
-	}
+func (u *UserManager) GetUserList() ([]User, error) {
+	PrintInfo("获取用户列表")
 
-	output, err := RunShellWithOutput("cat", "/etc/passwd")
+	// 使用 os/user 包读取 /etc/passwd
+	file, err := os.Open("/etc/passwd")
 	if err != nil {
-		return nil, fmt.Errorf("获取用户列表失败: %v", err)
+		PrintError(err)
+		return nil, fmt.Errorf("打开 /etc/passwd 失败: %v", err)
 	}
+	defer file.Close()
 
-	var users []string
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
+	var users []User
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
 		if line == "" {
 			continue
 		}
 		fields := strings.Split(line, ":")
-		if len(fields) >= 1 {
-			users = append(users, fields[0])
+		if len(fields) >= 7 {
+			// 获取用户信息
+			username := fields[0]
+			homeDir := fields[5]
+			shell := fields[6]
+
+			// 获取用户组信息
+			groups, _ := u.getUserGroups(username)
+
+			// 获取用户创建时间（通过 home 目录创建时间估算）
+			createTime := u.getUserCreateTime(homeDir)
+
+			// 获取最后登录时间
+			lastLogin := u.getLastLogin(username)
+
+			// 检查是否有 sudo 权限
+			sudo := u.hasSudoPermission(username)
+
+			users = append(users, User{
+				Username:   username,
+				Groups:     groups,
+				Shell:      shell,
+				HomeDir:    homeDir,
+				CreateTime: createTime,
+				LastLogin:  lastLogin,
+				Sudo:       sudo,
+			})
 		}
 	}
+
+	if err := scanner.Err(); err != nil {
+		PrintError(err)
+		return nil, fmt.Errorf("读取用户列表失败: %v", err)
+	}
+
+	PrintSuccessf("获取用户列表成功")
 	return users, nil
+}
+
+// 获取用户组信息
+func (u *UserManager) getUserGroups(username string) ([]string, error) {
+	output, err := RunShellWithOutput("groups", username)
+	if err != nil {
+		return nil, err
+	}
+	// 解析输出格式 "username : group1 group2 group3"
+	parts := strings.Split(output, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("unexpected groups output format")
+	}
+	groups := strings.Fields(parts[1])
+	return groups, nil
+}
+
+// 获取用户创建时间
+func (u *UserManager) getUserCreateTime(homeDir string) time.Time {
+	info, err := os.Stat(homeDir)
+	if err != nil {
+		return time.Time{} // 返回零值表示未知
+	}
+	return info.ModTime()
+}
+
+// 获取最后登录时间
+func (u *UserManager) getLastLogin(username string) time.Time {
+	err := RunShell("last", "-1", username)
+	if err != nil {
+		return time.Time{} // 返回零值表示未知
+	}
+	// TODO: 解析 last 命令输出获取最后登录时间
+	return time.Now() // 临时返回当前时间
+}
+
+// 检查是否有 sudo 权限
+func (u *UserManager) hasSudoPermission(username string) bool {
+	// 检查用户是否在 sudo 组中
+	output, err := RunShellWithOutput("groups", username)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(output, "sudo") || strings.Contains(output, "wheel")
 }
 
 // CreateUser 创建新用户
@@ -125,9 +216,16 @@ func (u *UserManager) GetUserListCommand() *cobra.Command {
 			users, err := u.GetUserList()
 			if err != nil {
 				DefaultPrinter.PrintError(err)
-
+				return
 			}
-			DefaultPrinter.PrintList(users, "用户列表")
+
+			// Convert []User to []string
+			userStrings := make([]string, len(users))
+			for i, user := range users {
+				userStrings[i] = fmt.Sprintf("%s (%s)", user.Username, strings.Join(user.Groups, ","))
+			}
+
+			DefaultPrinter.PrintList(userStrings, "用户列表")
 		},
 	})
 }

@@ -48,3 +48,18 @@ func (p *ProcessManager) GetProcessList() ([]Process, error) {
 
 	return processes, nil
 }
+
+// KillProcess 结束指定PID的进程
+func (p *ProcessManager) KillProcess(pid int) error {
+	proc, err := process.NewProcess(int32(pid))
+	if err != nil {
+		return fmt.Errorf("获取进程失败: %v", err)
+	}
+
+	err = proc.Kill()
+	if err != nil {
+		return fmt.Errorf("结束进程失败: %v", err)
+	}
+
+	return nil
+}
