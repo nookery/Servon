@@ -3,12 +3,31 @@ package github_runner
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"servon/core"
 	"servon/core/contract"
 	"strings"
 )
+
+// ProgressReader 用于跟踪读取进度
+type ProgressReader struct {
+	io.Reader
+	Total      int64
+	Current    int64
+	OnProgress func(current, total int64)
+}
+
+// Read 实现了 io.Reader 接口
+func (pr *ProgressReader) Read(p []byte) (int, error) {
+	n, err := pr.Reader.Read(p)
+	pr.Current += int64(n)
+	if pr.OnProgress != nil {
+		pr.OnProgress(pr.Current, pr.Total)
+	}
+	return n, err
+}
 
 func Setup(core *core.Core) {
 	plugin := NewGitHubRunner(core)
@@ -32,7 +51,7 @@ func NewGitHubRunner(core *core.Core) contract.SuperSoft {
 	}
 }
 
-func (g *GitHubRunner) Install(logChan chan<- string) error {
+func (g *GitHubRunner) Install() error {
 	osType := g.GetOSType()
 	g.PrintInfof("检测到操作系统: %s", osType)
 
@@ -74,8 +93,8 @@ func (g *GitHubRunner) Install(logChan chan<- string) error {
 		// 下载最新版本的 runner
 		g.PrintInfo("开始下载 GitHub Runner...")
 		downloadUrl := fmt.Sprintf("https://github.com/actions/runner/releases/download/v%s/actions-runner-linux-x64-%s.tar.gz", version, version)
-		err = g.RunShell("curl", "-o", g.targetDir+"/actions-runner-linux-x64.tar.gz",
-			"-L", downloadUrl)
+
+		err = g.Download(downloadUrl, g.targetDir+"/actions-runner-linux-x64.tar.gz")
 		if err != nil {
 			return fmt.Errorf("下载 runner 失败: %s", err)
 		}
@@ -85,6 +104,13 @@ func (g *GitHubRunner) Install(logChan chan<- string) error {
 		err = g.RunShell("tar", "xzf", g.targetDir+"/actions-runner-linux-x64.tar.gz", "-C", g.targetDir)
 		if err != nil {
 			return fmt.Errorf("解压失败: %s", err)
+		}
+
+		// 删除压缩包
+		g.PrintInfo("删除压缩包，因为已解压到 " + g.targetDir)
+		err = os.Remove(g.targetDir + "/actions-runner-linux-x64.tar.gz")
+		if err != nil {
+			return fmt.Errorf("删除压缩包失败: %s", err)
 		}
 
 		// 安装依赖
@@ -104,38 +130,35 @@ func (g *GitHubRunner) Install(logChan chan<- string) error {
 	}
 }
 
-func (g *GitHubRunner) Uninstall(logChan chan<- string) error {
-	outputChan := make(chan string, 100)
-
-	go func() {
-		defer close(outputChan)
-
-		// 运行卸载脚本
-		outputChan <- "正在卸载 GitHub Runner..."
-		if _, err := os.Stat(g.targetDir + "/config.sh"); !os.IsNotExist(err) {
-			removeCmd := exec.Command(g.targetDir+"/config.sh", "remove", "--unattended")
-			if output, err := removeCmd.CombinedOutput(); err != nil {
-				outputChan <- fmt.Sprintf("卸载失败:\n%s", string(output))
-			}
+// Uninstall 卸载 GitHub Runner
+func (g *GitHubRunner) Uninstall() error {
+	// 运行卸载脚本
+	g.PrintInfo("正在卸载 GitHub Runner...")
+	if _, err := os.Stat(g.targetDir + "/config.sh"); !os.IsNotExist(err) {
+		err = g.RunShell(g.targetDir+"/config.sh", "remove", "--unattended")
+		if err != nil {
+			return fmt.Errorf("卸载失败:\n%s", err.Error())
 		}
+	}
 
-		// 删除安装目录
-		if err := os.RemoveAll(g.targetDir); err != nil {
-			outputChan <- fmt.Sprintf("删除安装目录失败: %s", err)
-		}
+	// 删除安装目录
+	if err := os.RemoveAll(g.targetDir); err != nil {
+		return fmt.Errorf("删除安装目录失败: %s", err)
+	}
 
-		outputChan <- "GitHub Runner 卸载完成"
-	}()
+	g.PrintSuccess("GitHub Runner 卸载完成")
 
 	return nil
 }
 
 func (g *GitHubRunner) GetStatus() (map[string]string, error) {
+	g.PrintInfo("获取 GitHub Runner 状态...")
 	status := "not_installed"
 	version := ""
 
 	// 检查安装目录是否存在
 	if _, err := os.Stat(g.targetDir + "/run.sh"); !os.IsNotExist(err) {
+		g.PrintInfo("GitHub Runner 目录存在")
 		status = "stopped"
 
 		// 检查进程是否运行
@@ -151,6 +174,9 @@ func (g *GitHubRunner) GetStatus() (map[string]string, error) {
 		}
 	}
 
+	g.PrintInfof("GitHub Runner 状态: %s", status)
+	g.PrintInfof("GitHub Runner 版本: %s", version)
+
 	return map[string]string{
 		"status":  status,
 		"version": version,
@@ -161,7 +187,7 @@ func (g *GitHubRunner) GetInfo() contract.SoftwareInfo {
 	return g.info
 }
 
-func (g *GitHubRunner) Start(logChan chan<- string) error {
+func (g *GitHubRunner) Start() error {
 	// 检查是否已配置
 	if _, err := os.Stat(g.targetDir + "/.runner"); os.IsNotExist(err) {
 		g.PrintInfo("Runner 未配置，请输入以下信息：")
@@ -206,5 +232,26 @@ func (g *GitHubRunner) Reload() error {
 	if err := g.Stop(); err != nil {
 		return err
 	}
-	return g.Start(nil)
+	return g.Start()
+}
+
+// formatSize 将字节大小转换为人类可读的格式
+func formatSize(bytes int64) string {
+	const (
+		B  = 1
+		KB = 1024 * B
+		MB = 1024 * KB
+		GB = 1024 * MB
+	)
+
+	switch {
+	case bytes >= GB:
+		return fmt.Sprintf("%.2f GB", float64(bytes)/float64(GB))
+	case bytes >= MB:
+		return fmt.Sprintf("%.2f MB", float64(bytes)/float64(MB))
+	case bytes >= KB:
+		return fmt.Sprintf("%.2f KB", float64(bytes)/float64(KB))
+	default:
+		return fmt.Sprintf("%d B", bytes)
+	}
 }

@@ -29,7 +29,7 @@ func NewPnpm(core *core.Core) contract.SuperSoft {
 }
 
 // 从原来的 pnpm.go 复制所有方法实现...
-func (p *Pnpm) Install(logChan chan<- string) error {
+func (p *Pnpm) Install() error {
 	p.PrintInfo("正在安装 pnpm...")
 
 	// 检查 nodejs 是否已安装
@@ -57,7 +57,8 @@ func (p *Pnpm) Install(logChan chan<- string) error {
 	return nil
 }
 
-func (p *Pnpm) Uninstall(logChan chan<- string) error {
+// Uninstall 卸载 pnpm
+func (p *Pnpm) Uninstall() error {
 	p.PrintInfo("正在卸载 pnpm...")
 
 	if err := p.RunShell("npm", "uninstall", "-g", "pnpm"); err != nil {
@@ -107,7 +108,7 @@ func (p *Pnpm) GetInfo() contract.SoftwareInfo {
 	return p.info
 }
 
-func (p *Pnpm) Start(logChan chan<- string) error {
+func (p *Pnpm) Start() error {
 	p.PrintInfo("pnpm 是包管理工具，无需启动服务")
 	return nil
 }

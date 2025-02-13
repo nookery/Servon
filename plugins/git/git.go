@@ -29,7 +29,7 @@ func NewGit(core *core.Core) contract.SuperSoft {
 }
 
 // Install 安装 Git
-func (g *Git) Install(logChan chan<- string) error {
+func (g *Git) Install() error {
 	g.PrintInfo("正在安装 Git...")
 
 	// 检查操作系统类型
@@ -70,7 +70,8 @@ func (g *Git) Install(logChan chan<- string) error {
 	return nil
 }
 
-func (g *Git) Uninstall(logChan chan<- string) error {
+// Uninstall 卸载 Git
+func (g *Git) Uninstall() error {
 	g.PrintInfo("正在卸载 Git...")
 
 	osType := g.GetOSType()
@@ -123,7 +124,7 @@ func (g *Git) GetInfo() contract.SoftwareInfo {
 	return g.info
 }
 
-func (g *Git) Start(logChan chan<- string) error {
+func (g *Git) Start() error {
 	g.PrintInfo("Git 是版本控制工具，无需启动服务")
 	return nil
 }

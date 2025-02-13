@@ -29,7 +29,7 @@ func NewNpm(core *core.Core) contract.SuperSoft {
 	}
 }
 
-func (n *Npm) Install(logChan chan<- string) error {
+func (n *Npm) Install() error {
 	n.PrintInfo("正在检查 npm...")
 
 	// 检查 nodejs 是否已安装
@@ -56,7 +56,8 @@ func (n *Npm) Install(logChan chan<- string) error {
 	return nil
 }
 
-func (n *Npm) Uninstall(logChan chan<- string) error {
+// Uninstall 卸载 npm
+func (n *Npm) Uninstall() error {
 	n.PrintInfo("npm 是 NodeJS 的一部分，无法单独卸载")
 	return nil
 }
@@ -92,7 +93,7 @@ func (n *Npm) GetInfo() contract.SoftwareInfo {
 	return n.info
 }
 
-func (n *Npm) Start(logChan chan<- string) error {
+func (n *Npm) Start() error {
 	n.PrintInfo("npm 是包管理工具，无需启动服务")
 	return nil
 }

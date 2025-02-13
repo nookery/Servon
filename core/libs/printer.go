@@ -287,6 +287,11 @@ func (p *Printer) PrintCommand(command string) {
 	p.print(LogTypeCommand, command, LocationTypeLong, color.New(color.FgMagenta), true)
 }
 
+// PrintCommandOutput 打印命令输出
+func (p *Printer) PrintCommandOutput(output string) {
+	p.print(LogTypeCommandOutput, output, LocationTypeNone, color.New(color.FgMagenta), true)
+}
+
 func (p *Printer) RunShell(command string, args ...string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("command is required")

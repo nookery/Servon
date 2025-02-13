@@ -18,6 +18,7 @@ var DefaultSoftManager = newSoftManager()
 var DefaultDeployManager = NewDeployManager()
 var DefaultDataManager = NewDataManager()
 var DefaultUserManager = NewUserManager()
+var DefaultDownloadManager = NewDownloadManager()
 var DefaultEnvManager = NewEnvManager()
 
 // 以下为快捷函数
@@ -28,6 +29,7 @@ var GetOSType = DefaultOSInfoManager.GetOSType
 var NewCommand = DefaultCommandManager.NewCommand
 
 var PrintInfo = DefaultPrinter.PrintInfo
+var PrintLn = DefaultPrinter.PrintLn
 var PrintInfof = DefaultPrinter.PrintInfof
 var PrintSuccess = DefaultPrinter.PrintSuccess
 var PrintSuccessf = DefaultPrinter.PrintSuccessf
@@ -37,5 +39,6 @@ var PrintError = DefaultPrinter.PrintError
 var PrintErrorf = DefaultPrinter.PrintErrorf
 var PrintList = DefaultPrinter.PrintList
 var PrintCommand = DefaultPrinter.PrintCommand
+var PrintCommandOutput = DefaultPrinter.PrintCommandOutput
 var RunShell = DefaultPrinter.RunShell
 var RunShellWithOutput = DefaultPrinter.RunShellWithOutput

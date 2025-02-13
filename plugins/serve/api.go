@@ -126,7 +126,7 @@ func (p *ServePlugin) HandleInstallSoftware(c *gin.Context) {
 
 	// 在新的 goroutine 中执行安装
 	go func() {
-		err := p.Install(name, msgChan)
+		err := p.Install(name)
 		doneChan <- err
 		close(msgChan)
 	}()
@@ -165,21 +165,12 @@ func (p *ServePlugin) HandleInstallSoftware(c *gin.Context) {
 // HandleUninstallSoftware 处理卸载软件的请求
 func (p *ServePlugin) HandleUninstallSoftware(c *gin.Context) {
 	name := c.Param("name")
-	msgChan := make(chan string, 100)
-	err := p.UninstallSoftware(name, msgChan)
+	err := p.UninstallSoftware(name)
 	if err != nil {
 		c.String(500, err.Error())
 		return
 	}
-
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-
-	for msg := range msgChan {
-		c.SSEvent("message", msg)
-		c.Writer.Flush()
-	}
+	c.Status(200)
 }
 
 // HandleStopSoftware 处理停止软件的请求

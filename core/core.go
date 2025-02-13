@@ -30,6 +30,7 @@ type Core struct {
 	*libs.DeployManager
 	*libs.UserManager
 	*libs.EnvManager
+	*libs.DownloadManager
 }
 
 type OSType = libs.OSType
@@ -68,6 +69,7 @@ func New() *Core {
 		VersionManager:         libs.DefaultVersionManager,
 		UserManager:            libs.DefaultUserManager,
 		EnvManager:             libs.DefaultEnvManager,
+		DownloadManager:        libs.DefaultDownloadManager,
 	}
 
 	core.LoadEnv()

@@ -27,7 +27,7 @@ func NewYarn(core *core.Core) contract.SuperSoft {
 	}
 }
 
-func (y *Yarn) Install(logChan chan<- string) error {
+func (y *Yarn) Install() error {
 	y.PrintInfo("正在安装 Yarn...")
 
 	// 检查 nodejs 是否已安装
@@ -48,7 +48,8 @@ func (y *Yarn) Install(logChan chan<- string) error {
 	return nil
 }
 
-func (y *Yarn) Uninstall(logChan chan<- string) error {
+// Uninstall 卸载 Yarn
+func (y *Yarn) Uninstall() error {
 	y.PrintInfo("正在卸载 Yarn...")
 
 	if err := y.RunShell("npm", "uninstall", "-g", "yarn"); err != nil {
@@ -90,7 +91,7 @@ func (y *Yarn) GetInfo() contract.SoftwareInfo {
 	return y.info
 }
 
-func (y *Yarn) Start(logChan chan<- string) error {
+func (y *Yarn) Start() error {
 	y.PrintInfo("Yarn 是包管理工具，无需启动服务")
 	return nil
 }

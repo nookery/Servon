@@ -9,7 +9,7 @@ func NewInstallCommand(caddy *Caddy) *cobra.Command {
 		Use:   "install",
 		Short: "安装 Caddy",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return caddy.Install(nil)
+			return caddy.Install()
 		},
 	}
 }

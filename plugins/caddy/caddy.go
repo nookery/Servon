@@ -15,7 +15,7 @@ type Caddy struct {
 	info contract.SoftwareInfo
 }
 
-func (c *Caddy) Install(logChan chan<- string) error {
+func (c *Caddy) Install() error {
 	osType := c.GetOSType()
 
 	switch osType {
@@ -85,46 +85,39 @@ func (c *Caddy) Install(logChan chan<- string) error {
 	return nil
 }
 
-func (c *Caddy) Uninstall(logChan chan<- string) error {
-	outputChan := make(chan string, 100)
+// Uninstall 卸载 Caddy
+func (c *Caddy) Uninstall() error {
+	// 停止服务
+	c.PrintInfo("停止 Caddy 服务...")
+	stopCmd := exec.Command("sudo", "systemctl", "stop", "caddy")
+	if err := c.StreamCommand(stopCmd); err != nil {
+		return fmt.Errorf("停止服务失败:\n%s", err)
+	}
 
-	go func() {
-		defer close(outputChan)
+	// 卸载软件包及其依赖
+	c.PrintInfo("卸载软件包及其依赖...")
+	if err := c.AptRemove("caddy"); err != nil {
+		return fmt.Errorf("卸载软件包及其依赖失败:\n%s", err)
+	}
 
-		// 停止服务
-		outputChan <- "停止 Caddy 服务..."
-		stopCmd := exec.Command("sudo", "systemctl", "stop", "caddy")
-		output, err := stopCmd.CombinedOutput()
-		if err != nil {
-			outputChan <- fmt.Sprintf("停止服务失败:\n%s", string(output))
-		}
+	// 清理配置文件
+	if err := c.AptPurge("caddy"); err != nil {
+		return fmt.Errorf("清理配置文件失败:\n%s", err)
+	}
 
-		// 卸载软件包及其依赖
-		if err := c.AptRemove("caddy"); err != nil {
-			return
-		}
+	// 删除源文件
+	err := c.RunShell("sudo", "rm", "/etc/apt/sources.list.d/caddy-stable.list")
+	if err != nil {
+		return fmt.Errorf("删除源文件失败:\n%s", err)
+	}
 
-		// 清理配置文件
-		if err := c.AptPurge("caddy"); err != nil {
-			return
-		}
+	// 清理自动安装的依赖
+	cleanCmd := exec.Command("sudo", "apt-get", "autoremove", "-y")
+	if err := cleanCmd.Run(); err != nil {
+		return fmt.Errorf("清理依赖失败:\n%s", err)
+	}
 
-		// 删除源文件
-		rmSourceCmd := exec.Command("sudo", "rm", "/etc/apt/sources.list.d/caddy-stable.list")
-		if output, err := rmSourceCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("删除源文件失败:\n%s", string(output))
-			return
-		}
-
-		// 清理自动安装的依赖
-		cleanCmd := exec.Command("sudo", "apt-get", "autoremove", "-y")
-		if output, err := cleanCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("清理依赖失败:\n%s", string(output))
-			return
-		}
-
-		outputChan <- "Caddy 卸载完成"
-	}()
+	c.PrintSuccess("Caddy 卸载完成")
 
 	return nil
 }
@@ -197,7 +190,7 @@ func (c *Caddy) isRunning() (bool, error) {
 }
 
 // Start starts the Caddy service
-func (c *Caddy) Start(logChan chan<- string) error {
+func (c *Caddy) Start() error {
 	// 检查是否已安装
 	if !c.IsInstalled("caddy") {
 		errMsg := "Caddy 未安装，请先安装"

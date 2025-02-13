@@ -35,13 +35,10 @@ func NewClash(core *core.Core) contract.SuperSoft {
 }
 
 // Install 安装 Clash，并发送日志到日志通道
-func (c *Clash) Install(logChan chan<- string) error {
+func (c *Clash) Install() error {
 	osType := c.GetOSType()
 
-	if logChan == nil {
-		logChan = make(chan string, 100)
-	}
-
+	c.PrintInfof("检测到操作系统: %s", osType)
 	c.PrintInfof("检测到操作系统: %s", osType)
 	c.PrintInfof("开始安装 Clash...")
 
@@ -79,46 +76,33 @@ func (c *Clash) Install(logChan chan<- string) error {
 	return nil
 }
 
-func (c *Clash) Uninstall(logChan chan<- string) error {
-	outputChan := make(chan string, 100)
+// Uninstall 卸载 Clash
+func (c *Clash) Uninstall() error {
+	// 停止服务
+	err := c.Stop()
+	if err != nil {
+		return fmt.Errorf("停止服务失败: %s", err)
+	}
 
-	go func() {
-		defer close(outputChan)
+	// 删除服务文件
+	rmServiceCmd := exec.Command("sudo", "rm", "/etc/systemd/system/clash.service")
+	if err := rmServiceCmd.Run(); err != nil {
+		return fmt.Errorf("删除服务文件失败: %s", err)
+	}
 
-		// 停止服务
-		outputChan <- "停止 Clash 服务..."
-		stopCmd := exec.Command("sudo", "systemctl", "stop", "clash")
-		if output, err := stopCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("停止服务失败:\n%s", string(output))
-		}
+	// 删除二进制文件
+	rmBinCmd := exec.Command("sudo", "rm", "/usr/local/bin/clash")
+	if err := rmBinCmd.Run(); err != nil {
+		return fmt.Errorf("删除二进制文件失败: %s", err)
+	}
 
-		// 禁用服务
-		disableCmd := exec.Command("sudo", "systemctl", "disable", "clash")
-		if output, err := disableCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("禁用服务失败:\n%s", string(output))
-		}
+	// 删除配置目录
+	rmConfigCmd := exec.Command("sudo", "rm", "-rf", "/etc/clash")
+	if err := rmConfigCmd.Run(); err != nil {
+		return fmt.Errorf("删除配置目录失败: %s", err)
+	}
 
-		// 删除服务文件
-		rmServiceCmd := exec.Command("sudo", "rm", "/etc/systemd/system/clash.service")
-		if output, err := rmServiceCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("删除服务文件失败:\n%s", string(output))
-		}
-
-		// 删除二进制文件
-		rmBinCmd := exec.Command("sudo", "rm", "/usr/local/bin/clash")
-		if output, err := rmBinCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("删除二进制文件失败:\n%s", string(output))
-		}
-
-		// 删除配置目录
-		rmConfigCmd := exec.Command("sudo", "rm", "-rf", "/etc/clash")
-		if output, err := rmConfigCmd.CombinedOutput(); err != nil {
-			outputChan <- fmt.Sprintf("删除配置目录失败:\n%s", string(output))
-		}
-
-		outputChan <- "Clash 卸载完成"
-	}()
-
+	c.PrintSuccess("Clash 卸载完成")
 	return nil
 }
 
@@ -153,7 +137,7 @@ func (c *Clash) GetInfo() contract.SoftwareInfo {
 	return c.info
 }
 
-func (c *Clash) Start(logChan chan<- string) error {
+func (c *Clash) Start() error {
 	// 检查env文件是否配置
 	envFile := c.targetDir + "/.env"
 	if _, err := os.Stat(envFile); os.IsNotExist(err) {
