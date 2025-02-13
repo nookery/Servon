@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /// <reference lib="es2015" />
-import { ref, onMounted, getCurrentInstance } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
 import pkg from '../../package.json'
