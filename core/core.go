@@ -32,6 +32,7 @@ type Core struct {
 	*libs.DownloadManager
 	*libs.GitManager
 	*libs.TaskManager
+	*libs.ProxyManager
 }
 
 type OSType = libs.OSType
@@ -73,6 +74,7 @@ func New() *Core {
 		DownloadManager:        libs.DefaultDownloadManager,
 		GitManager:             libs.DefaultGitManager,
 		TaskManager:            libs.DefaultTaskManager,
+		ProxyManager:           libs.DefaultProxyManager,
 	}
 
 	core.AddCommand(core.GetDeployCommand())
@@ -81,6 +83,7 @@ func New() *Core {
 	core.AddCommand(core.GetSoftwareCommand())
 	core.AddCommand(core.GetUserRootCommand())
 	core.AddCommand(core.GetServiceRootCommand())
+	core.AddCommand(core.GetGitRootCommand())
 
 	return core
 }
