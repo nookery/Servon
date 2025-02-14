@@ -19,7 +19,6 @@ var DefaultDeployManager = NewDeployManager()
 var DefaultDataManager = NewDataManager()
 var DefaultUserManager = NewUserManager()
 var DefaultDownloadManager = NewDownloadManager()
-var DefaultEnvManager = NewEnvManager()
 var DefaultGitManager = NewGitManager()
 var DefaultTaskManager = NewTaskManager()
 
