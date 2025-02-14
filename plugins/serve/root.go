@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"servon/core"
 	"servon/core/libs"
@@ -37,28 +38,20 @@ func (p *ServePlugin) NewServeCommand() *cobra.Command {
 		Short: "启动服务器",
 		Run: func(cmd *cobra.Command, args []string) {
 			apiOnly, _ := cmd.Flags().GetBool("api-only")
-			appEnv := libs.DefaultEnvManager.GetEnv("APP_ENV")
 
 			// 清晰的启动横幅
 			fmt.Printf("\n  %s\n\n", color.HiCyanString("SERVON"))
 
 			printKeyValue("Version:", libs.DefaultVersionManager.GetVersion())
 			printKeyValue("API Only:", color.HiGreenString("%t", apiOnly))
-			printKeyValue("Environment:", color.HiGreenString("%s", appEnv))
 			fmt.Println()
 
 			p.StartWebServer(host, port, !apiOnly)
 		},
 	}
 
-	defaultPort, err := strconv.Atoi(libs.DefaultEnvManager.GetEnv("WEB_PORT_DEFAULT"))
-	if err != nil {
-		libs.PrintErrorf("Error: 无法将 WEB_PORT_DEFAULT 转换为整数，WEB_PORT_DEFAULT 的值为 %s", libs.DefaultEnvManager.GetEnv("WEB_PORT_DEFAULT"))
-		os.Exit(1)
-	}
-
 	// 配置 serve 子命令的参数
-	cmd.Flags().IntVarP(&port, "port", "p", defaultPort, "服务器监听端口")
+	cmd.Flags().IntVarP(&port, "port", "p", 9754, "服务器监听端口")
 	cmd.Flags().StringVar(&host, "host", "127.0.0.1", "服务器监听地址")
 	cmd.Flags().BoolVar(&apiOnly, "api-only", false, "仅启动API服务")
 
@@ -72,7 +65,6 @@ func printKeyValue(key string, value string) {
 }
 
 func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
-	appEnv := libs.DefaultEnvManager.GetEnv("APP_ENV")
 	router := libs.NewWebServer(host, port, withUI)
 
 	// 设置API路由
@@ -80,8 +72,8 @@ func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
 
 	// 如果启用了UI，设置UI路由
 	if withUI {
-		// 检查是否为开发环境
-		if appEnv == "development" {
+		// 检查是否为开发环境（通过检查是否使用 go run 启动）
+		if os.Args[0] == "main" || strings.Contains(os.Args[0], "go-build") {
 			go func() {
 				p.PrintLn()
 				p.PrintInfof("开发环境，启动 npm dev server")

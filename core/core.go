@@ -29,7 +29,6 @@ type Core struct {
 	*libs.SoftManager
 	*libs.DeployManager
 	*libs.UserManager
-	*libs.EnvManager
 	*libs.DownloadManager
 	*libs.GitManager
 	*libs.TaskManager
@@ -71,13 +70,10 @@ func New() *Core {
 		CronManager:            libs.DefaultCronManager,
 		VersionManager:         libs.DefaultVersionManager,
 		UserManager:            libs.DefaultUserManager,
-		EnvManager:             libs.DefaultEnvManager,
 		DownloadManager:        libs.DefaultDownloadManager,
 		GitManager:             libs.DefaultGitManager,
 		TaskManager:            libs.DefaultTaskManager,
 	}
-
-	core.LoadEnv()
 
 	core.AddCommand(core.GetDeployCommand())
 	core.AddCommand(core.GetVersionCommand())
