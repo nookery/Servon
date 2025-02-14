@@ -21,6 +21,7 @@ var DefaultUserManager = NewUserManager()
 var DefaultDownloadManager = NewDownloadManager()
 var DefaultGitManager = NewGitManager()
 var DefaultTaskManager = NewTaskManager()
+var DefaultProxyManager = NewProxyManager()
 
 // 以下为快捷函数
 
@@ -38,6 +39,7 @@ var PrintTitle = DefaultPrinter.PrintTitle
 var PrintSuccess = DefaultPrinter.PrintSuccess
 var PrintSuccessf = DefaultPrinter.PrintSuccessf
 var PrintWarn = DefaultPrinter.PrintWarn
+var PrintAlert = DefaultPrinter.PrintAlert
 var PrintWarnf = DefaultPrinter.PrintWarnf
 var PrintError = DefaultPrinter.PrintError
 var PrintErrorf = DefaultPrinter.PrintErrorf

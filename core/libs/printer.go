@@ -67,6 +67,11 @@ var (
 		Color:  color.New(color.FgWhite),
 		Symbol: "",
 	}
+	LogTypeAlert LogType = LogType{
+		Name:   "alert",
+		Color:  color.New(color.FgRed),
+		Symbol: "🐸",
+	}
 )
 
 const (
@@ -316,6 +321,11 @@ func (p *Printer) PrintWarn(format string) {
 // PrintWarnf 打印警告信息
 func (p *Printer) PrintWarnf(format string, args ...interface{}) {
 	p.print(LogTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, true)
+}
+
+// PrintAlert 打印提示信息
+func (p *Printer) PrintAlert(format string) {
+	p.print(LogTypeAlert, format, LocationTypeNone, true)
 }
 
 // PrintCommand 打印命令信息

@@ -18,6 +18,7 @@ type SuperSoft interface {
 
 // SoftwareInfo 软件基本信息
 type SoftwareInfo struct {
-	Name        string
-	Description string
+	Name            string
+	Description     string
+	IsProxySoftware bool
 }

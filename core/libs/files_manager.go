@@ -54,9 +54,9 @@ func (p *FilesManager) GetFileList(dirPath string) ([]FileInfo, error) {
 	files := make([]FileInfo, 0, len(entries))
 	for _, entry := range entries {
 		// 跳过隐藏文件
-		if strings.HasPrefix(entry.Name(), ".") {
-			continue
-		}
+		// if strings.HasPrefix(entry.Name(), ".") {
+		// 	continue
+		// }
 
 		// 获取详细信息
 		info, err := entry.Info()
@@ -102,4 +102,22 @@ func FormatFileSize(size int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
+}
+
+// IsDirExists 判断目录是否存在
+func (p *FilesManager) IsDirExists(dirPath string) bool {
+	info, err := os.Stat(dirPath)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return info.IsDir()
+}
+
+// GetDirSize 获取目录大小
+func (p *FilesManager) GetDirSize(dirPath string) int64 {
+	info, err := os.Stat(dirPath)
+	if os.IsNotExist(err) {
+		return 0
+	}
+	return info.Size()
 }

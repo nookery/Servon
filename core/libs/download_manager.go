@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+const (
+	maxRetries = 3 // 最大重试次数
+)
+
 type DownloadManager struct{}
 
 func NewDownloadManager() *DownloadManager {
@@ -18,6 +22,52 @@ func NewDownloadManager() *DownloadManager {
 // url: 下载地址
 // destPath: 目标文件路径（包含文件名）
 func (d *DownloadManager) Download(url string, destPath string) error {
+	var lastErr error
+
+	// 首先尝试不使用代理下载
+	for i := 0; i < maxRetries; i++ {
+		if i > 0 {
+			PrintCommandOutput(fmt.Sprintf("下载失败，第 %d 次重试...", i))
+			time.Sleep(time.Second * 2) // 重试前等待一段时间
+		}
+
+		err := d.downloadFile(url, destPath)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+	}
+
+	// 如果常规下载失败，尝试使用代理
+	if !DefaultProxyManager.IsProxyOn() {
+		PrintCommandOutput("常规下载失败，尝试开启代理重新下载...")
+		software, err := DefaultProxyManager.OpenProxy()
+		if err != nil {
+			return fmt.Errorf("开启代理失败: %v，上一次下载错误: %v", err, lastErr)
+		}
+
+		PrintAlert("使用代理软件: " + software + " 下载...")
+
+		// 使用代理重试下载
+		for i := 0; i < maxRetries; i++ {
+			if i > 0 {
+				PrintCommandOutput(fmt.Sprintf("代理下载失败，第 %d 次重试...", i))
+				time.Sleep(time.Second * 2)
+			}
+
+			err := d.downloadFile(url, destPath)
+			if err == nil {
+				return nil
+			}
+			lastErr = err
+		}
+	}
+
+	return fmt.Errorf("下载失败（已尝试使用代理）: %v", lastErr)
+}
+
+// downloadFile 实际执行下载操作
+func (d *DownloadManager) downloadFile(url string, destPath string) error {
 	// 创建 HTTP 请求
 	resp, err := http.Get(url)
 	if err != nil {

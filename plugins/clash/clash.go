@@ -11,6 +11,12 @@ import (
 
 const repoUrl = "https://github.com/wnlen/clash-for-linux.git"
 
+var softInfo = contract.SoftwareInfo{
+	Name:            "clash",
+	Description:     "A rule-based tunnel in Go",
+	IsProxySoftware: true,
+}
+
 func Setup(core *core.Core) {
 	plugin := NewClash(core)
 
@@ -18,17 +24,12 @@ func Setup(core *core.Core) {
 }
 
 type Clash struct {
-	info      contract.SoftwareInfo
 	targetDir string
 	*core.Core
 }
 
 func NewClash(core *core.Core) contract.SuperSoft {
 	return &Clash{
-		info: contract.SoftwareInfo{
-			Name:        "clash",
-			Description: "A rule-based tunnel in Go",
-		},
 		targetDir: core.DataManager.GetSoftwareRootFolder("clash"),
 		Core:      core,
 	}
@@ -38,9 +39,7 @@ func NewClash(core *core.Core) contract.SuperSoft {
 func (c *Clash) Install() error {
 	osType := c.GetOSType()
 
-	c.PrintInfof("检测到操作系统: %s", osType)
-	c.PrintInfof("检测到操作系统: %s", osType)
-	c.PrintInfof("开始安装 Clash...")
+	c.PrintInfof("安装 Clash，检测到操作系统: %s", osType)
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
@@ -134,7 +133,7 @@ func (c *Clash) GetStatus() (map[string]string, error) {
 }
 
 func (c *Clash) GetInfo() contract.SoftwareInfo {
-	return c.info
+	return softInfo
 }
 
 func (c *Clash) Start() error {

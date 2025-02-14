@@ -17,6 +17,32 @@ func newSoftManager() *SoftManager {
 	}
 }
 
+// GetProxySoftwares 获取所有的代理软件
+func (p *SoftManager) GetProxySoftwares() []string {
+	proxySoftwares := make([]string, 0)
+	for name, software := range p.Softwares {
+		if software.GetInfo().IsProxySoftware {
+			proxySoftwares = append(proxySoftwares, name)
+		}
+	}
+	return proxySoftwares
+}
+
+// GetSoftware 获取软件
+func (p *SoftManager) GetSoftware(name string) (contract.SuperSoft, error) {
+	software, ok := p.Softwares[name]
+	if !ok {
+		return nil, fmt.Errorf("软件 %s 未注册", name)
+	}
+	return software, nil
+}
+
+// HasSoftware 判断软件是否存在
+func (p *SoftManager) HasSoftware(name string) bool {
+	_, ok := p.Softwares[name]
+	return ok
+}
+
 // newInfoCmd 返回 info 子命令
 func (p *SoftManager) newInfoCmd() *cobra.Command {
 	return NewCommand(CommandOptions{
@@ -320,6 +346,7 @@ func (c *SoftManager) GetSoftwareStatus(name string) (map[string]string, error) 
 	if !ok {
 		return nil, DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
+
 	return software.GetStatus()
 }
 
