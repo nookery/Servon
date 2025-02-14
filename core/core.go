@@ -32,6 +32,7 @@ type Core struct {
 	*libs.EnvManager
 	*libs.DownloadManager
 	*libs.GitManager
+	*libs.TaskManager
 }
 
 type OSType = libs.OSType
@@ -39,6 +40,7 @@ type CommandOptions = libs.CommandOptions
 type CronTask = libs.CronTask
 type ValidationError = libs.ValidationError
 type ValidationErrors = libs.ValidationErrors
+type Task = libs.Task
 
 const (
 	Ubuntu  OSType = "ubuntu"
@@ -72,6 +74,7 @@ func New() *Core {
 		EnvManager:             libs.DefaultEnvManager,
 		DownloadManager:        libs.DefaultDownloadManager,
 		GitManager:             libs.DefaultGitManager,
+		TaskManager:            libs.DefaultTaskManager,
 	}
 
 	core.LoadEnv()
@@ -81,6 +84,7 @@ func New() *Core {
 	core.AddCommand(core.GetUpgradeCommand())
 	core.AddCommand(core.GetSoftwareCommand())
 	core.AddCommand(core.GetUserRootCommand())
+	core.AddCommand(core.GetServiceRootCommand())
 
 	return core
 }

@@ -1,0 +1,9 @@
+[program:{{.ServiceName}}]
+command={{.Command}} {{.Args}}
+directory={{.RootFolder}}
+autostart=true
+autorestart=true
+stderr_logfile={{.RootFolder}}/logs/{{.ServiceName}}.err.log
+stdout_logfile={{.RootFolder}}/logs/{{.ServiceName}}.out.log
+environment={{.Environment}}
+user=root 

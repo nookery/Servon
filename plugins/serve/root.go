@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
 	"servon/core"
 	"servon/core/libs"
 	"strconv"
@@ -81,10 +82,10 @@ func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
 	if withUI {
 		// 检查是否为开发环境
 		if appEnv == "development" {
-			fmt.Println()
-			libs.PrintInfof("开发环境，启动 npm dev server")
-			libs.PrintInfof("VITE_API_TARGET=http://127.0.0.1:%d", port)
 			go func() {
+				p.PrintLn()
+				p.PrintInfof("开发环境，启动 npm dev server")
+				p.PrintInfof("VITE_API_TARGET=http://127.0.0.1:%d", port)
 				cmd := exec.Command("npm", "run", "dev")
 				cmd.Dir = "."
 				cmd.Env = append(os.Environ(), "VITE_API_TARGET=http://127.0.0.1:"+strconv.Itoa(port))
@@ -102,7 +103,13 @@ func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
 		}
 	}
 
-	router.Run(fmt.Sprintf("%s:%d", host, port))
+	// 启动 Web 服务器
+	// p.PrintInfof("启动 Web 服务器: http://%s:%d", host, port)
+	err := router.Run(fmt.Sprintf("%s:%d", host, port))
+	if err != nil {
+		p.PrintErrorf("启动 Web 服务器失败: %v", err)
+		os.Exit(1)
+	}
 }
 
 // HandleStreamLogs streams logs from a specified channel using Server-Sent Events (SSE)

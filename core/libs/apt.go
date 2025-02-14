@@ -14,7 +14,7 @@ func NewAptManager() *AptManager {
 // AptUpdate 更新软件包索引
 func (p *AptManager) AptUpdate() error {
 	PrintInfo("正在更新软件包索引...")
-	if err := RunShell("sudo", "apt-get", "update"); err != nil {
+	if err := printer.RunShellWithSudo("apt-get", "update"); err != nil {
 		return fmt.Errorf("更新索引失败: %v", err)
 	}
 	PrintSuccess("软件包索引更新成功")
@@ -23,7 +23,7 @@ func (p *AptManager) AptUpdate() error {
 
 // AptInstall 安装指定的软件包
 func (p *AptManager) AptInstall(packages ...string) error {
-	if err := RunShell("sudo", "apt-get", "install", "-y", strings.Join(packages, " ")); err != nil {
+	if err := printer.RunShellWithSudo("apt-get", "install", "-y", strings.Join(packages, " ")); err != nil {
 		return fmt.Errorf("安装失败: %v", err)
 	}
 
@@ -34,7 +34,7 @@ func (p *AptManager) AptInstall(packages ...string) error {
 
 // AptRemove 移除指定的软件包
 func (p *AptManager) AptRemove(packages ...string) error {
-	if err := RunShell("sudo", "apt-get", "remove", "-y", strings.Join(packages, " ")); err != nil {
+	if err := printer.RunShellWithSudo("apt-get", "remove", "-y", strings.Join(packages, " ")); err != nil {
 		return fmt.Errorf("移除失败: %v", err)
 	}
 	return nil
@@ -42,7 +42,7 @@ func (p *AptManager) AptRemove(packages ...string) error {
 
 // AptPurge 完全移除软件包及其配置文件
 func (p *AptManager) AptPurge(packages ...string) error {
-	if err := RunShell("sudo", "apt-get", "purge", "-y", strings.Join(packages, " ")); err != nil {
+	if err := printer.RunShellWithSudo("apt-get", "purge", "-y", strings.Join(packages, " ")); err != nil {
 		return fmt.Errorf("清理失败: %v", err)
 	}
 	return nil

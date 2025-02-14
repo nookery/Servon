@@ -9,10 +9,15 @@ import (
 )
 
 type Caddy struct {
-	CaddyConfig
+	BaseDir string
 	CaddyTemplate
 	*core.Core
 	info contract.SoftwareInfo
+}
+
+// GetInfo 获取软件信息
+func (c *Caddy) GetInfo() contract.SoftwareInfo {
+	return c.info
 }
 
 func (c *Caddy) Install() error {
@@ -23,25 +28,17 @@ func (c *Caddy) Install() error {
 		c.PrintInfo("使用 APT 包管理器安装...")
 		c.PrintInfo("添加 Caddy 官方源...")
 
-		// 下载 GPG 密钥
-		c.PrintInfo("下载 GPG 密钥...")
-		err := c.RunShell("curl", "-1sLf", "https://dl.cloudsmith.io/public/caddy/stable/gpg.key")
+		// 下载和安装 GPG 密钥
+		c.PrintInfo("下载和安装 GPG 密钥...")
+		err := c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg")
 		if err != nil {
 			c.PrintErrorf("下载 GPG 密钥失败: %v", err)
 			return err
 		}
 
-		// 安装 GPG 密钥
-		c.PrintInfo("安装 GPG 密钥...")
-		err = c.RunShell("sudo", "gpg", "--dearmor", "-o", "/usr/share/keyrings/caddy-stable-archive-keyring.gpg")
-		if err != nil {
-			c.PrintErrorf("安装 GPG 密钥失败: %v", err)
-			return err
-		}
-
 		// 添加 Caddy 软件源
 		c.PrintInfo("添加 Caddy 软件源...")
-		err = c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list")
+		err = c.RunShellWithSudo("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list")
 		if err != nil {
 			c.PrintErrorf("添加 Caddy 软件源失败: %v", err)
 			return err
@@ -151,10 +148,6 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 func (c *Caddy) Stop() error {
 	cmd := exec.Command("caddy", "stop")
 	return c.StreamCommand(cmd)
-}
-
-func (c *Caddy) GetInfo() contract.SoftwareInfo {
-	return c.info
 }
 
 // Reload reloads the Caddy configuration

@@ -5,6 +5,7 @@ import axios from 'axios'
 import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
 import pkg from '../../package.json'
 import { useLogViewerStore } from '../stores/logViewer'
+import TaskManager from '../components/TaskManager.vue'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
@@ -14,6 +15,7 @@ const osInfo = ref('')
 const currentTheme = ref(localStorage.getItem('theme') || 'light')
 const downloadSpeed = ref(0)
 const uploadSpeed = ref(0)
+const isTaskManagerVisible = ref(false)
 
 const logViewerStore = useLogViewerStore()
 
@@ -58,6 +60,14 @@ function changeTheme(theme: string) {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
     currentTheme.value = theme
+}
+
+const showTaskManager = () => {
+    isTaskManagerVisible.value = true
+}
+
+const closeTaskManager = () => {
+    isTaskManagerVisible.value = false
 }
 
 onMounted(async () => {
@@ -144,6 +154,11 @@ onMounted(async () => {
                     <i class="ri-file-list-line text-xl"></i>
                 </button>
 
+                <!-- 任务管理按钮 -->
+                <button @click="showTaskManager" class="btn btn-ghost btn-circle">
+                    <i class="ri-task-line text-xl"></i>
+                </button>
+
                 <!-- Theme Switcher Component -->
                 <ThemeSwitcher />
 
@@ -156,6 +171,17 @@ onMounted(async () => {
                     </div>
                     <span class="text-sm">{{ currentUser }}</span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Manager Modal -->
+    <div v-if="isTaskManagerVisible" class="modal modal-open">
+        <div class="modal-box">
+            <h2 class="font-bold text-lg">任务管理</h2>
+            <TaskManager />
+            <div class="modal-action">
+                <button @click="closeTaskManager" class="btn">关闭</button>
             </div>
         </div>
     </div>

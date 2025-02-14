@@ -6,15 +6,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewProxyCommand(caddy *Caddy) *cobra.Command {
-	cmd := caddy.NewCommand(core.CommandOptions{
+func (c *Caddy) NewInstallCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "install",
+		Short: "安装 Caddy",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return c.Install()
+		},
+	}
+}
+
+func (c *Caddy) NewProxyCommand() *cobra.Command {
+	cmd := c.NewCommand(core.CommandOptions{
 		Use:   "proxy",
 		Short: "代理命令",
 		Run: func(cmd *cobra.Command, args []string) {
 			domain, _ := cmd.Flags().GetString("domain")
 			target, _ := cmd.Flags().GetString("target")
 
-			caddy.AddProxy(domain, target)
+			c.AddProxy(domain, target)
 		},
 	})
 
