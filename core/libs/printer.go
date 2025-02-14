@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/fatih/color"
@@ -49,6 +51,11 @@ var (
 		Name:   "command",
 		Color:  color.New(color.FgMagenta),
 		Symbol: "📺",
+	}
+	LogTypeTitle LogType = LogType{
+		Name:   "title",
+		Color:  color.New(color.FgGreen),
+		Symbol: "",
 	}
 	LogTypeCommandOutput LogType = LogType{
 		Name:   "command_output",
@@ -133,12 +140,9 @@ func (p *Printer) sendToChannel(message string, logType LogType) {
 }
 
 // print handles all printing operations
-func (p *Printer) print(level LogType, message string, locationType LocationType, color *color.Color, sendToChannel bool) {
-	if color == nil {
-		color = p.Color
-	}
+func (p *Printer) print(level LogType, message string, locationType LocationType, sendToChannel bool) {
+	color := level.Color
 
-	var messageWithLevel string
 	var callerInfo string
 
 	_, thisFile, _, _ := runtime.Caller(0)
@@ -161,11 +165,11 @@ func (p *Printer) print(level LogType, message string, locationType LocationType
 		callerInfo = ""
 	}
 
-	// 生成消息
-	messageWithLevel = fmt.Sprintf("%s %s", level.Symbol, message)
+	// emoji
+	emoji := level.Symbol
 
 	// Generate the complete message with newline
-	completeMessage := callerInfo + messageWithLevel + "\n"
+	completeMessage := emoji + " " + callerInfo + " " + message + "\n"
 
 	// Print in a single operation
 	color.Print(completeMessage)
@@ -177,40 +181,55 @@ func (p *Printer) print(level LogType, message string, locationType LocationType
 
 // PrintCyan 打印青色信息
 func (p *Printer) PrintCyan(format string, args ...interface{}) {
-	p.print(LogTypeInfo, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgCyan), true)
+	p.print(LogTypeInfo, fmt.Sprintf(format, args...), LocationTypeNone, true)
 }
 
 func (p *Printer) PrintGreen(format string, args ...interface{}) {
-	p.print(LogTypeSuccess, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgGreen), true)
+	p.print(LogTypeSuccess, fmt.Sprintf(format, args...), LocationTypeNone, true)
 }
 
 // PrintRed 打印红色信息
 func (p *Printer) PrintRed(format string, args ...interface{}) {
-	p.print(LogTypeRaw, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgRed), true)
+	p.print(LogTypeRaw, fmt.Sprintf(format, args...), LocationTypeNone, true)
 }
 
 // PrintWhite 打印白色信息
 func (p *Printer) PrintWhite(format string, args ...interface{}) {
-	p.print(LogTypeDebug, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgWhite), true)
+	p.print(LogTypeDebug, fmt.Sprintf(format, args...), LocationTypeNone, true)
 }
 
 func (p *Printer) PrintYellow(format string, args ...interface{}) {
-	p.print(LogTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, color.New(color.FgYellow), true)
+	p.print(LogTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, true)
 }
 
 func (p *Printer) PrintAndReturnError(errMsg string) error {
-	p.print(LogTypeError, fmt.Sprintf("错误: %s", errMsg), LocationTypeNone, p.Color, true)
+	p.print(LogTypeError, fmt.Sprintf("错误: %s", errMsg), LocationTypeNone, true)
 	return fmt.Errorf("%s", errMsg)
 }
 
 // PrintInfo 打印信息
 func (p *Printer) PrintInfo(info string) {
-	p.print(LogTypeInfo, info, LocationTypeLong, p.Color, true)
+	p.print(LogTypeInfo, info, LocationTypeLong, true)
 }
 
 // PrintInfof 打印信息
 func (p *Printer) PrintInfof(format string, args ...interface{}) {
 	p.PrintInfo(fmt.Sprintf(format, args...))
+}
+
+// PrintInfofWithoutLocation 打印信息
+func (p *Printer) PrintInfofWithoutLocation(format string, args ...interface{}) {
+	p.print(LogTypeInfo, fmt.Sprintf(format, args...), LocationTypeNone, true)
+}
+
+// PrintInfofWithoutLocationAndEmoji 打印信息
+func (p *Printer) PrintInfofWithoutLocationAndEmoji(format string, args ...interface{}) {
+	p.print(LogTypeRaw, fmt.Sprintf(format, args...), LocationTypeNone, true)
+}
+
+// PrintTitle 打印标题
+func (p *Printer) PrintTitle(title string) {
+	p.print(LogTypeTitle, title, LocationTypeNone, true)
 }
 
 // PrintLn 打印换行
@@ -220,7 +239,7 @@ func (p *Printer) PrintLn() {
 
 // Printf 打印格式化信息
 func (p *Printer) Printf(format string, args ...interface{}) {
-	p.print(LogTypeDebug, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
+	p.print(LogTypeDebug, fmt.Sprintf(format, args...), LocationTypeNone, true)
 }
 
 // PrintError 打印错误信息
@@ -235,7 +254,7 @@ func (p *Printer) PrintErrorf(format string, args ...interface{}) {
 
 // PrintAndReturnErrorf 打印错误信息并返回错误
 func (p *Printer) PrintAndReturnErrorf(format string, args ...interface{}) error {
-	p.print(LogTypeError, fmt.Sprintf("错误: %s", fmt.Sprintf(format, args...)), LocationTypeNone, p.Color, true)
+	p.print(LogTypeError, fmt.Sprintf("错误: %s", fmt.Sprintf(format, args...)), LocationTypeNone, true)
 	return fmt.Errorf("%s", fmt.Sprintf(format, args...))
 }
 
@@ -249,7 +268,7 @@ func (p *Printer) PrintErrorMessage(message string) {
 	}
 
 	p.PrintLn()
-	p.PrintRed("❌ 错误: %s", message)
+	p.PrintRed("❌ 错误: %s", strings.TrimSpace(message))
 	p.PrintRed("📃 位置: %s:%d", file, line)
 	p.PrintLn()
 
@@ -272,38 +291,41 @@ func (p *Printer) PrintList(list []string, title string) {
 
 // PrintSuccess 打印成功信息
 func (p *Printer) PrintSuccess(format string) {
-	p.print(LogTypeSuccess, format, LocationTypeLong, p.Color, true)
+	p.print(LogTypeSuccess, format, LocationTypeLong, true)
 }
 
 // PrintSuccessf 打印成功信息
 func (p *Printer) PrintSuccessf(format string, args ...interface{}) {
-	p.print(LogTypeSuccess, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
+	p.print(LogTypeSuccess, fmt.Sprintf(format, args...), LocationTypeNone, true)
 }
 
 // PrintWarn 打印警告信息
 func (p *Printer) PrintWarn(format string) {
-	p.print(LogTypeWarn, format, LocationTypeNone, p.Color, true)
+	p.print(LogTypeWarn, format, LocationTypeNone, true)
 }
 
 // PrintWarnf 打印警告信息
 func (p *Printer) PrintWarnf(format string, args ...interface{}) {
-	p.print(LogTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, p.Color, true)
+	p.print(LogTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, true)
 }
 
 // PrintCommand 打印命令信息
 func (p *Printer) PrintCommand(command string) {
-	p.print(LogTypeCommand, command, LocationTypeLong, color.New(color.FgMagenta), true)
+	p.print(LogTypeCommand, command, LocationTypeLong, true)
 }
 
 // PrintCommandOutput 打印命令输出
 func (p *Printer) PrintCommandOutput(output string) {
-	p.print(LogTypeCommandOutput, output, LocationTypeNone, color.New(color.FgMagenta), true)
+	p.print(LogTypeCommandOutput, output, LocationTypeNone, true)
 }
 
 func (p *Printer) RunShell(command string, args ...string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("command is required")
 	}
+
+	// 去除command开头的空格
+	command = strings.TrimSpace(command)
 
 	PrintCommand(fmt.Sprintf("%s %s", command, joinArgs(args)))
 
@@ -334,6 +356,17 @@ func (p *Printer) RunShell(command string, args ...string) error {
 	return execCmd.Wait()
 }
 
+// RunShellWithSudo 运行命令并使用 sudo
+func (p *Printer) RunShellWithSudo(command string, args ...string) error {
+	sudoPrefix := p.GetSudoPrefix()
+
+	if sudoPrefix == "" {
+		return p.RunShell(command, args...)
+	}
+
+	return p.RunShell(sudoPrefix+command, args...)
+}
+
 // processOutput 处理输出流
 func processOutput(pipe io.ReadCloser, source string) {
 	scanner := bufio.NewScanner(pipe)
@@ -362,4 +395,55 @@ func (p *Printer) RunShellWithOutput(command string, args ...string) (string, er
 	output, err := execCmd.CombinedOutput()
 
 	return string(output), err
+}
+
+// RunShellInFolder 在指定文件夹中运行命令
+func (p *Printer) RunShellInFolder(folder string, command string, args ...string) error {
+	p.PrintInfo(fmt.Sprintf("切换到文件夹: %s", folder))
+
+	// 切换到指定文件夹
+	err := os.Chdir(folder)
+	if err != nil {
+		return err
+	}
+
+	return p.RunShell(command, args...)
+}
+
+// GetSudoPrefix 获取 sudo 前缀
+func (p *Printer) GetSudoPrefix() string {
+	if os.Geteuid() != 0 {
+		return "sudo "
+	}
+	return ""
+}
+
+// PrintKeyValue 打印键值对
+func (p *Printer) PrintKeyValue(key string, value string) {
+	p.print(LogTypeDebug, fmt.Sprintf("%s: %s", key, value), LocationTypeNone, true)
+}
+
+// PrintKeyValues 打印键值对列表
+func (p *Printer) PrintKeyValues(keyValues map[string]string) {
+	// 找出最长的 key 长度
+	maxKeyLength := 0
+	for key := range keyValues {
+		if len(key) > maxKeyLength {
+			maxKeyLength = len(key)
+		}
+	}
+
+	// 按照 key 排序，保证输出顺序一致
+	keys := make([]string, 0, len(keyValues))
+	for key := range keyValues {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	// 输出对齐的键值对
+	for _, key := range keys {
+		// 使用空格补充 key 到最大长度
+		paddedKey := fmt.Sprintf("%-*s", maxKeyLength, key)
+		p.PrintKeyValue(paddedKey, keyValues[key])
+	}
 }

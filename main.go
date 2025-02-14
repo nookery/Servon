@@ -15,8 +15,10 @@ import (
 	"servon/plugins/ip"
 	"servon/plugins/nodejs"
 	"servon/plugins/npm"
+	"servon/plugins/pm2"
 	"servon/plugins/pnpm"
 	"servon/plugins/serve"
+	"servon/plugins/supervisor"
 	"servon/plugins/yarn"
 )
 
@@ -34,6 +36,8 @@ func main() {
 	npm.Setup(core)
 	github_runner.Setup(core)
 	serve.Setup(core)
+	pm2.Setup(core)
+	supervisor.Setup(core)
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)

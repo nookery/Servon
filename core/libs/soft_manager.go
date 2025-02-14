@@ -32,7 +32,6 @@ func (p *SoftManager) newInfoCmd() *cobra.Command {
 				// 显示支持的软件列表
 				names := p.GetAllSoftware()
 				DefaultPrinter.PrintList(names, "支持的软件列表")
-
 				return
 			}
 
@@ -66,28 +65,25 @@ func (p *SoftManager) newInfoCmd() *cobra.Command {
 
 			// 显示软件信息
 			fmt.Println()
-			DefaultPrinter.PrintCyan("%s", fmt.Sprintf("📦 %s\n", name))
+			PrintTitle(name)
 			fmt.Println()
 
-			// 显示安装状态
-			DefaultPrinter.PrintWhite("状态: ")
-			switch status["status"] {
-			case "running":
-				DefaultPrinter.PrintGreen("运行中")
-			case "stopped":
-				DefaultPrinter.PrintYellow("已停止")
-			case "not_installed":
-				DefaultPrinter.PrintRed("未安装")
-			default:
-				DefaultPrinter.PrintWhite("%s", status["status"])
+			// 对状态进行本地化处理
+			if statusValue, exists := status["status"]; exists {
+				statusText := map[string]string{
+					"not_installed": "未安装",
+					"installed":     "已安装",
+					"running":       "运行中",
+					"stopped":       "已停止",
+					"error":         "异常",
+				}
+				if localText, ok := statusText[statusValue]; ok {
+					status["status"] = localText
+				}
 			}
 
-			// 显示版本信息
-			if version := status["version"]; version != "" {
-				DefaultPrinter.PrintWhite("版本: ")
-				DefaultPrinter.PrintWhite(version)
-			}
-
+			// 使用 PrintKeyValues 输出所有状态信息
+			DefaultPrinter.PrintKeyValues(status)
 			fmt.Println()
 		},
 	})

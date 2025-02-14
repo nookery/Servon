@@ -84,6 +84,7 @@ func New() *Core {
 	core.AddCommand(core.GetUpgradeCommand())
 	core.AddCommand(core.GetSoftwareCommand())
 	core.AddCommand(core.GetUserRootCommand())
+	core.AddCommand(core.GetServiceRootCommand())
 
 	return core
 }

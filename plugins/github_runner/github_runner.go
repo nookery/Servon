@@ -48,7 +48,7 @@ func NewGitHubRunner(core *core.Core) contract.SuperSoft {
 			Name:        "github-runner",
 			Description: "GitHub Actions self-hosted runner",
 		},
-		targetDir: core.GetDataRootFolder() + "/actions-runner",
+		targetDir: core.GetSoftwareRootFolder("github-runner"),
 		Core:      core,
 	}
 }

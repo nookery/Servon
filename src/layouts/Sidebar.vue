@@ -36,11 +36,11 @@ const menuOptions = [
         key: 'users',
         icon: 'ri-user-settings-line'
     },
-    {
-        label: '定时任务',
-        key: 'cron',
-        icon: 'ri-time-line'
-    }
+    // {
+    //     label: '定时任务',
+    //     key: 'cron',
+    //     icon: 'ri-time-line'
+    // }
 ]
 
 const handleMenuClick = (key: string) => {

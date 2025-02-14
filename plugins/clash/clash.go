@@ -29,7 +29,7 @@ func NewClash(core *core.Core) contract.SuperSoft {
 			Name:        "clash",
 			Description: "A rule-based tunnel in Go",
 		},
-		targetDir: core.GetDataRootFolder() + "/clash-for-linux",
+		targetDir: core.DataManager.GetSoftwareRootFolder("clash"),
 		Core:      core,
 	}
 }
@@ -53,8 +53,9 @@ func (c *Clash) Install() error {
 
 		// 使用 go-git 克隆仓库
 		c.PrintInfof("克隆 clash-for-linux 仓库 -> %s", repoUrl)
-		err = c.GitManager.GitClone(repoUrl, c.targetDir)
+		err = c.GitClone(repoUrl, "master", c.targetDir)
 		if err != nil {
+			c.PrintErrorMessage(err.Error())
 			return fmt.Errorf("克隆仓库失败: %s", err)
 		}
 
@@ -71,7 +72,7 @@ func (c *Clash) Install() error {
 	}
 
 	// 确保在返回前发送完成消息
-	c.PrintInfof("ClashPlugin: 安装完成")
+	c.PrintInfof("Clash 安装完成")
 	return nil
 }
 
