@@ -141,8 +141,7 @@ func (p *Printer) sendToChannel(message string, logType LogType) {
 
 // print handles all printing operations
 func (p *Printer) print(level LogType, message string, locationType LocationType, sendToChannel bool) {
-	color := level.Color
-
+	var color = level.Color
 	var callerInfo string
 
 	_, thisFile, _, _ := runtime.Caller(0)
@@ -162,6 +161,16 @@ func (p *Printer) print(level LogType, message string, locationType LocationType
 		shortFile := callerFile[strings.LastIndex(callerFile, "/")+1:]
 		callerInfo = fmt.Sprintf("%s\n📃 位置: %s:%d", message, shortFile, callerLine)
 	} else {
+		callerInfo = ""
+	}
+
+	// 如果是打包后的软件，则不打印位置
+	if os.Args[0] == "main" ||
+		strings.Contains(os.Args[0], "go-build") ||
+		strings.Contains(os.Args[0], "/tmp/") {
+		// 在开发环境中运行
+	} else {
+		// 在打包环境中运行
 		callerInfo = ""
 	}
 
