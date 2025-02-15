@@ -1,12 +1,12 @@
-package libs
+package managers
 
 import (
 	"fmt"
+	"servon/core/internal/utils"
 	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -26,7 +26,7 @@ func NewGitManager() *GitManager {
 // targetDir: 目标目录
 func (g *GitManager) GitClone(url string, branch string, targetDir string) error {
 	// 如果目标目录存在且不为空，则返回错误
-	if DefaultFilesManager.IsDirExists(targetDir) && DefaultFilesManager.GetDirSize(targetDir) > 0 {
+	if utils.IsDirExists(targetDir) && utils.GetDirSize(targetDir) > 0 {
 		return fmt.Errorf("目标目录 %s 已存在且不为空", targetDir)
 	}
 
@@ -47,9 +47,9 @@ func (g *GitManager) GitClone(url string, branch string, targetDir string) error
 	}
 
 	// 如果常规克隆失败，尝试使用代理
-	if !DefaultProxyManager.IsProxyOn() {
+	if !DefaultSoftManager.IsProxyOn() {
 		PrintCommandOutput("常规克隆失败，尝试开启代理重新克隆...")
-		software, err := DefaultProxyManager.OpenProxy()
+		software, err := DefaultSoftManager.OpenProxy()
 		if err != nil {
 			return fmt.Errorf("开启代理失败: %v，上一次克隆错误: %v", err, lastErr)
 		}
@@ -92,44 +92,6 @@ func (g *GitManager) cloneRepo(url string, branch string, targetDir string) erro
 type progressWriter struct{}
 
 func (pw *progressWriter) Write(p []byte) (n int, err error) {
-	DefaultPrinter.PrintCommandOutput(string(p))
+	PrintCommandOutput(string(p))
 	return len(p), nil
-}
-
-// --- 以下是 cobra 命令 ---
-
-// GetGitRootCommand 获取git命令根命令，返回一个 cobra.Command
-func (g *GitManager) GetGitRootCommand() *cobra.Command {
-	rootCmd := &cobra.Command{
-		Use:   "git",
-		Short: "git 命令，比默认的 git 命令更智能",
-	}
-
-	rootCmd.AddCommand(g.GetCloneCommand())
-
-	return rootCmd
-}
-
-// GetCloneCommand 获取克隆命令，返回一个 cobra.Command
-func (g *GitManager) GetCloneCommand() *cobra.Command {
-	cloneCmd := &cobra.Command{
-		Use:   "clone",
-		Short: "克隆一个git仓库",
-		Run: func(cmd *cobra.Command, args []string) {
-			url, _ := cmd.Flags().GetString("url")
-			branch, _ := cmd.Flags().GetString("branch")
-			targetDir, _ := cmd.Flags().GetString("target-dir")
-
-			err := g.GitClone(url, branch, targetDir)
-			if err != nil {
-				PrintError(err)
-			}
-		},
-	}
-
-	cloneCmd.Flags().StringP("url", "u", "", "仓库地址")
-	cloneCmd.Flags().StringP("branch", "b", "master", "分支")
-	cloneCmd.Flags().StringP("target-dir", "t", "", "目标目录")
-
-	return cloneCmd
 }

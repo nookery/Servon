@@ -59,8 +59,8 @@ func (p *ServePlugin) NewServeCommand() *cobra.Command {
 			// 清晰的启动横幅
 			fmt.Printf("\n  %s\n\n", color.HiCyanString("SERVON"))
 
-			printKeyValue("Version:", p.VersionManager.GetVersion())
-			printKeyValue("API Only:", color.HiGreenString("%t", apiOnly))
+			p.PrintKeyValue("Version:", p.VersionManager.GetVersion())
+			p.PrintKeyValue("API Only:", color.HiGreenString("%t", apiOnly))
 			fmt.Println()
 
 			p.StartWebServer(host, port, !apiOnly)
@@ -75,14 +75,8 @@ func (p *ServePlugin) NewServeCommand() *cobra.Command {
 	return cmd
 }
 
-func printKeyValue(key string, value string) {
-	fmt.Printf("  %-25s    %s\n",
-		color.HiBlackString(key),
-		color.HiGreenString(value))
-}
-
 func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
-	router := p.NewWebServer(host, port, withUI)
+	router := p.GetRouter()
 
 	// 设置API路由
 	p.setupAPIRoutes(router)
@@ -108,7 +102,7 @@ func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
 			}()
 		} else {
 			setupUIRoutes(router)
-			printKeyValue("Local UI:", color.HiGreenString("http://localhost:%d", port))
+			p.PrintKeyValue("Local UI:", color.HiGreenString("http://localhost:%d", port))
 		}
 	}
 

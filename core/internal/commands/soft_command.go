@@ -1,50 +1,32 @@
-package libs
+package commands
 
 import (
 	"fmt"
-	"servon/core/internal/contract"
+	"servon/core/internal/managers"
 
 	"github.com/spf13/cobra"
 )
 
-type SoftManager struct {
-	Softwares map[string]contract.SuperSoft
-}
+// GetSoftwareCommand 返回 software 命令
+func GetSoftwareCommand(p *managers.SoftManager) *cobra.Command {
+	cmd := NewCommand(CommandOptions{
+		Use:     "software",
+		Short:   "软件管理",
+		Aliases: []string{"soft"},
+	})
 
-func newSoftManager() *SoftManager {
-	return &SoftManager{
-		Softwares: make(map[string]contract.SuperSoft),
-	}
-}
+	cmd.AddCommand(newListCmd(p))
+	cmd.AddCommand(newInstallCmd(p))
+	cmd.AddCommand(newInfoCmd(p))
+	cmd.AddCommand(newStartCmd(p))
+	cmd.AddCommand(newStopCmd(p))
+	cmd.AddCommand(newUninstallCmd(p))
 
-// GetProxySoftwares 获取所有的代理软件
-func (p *SoftManager) GetProxySoftwares() []string {
-	proxySoftwares := make([]string, 0)
-	for name, software := range p.Softwares {
-		if software.GetInfo().IsProxySoftware {
-			proxySoftwares = append(proxySoftwares, name)
-		}
-	}
-	return proxySoftwares
-}
-
-// GetSoftware 获取软件
-func (p *SoftManager) GetSoftware(name string) (contract.SuperSoft, error) {
-	software, ok := p.Softwares[name]
-	if !ok {
-		return nil, fmt.Errorf("软件 %s 未注册", name)
-	}
-	return software, nil
-}
-
-// HasSoftware 判断软件是否存在
-func (p *SoftManager) HasSoftware(name string) bool {
-	_, ok := p.Softwares[name]
-	return ok
+	return cmd
 }
 
 // newInfoCmd 返回 info 子命令
-func (p *SoftManager) newInfoCmd() *cobra.Command {
+func newInfoCmd(p *managers.SoftManager) *cobra.Command {
 	return NewCommand(CommandOptions{
 		Use:   "info",
 		Short: "显示软件详细信息",
@@ -115,26 +97,20 @@ func (p *SoftManager) newInfoCmd() *cobra.Command {
 	})
 }
 
-// GetSoftwareCommand 返回 software 命令
-func (p *SoftManager) GetSoftwareCommand() *cobra.Command {
-	cmd := NewCommand(CommandOptions{
-		Use:     "software",
-		Short:   "软件管理",
-		Aliases: []string{"soft"},
+// newUninstallCmd 返回 uninstall 子命令
+func newUninstallCmd(p *managers.SoftManager) *cobra.Command {
+	return NewCommand(CommandOptions{
+		Use:     "uninstall",
+		Short:   "卸载指定的软件",
+		Aliases: []string{"u", "remove"},
+		Run: func(cmd *cobra.Command, args []string) {
+			p.UninstallSoftware(args[0])
+		},
 	})
-
-	cmd.AddCommand(p.newListCmd())
-	cmd.AddCommand(p.newInstallCmd())
-	cmd.AddCommand(p.newInfoCmd())
-	cmd.AddCommand(p.newStartCmd())
-	cmd.AddCommand(p.newStopCmd())
-	cmd.AddCommand(p.newUninstallCmd())
-
-	return cmd
 }
 
 // newStartCmd 返回 start 子命令
-func (p *SoftManager) newStartCmd() *cobra.Command {
+func newStartCmd(p *managers.SoftManager) *cobra.Command {
 	return NewCommand(CommandOptions{
 		Use:   "start",
 		Short: "启动指定的软件",
@@ -194,7 +170,7 @@ func (p *SoftManager) newStartCmd() *cobra.Command {
 	})
 }
 
-func (p *SoftManager) newStopCmd() *cobra.Command {
+func newStopCmd(p *managers.SoftManager) *cobra.Command {
 	return NewCommand(CommandOptions{
 		Use:   "stop",
 		Short: "停止指定的软件",
@@ -255,7 +231,7 @@ func (p *SoftManager) newStopCmd() *cobra.Command {
 }
 
 // newListCmd 返回 list 子命令
-func (p *SoftManager) newListCmd() *cobra.Command {
+func newListCmd(p *managers.SoftManager) *cobra.Command {
 	return NewCommand(CommandOptions{
 		Use:     "list",
 		Short:   "显示支持的软件列表",
@@ -269,7 +245,7 @@ func (p *SoftManager) newListCmd() *cobra.Command {
 }
 
 // newInstallCmd 返回 install 子命令
-func (p *SoftManager) newInstallCmd() *cobra.Command {
+func newInstallCmd(p *managers.SoftManager) *cobra.Command {
 	cmd := NewCommand(CommandOptions{
 		Use:     "install",
 		Short:   "安装指定的软件",
@@ -283,88 +259,4 @@ func (p *SoftManager) newInstallCmd() *cobra.Command {
 	})
 
 	return cmd
-}
-
-// newUninstallCmd 返回 uninstall 子命令
-func (p *SoftManager) newUninstallCmd() *cobra.Command {
-	return NewCommand(CommandOptions{
-		Use:     "uninstall",
-		Short:   "卸载指定的软件",
-		Aliases: []string{"u", "remove"},
-		Run: func(cmd *cobra.Command, args []string) {
-			p.UninstallSoftware(args[0])
-		},
-	})
-}
-
-// Install 安装软件, 如果提供了日志通道则输出日志
-func (c *SoftManager) Install(name string) error {
-	software, ok := c.Softwares[name]
-	if !ok {
-		registeredSoftwares := make([]string, 0, len(c.Softwares))
-		for name := range c.Softwares {
-			registeredSoftwares = append(registeredSoftwares, name)
-		}
-
-		DefaultPrinter.PrintList(registeredSoftwares, "可用的软件")
-		return DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
-	}
-
-	return software.Install()
-}
-
-// UninstallSoftware 卸载软件
-func (c *SoftManager) UninstallSoftware(name string) error {
-	software, ok := c.Softwares[name]
-	if !ok {
-		return DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
-	}
-	return software.Uninstall()
-}
-
-// StartSoftware 启动软件
-func (c *SoftManager) StartSoftware(name string) error {
-	software, ok := c.Softwares[name]
-	if !ok {
-		return DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
-	}
-	return software.Start()
-}
-
-// StopSoftware 停止软件
-func (c *SoftManager) StopSoftware(name string) error {
-	software, ok := c.Softwares[name]
-	if !ok {
-		return DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
-	}
-	return software.Stop()
-}
-
-// GetSoftwareStatus 获取软件状态
-func (c *SoftManager) GetSoftwareStatus(name string) (map[string]string, error) {
-	software, ok := c.Softwares[name]
-	if !ok {
-		return nil, DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
-	}
-
-	return software.GetStatus()
-}
-
-// RegisterSoftware 注册软件
-func (c *SoftManager) RegisterSoftware(name string, software contract.SuperSoft) error {
-	if _, exists := c.Softwares[name]; exists {
-		return DefaultPrinter.PrintAndReturnError(fmt.Sprintf("软件 %s 已注册", name))
-	}
-	c.Softwares[name] = software
-	return nil
-}
-
-// GetAllSoftware 获取所有软件
-func (c *SoftManager) GetAllSoftware() []string {
-	DefaultPrinter.PrintInfo("获取所有软件...")
-	softwareNames := make([]string, 0, len(c.Softwares))
-	for name := range c.Softwares {
-		softwareNames = append(softwareNames, name)
-	}
-	return softwareNames
 }

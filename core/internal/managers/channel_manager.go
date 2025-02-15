@@ -1,10 +1,12 @@
-package libs
+package managers
+
+var DefaultChannelManager = newChannelManager()
 
 type ChannelManager struct {
 	channels map[string]chan string
 }
 
-func NewChannelManager() *ChannelManager {
+func newChannelManager() *ChannelManager {
 	return &ChannelManager{
 		channels: make(map[string]chan string),
 	}

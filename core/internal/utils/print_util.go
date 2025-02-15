@@ -1,4 +1,4 @@
-package libs
+package utils
 
 import (
 	"bufio"
@@ -13,6 +13,30 @@ import (
 
 	"github.com/fatih/color"
 )
+
+var DefaultPrinter = newPrinter()
+
+type Printer struct {
+	Color   *color.Color
+	LogChan chan string // 添加日志通道
+	enabled bool        // 是否启用通道
+}
+
+func newPrinter() *Printer {
+	p := &Printer{
+		Color:   color.New(color.FgCyan),
+		LogChan: make(chan string, 100), // 使用带缓冲的通道，避免阻塞
+		enabled: true,
+	}
+
+	// go func() {
+	// 	for msg := range p.LogChan {
+	// 		fmt.Println("=====:" + msg)
+	// 	}
+	// }()
+
+	return p
+}
 
 type LogType struct {
 	Name   string
@@ -85,28 +109,6 @@ type LogMessage struct {
 	Type    string `json:"type"`    // The log type (info, error, warn, etc.)
 	Symbol  string `json:"symbol"`  // The emoji symbol
 	Message string `json:"message"` // The actual message
-}
-
-type Printer struct {
-	Color   *color.Color
-	LogChan chan string // 添加日志通道
-	enabled bool        // 是否启用通道
-}
-
-func NewPrinter() *Printer {
-	p := &Printer{
-		Color:   color.New(color.FgCyan),
-		LogChan: make(chan string, 100), // 使用带缓冲的通道，避免阻塞
-		enabled: true,
-	}
-
-	// go func() {
-	// 	for msg := range p.LogChan {
-	// 		fmt.Println("=====:" + msg)
-	// 	}
-	// }()
-
-	return p
 }
 
 // EnableLogging 启用日志通道
@@ -346,7 +348,7 @@ func (p *Printer) RunShell(command string, args ...string) error {
 	// 去除command开头的空格
 	command = strings.TrimSpace(command)
 
-	PrintCommand(fmt.Sprintf("%s %s", command, joinArgs(args)))
+	p.PrintCommand(fmt.Sprintf("%s %s", command, JoinArgs(args)))
 
 	execCmd := exec.Command(command, args...)
 
@@ -366,10 +368,10 @@ func (p *Printer) RunShell(command string, args ...string) error {
 	}
 
 	// 处理标准输出
-	go processOutput(stdoutPipe, "stdout")
+	go p.processOutput(stdoutPipe, "stdout")
 
 	// 处理标准错误
-	go processOutput(stderrPipe, "stderr")
+	go p.processOutput(stderrPipe, "stderr")
 
 	// 等待命令完成
 	return execCmd.Wait()
@@ -387,13 +389,13 @@ func (p *Printer) RunShellWithSudo(command string, args ...string) error {
 }
 
 // processOutput 处理输出流
-func processOutput(pipe io.ReadCloser, source string) {
+func (p *Printer) processOutput(pipe io.ReadCloser, source string) {
 	scanner := bufio.NewScanner(pipe)
 	for scanner.Scan() {
 		line := scanner.Text()
 		// 打印到控制台并发送到日志通道
 		fmt.Println(line)
-		DefaultPrinter.sendToChannel(line, LogTypeCommandOutput)
+		p.sendToChannel(line, LogTypeCommandOutput)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -407,7 +409,7 @@ func (p *Printer) RunShellWithOutput(command string, args ...string) (string, er
 		return "", fmt.Errorf("command is required")
 	}
 
-	PrintCommand(fmt.Sprintf("%s %s", command, joinArgs(args)))
+	p.PrintCommand(fmt.Sprintf("%s %s", command, JoinArgs(args)))
 
 	execCmd := exec.Command(command, args...)
 

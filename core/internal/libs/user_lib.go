@@ -7,14 +7,12 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-
-	"github.com/spf13/cobra"
 )
 
-type UserManager struct{}
+type UserLib struct{}
 
-func NewUserManager() *UserManager {
-	return &UserManager{}
+func NewUserLib() *UserLib {
+	return &UserLib{}
 }
 
 // User 表示系统用户的结构体
@@ -29,7 +27,7 @@ type User struct {
 }
 
 // GetUserList 获取系统用户列表
-func (u *UserManager) GetUserList() ([]User, error) {
+func (u *UserLib) GetUserList() ([]User, error) {
 	PrintInfo("获取用户列表")
 
 	// 使用 os/user 包读取 /etc/passwd
@@ -88,7 +86,7 @@ func (u *UserManager) GetUserList() ([]User, error) {
 }
 
 // 获取用户组信息
-func (u *UserManager) getUserGroups(username string) ([]string, error) {
+func (u *UserLib) getUserGroups(username string) ([]string, error) {
 	output, err := RunShellWithOutput("groups", username)
 	if err != nil {
 		return nil, err
@@ -103,7 +101,7 @@ func (u *UserManager) getUserGroups(username string) ([]string, error) {
 }
 
 // 获取用户创建时间
-func (u *UserManager) getUserCreateTime(homeDir string) time.Time {
+func (u *UserLib) getUserCreateTime(homeDir string) time.Time {
 	info, err := os.Stat(homeDir)
 	if err != nil {
 		return time.Time{} // 返回零值表示未知
@@ -112,7 +110,7 @@ func (u *UserManager) getUserCreateTime(homeDir string) time.Time {
 }
 
 // 获取最后登录时间
-func (u *UserManager) getLastLogin(username string) time.Time {
+func (u *UserLib) getLastLogin(username string) time.Time {
 	err := RunShell("last", "-1", username)
 	if err != nil {
 		return time.Time{} // 返回零值表示未知
@@ -122,7 +120,7 @@ func (u *UserManager) getLastLogin(username string) time.Time {
 }
 
 // 检查是否有 sudo 权限
-func (u *UserManager) hasSudoPermission(username string) bool {
+func (u *UserLib) hasSudoPermission(username string) bool {
 	// 检查用户是否在 sudo 组中
 	output, err := RunShellWithOutput("groups", username)
 	if err != nil {
@@ -132,7 +130,7 @@ func (u *UserManager) hasSudoPermission(username string) bool {
 }
 
 // CreateUser 创建新用户
-func (u *UserManager) CreateUser(username string, password string) error {
+func (u *UserLib) CreateUser(username string, password string) error {
 	exists, err := u.UserExists(username)
 	if err != nil {
 		return err
@@ -158,7 +156,7 @@ func (u *UserManager) CreateUser(username string, password string) error {
 }
 
 // DeleteUser 删除用户
-func (u *UserManager) DeleteUser(username string) error {
+func (u *UserLib) DeleteUser(username string) error {
 	exists, err := u.UserExists(username)
 	if err != nil {
 		return fmt.Errorf("检查用户是否存在失败: %v", err)
@@ -175,7 +173,7 @@ func (u *UserManager) DeleteUser(username string) error {
 }
 
 // UserExists 检查用户是否存在
-func (u *UserManager) UserExists(username string) (bool, error) {
+func (u *UserLib) UserExists(username string) (bool, error) {
 	output, err := RunShellWithOutput("id", username)
 
 	if err != nil {
@@ -189,86 +187,4 @@ func (u *UserManager) UserExists(username string) (bool, error) {
 	}
 
 	return true, nil
-}
-
-// --- 命令 ---
-
-// GetUserRootCommand 获取用户管理命令
-func (u *UserManager) GetUserRootCommand() *cobra.Command {
-	rootCmd := NewCommand(CommandOptions{
-		Use:   "user",
-		Short: "用户管理",
-	})
-
-	rootCmd.AddCommand(u.GetUserListCommand())
-	rootCmd.AddCommand(u.CreateUserCommand())
-	rootCmd.AddCommand(u.DeleteUserCommand())
-
-	return rootCmd
-}
-
-// GetUserListCommand 获取用户列表命令
-func (u *UserManager) GetUserListCommand() *cobra.Command {
-	return NewCommand(CommandOptions{
-		Use:   "list",
-		Short: "获取用户列表",
-		Run: func(cmd *cobra.Command, args []string) {
-			users, err := u.GetUserList()
-			if err != nil {
-				DefaultPrinter.PrintError(err)
-				return
-			}
-
-			// Convert []User to []string
-			userStrings := make([]string, len(users))
-			for i, user := range users {
-				userStrings[i] = fmt.Sprintf("%s (%s)", user.Username, strings.Join(user.Groups, ","))
-			}
-
-			DefaultPrinter.PrintList(userStrings, "用户列表")
-		},
-	})
-}
-
-// CreateUserCommand 创建用户命令
-func (u *UserManager) CreateUserCommand() *cobra.Command {
-	return NewCommand(CommandOptions{
-		Use:   "create",
-		Short: "创建用户",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 2 {
-				DefaultPrinter.PrintErrorMessage("请提供用户名和密码，例如：user create username password")
-				return
-			}
-			username := args[0]
-			password := args[1]
-			err := u.CreateUser(username, password)
-			if err != nil {
-				PrintError(err)
-			}
-		},
-	})
-}
-
-// DeleteUserCommand 删除用户命令
-func (u *UserManager) DeleteUserCommand() *cobra.Command {
-	return NewCommand(CommandOptions{
-		Use:     "delete",
-		Short:   "删除用户",
-		Aliases: []string{"del", "d"},
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 1 {
-				DefaultPrinter.PrintErrorMessage("请提供用户名")
-				return
-			}
-			username := args[0]
-			err := u.DeleteUser(username)
-			if err != nil {
-				PrintError(err)
-				return
-			}
-
-			PrintSuccessf("用户 %s 已删除", username)
-		},
-	})
 }

@@ -1,4 +1,4 @@
-package libs
+package managers
 
 import (
 	"fmt"
@@ -9,9 +9,9 @@ import (
 	"text/template"
 
 	"servon/core/internal/templates"
-
-	"github.com/spf13/cobra"
 )
+
+var DefaultServiceManager = newServiceManager()
 
 type ServiceManager struct {
 	RootFolder string
@@ -27,17 +27,17 @@ type SupervisorConfig struct {
 	Environment string
 }
 
-func NewServiceManager() *ServiceManager {
+func newServiceManager() *ServiceManager {
 	return &ServiceManager{
 		RootFolder: DefaultDataManager.GetSoftwareRootFolder("supervisor"),
 		ConfigDir:  DefaultDataManager.GetSoftwareRootFolder("supervisor") + "/conf.d",
 	}
 }
 
-func (p *ServiceManager) checkSupervisorInstalled() error {
+func (p *ServiceManager) CheckSupervisorInstalled() error {
 	cmd := exec.Command("which", "supervisord")
 	if err := cmd.Run(); err != nil {
-		printer.PrintErrorMessage("Supervisor未安装，请先安装Supervisor")
+		PrintErrorMessage("Supervisor未安装，请先安装Supervisor")
 		PrintInfo("Ubuntu/Debian: sudo apt-get install supervisor")
 		PrintInfo("CentOS/RHEL: sudo yum install supervisor")
 		return fmt.Errorf("supervisor未安装")
@@ -155,9 +155,9 @@ func (p *ServiceManager) createConfig(serviceName string, command string, args [
 	return configPath, nil
 }
 
-func (p *ServiceManager) checkSupervisorRunning() error {
+func (p *ServiceManager) CheckSupervisorRunning() error {
 	// 首先检查是否安装
-	if err := p.checkSupervisorInstalled(); err != nil {
+	if err := p.CheckSupervisorInstalled(); err != nil {
 		return err
 	}
 
@@ -197,7 +197,7 @@ func (p *ServiceManager) GetServiceFilePath(serviceName string) string {
 }
 
 func (p *ServiceManager) IsActive(serviceName string) bool {
-	if err := p.checkSupervisorInstalled(); err != nil {
+	if err := p.CheckSupervisorInstalled(); err != nil {
 		return false
 	}
 
@@ -214,7 +214,7 @@ func (p *ServiceManager) IsActive(serviceName string) bool {
 
 // Reload 重载服务
 func (p *ServiceManager) Reload(serviceName string) error {
-	if err := p.checkSupervisorInstalled(); err != nil {
+	if err := p.CheckSupervisorInstalled(); err != nil {
 		return err
 	}
 
@@ -238,7 +238,7 @@ func (p *ServiceManager) Reload(serviceName string) error {
 
 // Start 启动服务
 func (p *ServiceManager) Start(serviceName string) error {
-	if err := p.checkSupervisorInstalled(); err != nil {
+	if err := p.CheckSupervisorInstalled(); err != nil {
 		return err
 	}
 
@@ -255,7 +255,7 @@ func (p *ServiceManager) Start(serviceName string) error {
 
 // Stop 停止服务
 func (p *ServiceManager) Stop(serviceName string) error {
-	if err := p.checkSupervisorInstalled(); err != nil {
+	if err := p.CheckSupervisorInstalled(); err != nil {
 		return err
 	}
 
@@ -285,13 +285,13 @@ func (p *ServiceManager) Stop(serviceName string) error {
 // args: 命令参数
 // env: 环境变量，格式如 ["KEY=VALUE", ...]
 func (p *ServiceManager) AddBackgroundService(serviceName string, command string, args []string, env []string) (string, error) {
-	printer.PrintInfof("正在添加后台服务: %s", command)
+	PrintInfof("正在添加后台服务: %s", command)
 
 	if p.HasServiceConf(serviceName) {
 		return "", fmt.Errorf("服务配置文件已存在: %s", serviceName)
 	}
 
-	if err := p.checkSupervisorInstalled(); err != nil {
+	if err := p.CheckSupervisorInstalled(); err != nil {
 		return "", err
 	}
 
@@ -299,7 +299,7 @@ func (p *ServiceManager) AddBackgroundService(serviceName string, command string
 		return "", err
 	}
 
-	printer.PrintInfof("正在创建服务配置文件: %s", serviceName)
+	PrintInfof("正在创建服务配置文件: %s", serviceName)
 
 	configPath, err := p.createConfig(serviceName, command, args, env)
 	if err != nil {
@@ -340,7 +340,7 @@ func (p *ServiceManager) StopBackgroundService(serviceName string, logChan chan<
 func (p *ServiceManager) GetServiceList() (string, error) {
 	PrintInfo("获取服务列表...")
 
-	if err := p.checkSupervisorInstalled(); err != nil {
+	if err := p.CheckSupervisorInstalled(); err != nil {
 		return "", err
 	}
 
@@ -350,177 +350,4 @@ func (p *ServiceManager) GetServiceList() (string, error) {
 	}
 
 	return string(output), nil
-}
-
-// --- 命令 ---
-
-func (p *ServiceManager) GetServiceRootCommand() *cobra.Command {
-	rootCmd := NewCommand(CommandOptions{
-		Use:   "service",
-		Short: "服务管理，管理系统中运行的后台服务，包括查看、启动、停止、重启等操作",
-	})
-
-	rootCmd.AddCommand(p.GetServiceListCommand())
-	rootCmd.AddCommand(p.GetServiceStartCommand())
-	rootCmd.AddCommand(p.GetServiceStopCommand())
-	rootCmd.AddCommand(p.GetServiceRestartCommand())
-	rootCmd.AddCommand(p.GetServiceStatusCommand())
-	rootCmd.AddCommand(p.GetServiceLogsCommand())
-
-	return rootCmd
-}
-
-// GetServiceListCommand 列出所有服务
-func (p *ServiceManager) GetServiceListCommand() *cobra.Command {
-	return NewCommand(CommandOptions{
-		Use:   "list",
-		Short: "列出所有服务",
-		Run: func(cmd *cobra.Command, args []string) {
-			// 检查 supervisor 是否正在运行
-			if err := p.checkSupervisorRunning(); err != nil {
-				return
-			}
-
-			PrintInfo("获取服务列表...")
-			output, err := p.GetServiceList()
-			if err != nil {
-				PrintErrorf("%v", err)
-				return
-			}
-
-			if output == "" {
-				PrintInfo("当前没有运行中的服务")
-				PrintCommandOutput("当前没有运行中的服务")
-				return
-			}
-
-			PrintInfo("服务列表:")
-			fmt.Println(output)
-		},
-	})
-}
-
-func (p *ServiceManager) GetServiceStartCommand() *cobra.Command {
-	return NewCommand(CommandOptions{
-		Use:   "start",
-		Short: "启动服务",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceName := args[0]
-			if err := p.Start(serviceName); err != nil {
-				PrintErrorf("启动服务失败: %v", err)
-				return
-			}
-		},
-	})
-}
-
-func (p *ServiceManager) GetServiceStopCommand() *cobra.Command {
-	return NewCommand(CommandOptions{
-		Use:   "stop",
-		Short: "停止服务",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceName := args[0]
-			if err := p.Stop(serviceName); err != nil {
-				PrintErrorf("停止服务失败: %v", err)
-				return
-			}
-		},
-	})
-}
-
-func (p *ServiceManager) GetServiceRestartCommand() *cobra.Command {
-	return NewCommand(CommandOptions{
-		Use:   "restart",
-		Short: "重启服务",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceName := args[0]
-			PrintInfof("正在重启服务: %s", serviceName)
-
-			if err := p.Stop(serviceName); err != nil {
-				PrintErrorf("停止服务失败: %v", err)
-				return
-			}
-
-			if err := p.Start(serviceName); err != nil {
-				PrintErrorf("启动服务失败: %v", err)
-				return
-			}
-
-			PrintSuccessf("服务已成功重启: %s", serviceName)
-		},
-	})
-}
-
-func (p *ServiceManager) GetServiceStatusCommand() *cobra.Command {
-	return NewCommand(CommandOptions{
-		Use:   "status",
-		Short: "查看服务状态",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceName := args[0]
-			if err := p.checkSupervisorInstalled(); err != nil {
-				return
-			}
-
-			command := exec.Command("supervisorctl", "status", serviceName)
-			output, err := command.CombinedOutput()
-			if err != nil {
-				PrintErrorf("获取服务状态失败: %v", err)
-				return
-			}
-
-			PrintInfof("服务状态:")
-			fmt.Println(string(output))
-		},
-	})
-}
-
-func (p *ServiceManager) GetServiceLogsCommand() *cobra.Command {
-	var tail int
-	cmd := NewCommand(CommandOptions{
-		Use:   "logs",
-		Short: "查看服务日志",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			serviceName := args[0]
-
-			// 构建日志文件路径
-			stdoutLog := filepath.Join(p.RootFolder, "logs", serviceName+".out.log")
-			stderrLog := filepath.Join(p.RootFolder, "logs", serviceName+".err.log")
-
-			// 读取标准输出日志
-			PrintInfof("标准输出日志 (最后 %d 行):", tail)
-			if err := p.tailLog(stdoutLog, tail); err != nil {
-				PrintErrorf("读取标准输出日志失败: %v", err)
-			}
-
-			// 读取错误日志
-			PrintInfof("\n错误日志 (最后 %d 行):", tail)
-			if err := p.tailLog(stderrLog, tail); err != nil {
-				PrintErrorf("读取错误日志失败: %v", err)
-			}
-		},
-	})
-
-	cmd.Flags().IntVarP(&tail, "tail", "n", 100, "显示最后几行日志")
-	return cmd
-}
-
-func (p *ServiceManager) tailLog(logFile string, lines int) error {
-	if _, err := os.Stat(logFile); os.IsNotExist(err) {
-		PrintInfo("日志文件不存在")
-		return nil
-	}
-
-	command := exec.Command("tail", "-n", fmt.Sprintf("%d", lines), logFile)
-	output, err := command.CombinedOutput()
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(output))
-	return nil
 }

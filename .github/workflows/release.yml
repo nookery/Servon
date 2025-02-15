@@ -83,9 +83,9 @@ jobs:
 
           # 构建二进制文件，注入版本信息
           go build -ldflags=" \
-            -X 'servon/core/libs.Version=$VERSION' \
-            -X 'servon/core/libs.CommitHash=$(git rev-parse HEAD)' \
-            -X 'servon/core/libs.BuildTime=$(date -u "+%Y-%m-%d %H:%M:%S")'" \
+            -X 'servon/core/internal/managers.Version=$VERSION' \
+            -X 'servon/core/internal/managers.CommitHash=$(git rev-parse HEAD)' \
+            -X 'servon/core/internal/managers.BuildTime=$(date -u "+%Y-%m-%d %H:%M:%S")'" \
             -o "servon-${{ matrix.os }}-${{ matrix.arch }}"
           sha256sum "servon-${{ matrix.os }}-${{ matrix.arch }}" > "servon-${{ matrix.os }}-${{ matrix.arch }}.sha256"
 

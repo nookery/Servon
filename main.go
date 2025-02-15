@@ -38,6 +38,7 @@ func main() {
 	serve.Setup(core)
 	pm2.Setup(core)
 	supervisor.Setup(core)
+
 	if err := core.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)

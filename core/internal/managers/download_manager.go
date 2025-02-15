@@ -1,4 +1,4 @@
-package libs
+package managers
 
 import (
 	"fmt"
@@ -39,9 +39,9 @@ func (d *DownloadManager) Download(url string, destPath string) error {
 	}
 
 	// 如果常规下载失败，尝试使用代理
-	if !DefaultProxyManager.IsProxyOn() {
+	if !DefaultSoftManager.IsProxyOn() {
 		PrintCommandOutput("常规下载失败，尝试开启代理重新下载...")
-		software, err := DefaultProxyManager.OpenProxy()
+		software, err := DefaultSoftManager.OpenProxy()
 		if err != nil {
 			return fmt.Errorf("开启代理失败: %v，上一次下载错误: %v", err, lastErr)
 		}

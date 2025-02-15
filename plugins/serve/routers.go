@@ -70,9 +70,9 @@ func (p *ServePlugin) setupAPIRoutes(router *gin.Engine) {
 		api.POST("/github/webhook", p.HandleGitHubWebhook)
 	}
 
-	printKeyValue("API:", color.HiGreenString("http://localhost:%d/web_api", port)) // 仅当监听非本地地址时显示网络访问信息
+	p.PrintKeyValue("API:", color.HiGreenString("http://localhost:%d/web_api", port)) // 仅当监听非本地地址时显示网络访问信息
 	if host != "127.0.0.1" && host != "localhost" {
-		printKeyValue("Network:", color.HiGreenString("http://%s:%d", host, port))
+		p.PrintKeyValue("Network:", color.HiGreenString("http://%s:%d", host, port))
 	}
 }
 

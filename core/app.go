@@ -1,15 +1,20 @@
 package core
 
 import (
+	"servon/core/internal/commands"
 	"servon/core/internal/contract"
 	"servon/core/internal/libs"
+	"servon/core/internal/managers"
+	"servon/core/internal/utils"
 )
 
 const DataRootFolder = "/data"
 const LoggerFolder = "/logs"
+const DefaultHost = "0.0.0.0"
+const DefaultPort = 8080
 
 type OSType = libs.OSType
-type CommandOptions = libs.CommandOptions
+type CommandOptions = utils.CommandOptions
 type CronTask = libs.CronTask
 type ValidationError = libs.ValidationError
 type ValidationErrors = libs.ValidationErrors
@@ -18,9 +23,8 @@ type SoftwareInfo = contract.SoftwareInfo
 type SuperSoft = contract.SuperSoft
 
 type App struct {
-	*libs.CommandManager
-	*libs.DataManager
-	*libs.Printer
+	// Libs，无状态的
+
 	*libs.PortManager
 	*libs.BasicInfoManager
 	*libs.OSInfoManager
@@ -28,19 +32,28 @@ type App struct {
 	*libs.ProcessManager
 	*libs.FilesManager
 	*libs.NetworkManager
-	*libs.ServiceManager
-	*libs.AptManager
 	*libs.Dpkg
 	*libs.CronManager
-	*libs.VersionManager
-	*libs.SoftManager
-	*libs.DeployManager
-	*libs.UserManager
-	*libs.DownloadManager
-	*libs.GitManager
+	*libs.UserLib
 	*libs.TaskManager
-	*libs.ProxyManager
-	*libs.WebServerManager
+
+	// Managers，有状态的或有数据的
+
+	*managers.DeployManager
+	*managers.DownloadManager
+	*managers.GitManager
+	*managers.AptManager
+	*managers.SoftManager
+	*managers.VersionManager
+	*managers.WebServerManager
+	*managers.CommandManager
+	*managers.DataManager
+	*managers.ServiceManager
+
+	// Utils
+
+	*utils.Printer
+	*utils.CommandUtil
 }
 
 const (
@@ -53,12 +66,13 @@ const (
 
 // New 创建Core实例
 func New() *App {
+	rootCmd := commands.RootCmd
+
 	core := &App{
-		CommandManager:         libs.DefaultCommandManager,
-		SoftManager:            libs.DefaultSoftManager,
-		DataManager:            libs.DefaultDataManager,
-		DeployManager:          libs.DefaultDeployManager,
-		Printer:                libs.DefaultPrinter,
+		CommandManager:         managers.NewCommandManager(rootCmd),
+		SoftManager:            managers.NewSoftManager(),
+		DataManager:            managers.DefaultDataManager,
+		Printer:                utils.DefaultPrinter,
 		PortManager:            libs.DefaultPortManager,
 		BasicInfoManager:       libs.DefaultBasicInfoManager,
 		OSInfoManager:          libs.DefaultOSInfoManager,
@@ -66,26 +80,30 @@ func New() *App {
 		ProcessManager:         libs.DefaultProcessManager,
 		FilesManager:           libs.DefaultFilesManager,
 		NetworkManager:         libs.DefaultNetworkManager,
-		ServiceManager:         libs.DefaultServiceManager,
-		AptManager:             libs.DefaultAptManager,
+		ServiceManager:         managers.DefaultServiceManager,
+		AptManager:             managers.DefaultAptManager,
 		Dpkg:                   libs.DefaultDpkg,
 		CronManager:            libs.DefaultCronManager,
-		VersionManager:         libs.DefaultVersionManager,
-		UserManager:            libs.DefaultUserManager,
-		DownloadManager:        libs.DefaultDownloadManager,
-		GitManager:             libs.DefaultGitManager,
+		VersionManager:         managers.NewVersionManager(),
+		UserLib:                libs.DefaultUserManager,
+		DownloadManager:        managers.NewDownloadManager(),
+		GitManager:             managers.NewGitManager(),
 		TaskManager:            libs.DefaultTaskManager,
-		ProxyManager:           libs.DefaultProxyManager,
-		WebServerManager:       libs.NewWebServerManager(),
+		DeployManager:          managers.NewDeployManager(commands.GetDeployCommand()),
+		WebServerManager: managers.NewWebServerManager(
+			DefaultHost,
+			DefaultPort,
+			true,
+		),
 	}
 
-	core.AddCommand(core.GetDeployCommand())
-	core.AddCommand(core.GetVersionCommand())
-	core.AddCommand(core.GetUpgradeCommand())
-	core.AddCommand(core.GetSoftwareCommand())
-	core.AddCommand(core.GetUserRootCommand())
-	core.AddCommand(core.GetServiceRootCommand())
-	core.AddCommand(core.GetGitRootCommand())
+	core.AddCommand(commands.GetDeployCommand())
+	core.AddCommand(commands.GetVersionCommand(core.VersionManager))
+	core.AddCommand(commands.GetUpgradeCommand(core.VersionManager))
+	core.AddCommand(commands.GetServiceRootCommand(core.ServiceManager))
+	core.AddCommand(commands.GetUserRootCommand(core.UserLib))
+	core.AddCommand(commands.GetSoftwareCommand(core.SoftManager))
+	core.AddCommand(commands.GetGitRootCommand(core.GitManager))
 
 	return core
 }

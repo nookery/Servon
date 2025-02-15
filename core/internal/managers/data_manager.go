@@ -1,10 +1,12 @@
-package libs
+package managers
 
 import "os"
 
+var DefaultDataManager = newDataManager()
+
 type DataManager struct{}
 
-func NewDataManager() *DataManager {
+func newDataManager() *DataManager {
 	return &DataManager{}
 }
 
