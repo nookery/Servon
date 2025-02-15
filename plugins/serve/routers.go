@@ -63,6 +63,11 @@ func (p *ServePlugin) setupAPIRoutes(router *gin.Engine) {
 		api.GET("/tasks", p.HandleListTasks)                // 获取任务列表
 		api.DELETE("/tasks/:id", p.HandleRemoveTask)        // 删除任务
 		api.POST("/tasks/:id/execute", p.HandleExecuteTask) // 执行任务
+
+		// GitHub integration routes
+		api.POST("/github/setup", p.HandleGitHubSetup)
+		api.GET("/github/callback", p.HandleGitHubCallback)
+		api.POST("/github/webhook", p.HandleGitHubWebhook)
 	}
 
 	printKeyValue("API:", color.HiGreenString("http://localhost:%d/web_api", port)) // 仅当监听非本地地址时显示网络访问信息

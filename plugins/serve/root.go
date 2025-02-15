@@ -21,13 +21,28 @@ var (
 	apiOnly bool
 )
 
+// Config represents the configuration for the serve plugin
+type Config struct {
+	Host string `json:"host"`
+	Port int    `json:"port"`
+
+	// GitHub integration settings
+	GitHubAppID         int64  `json:"github_app_id"`
+	GitHubAppPrivateKey string `json:"github_app_private_key"`
+	GitHubWebhookSecret string `json:"github_webhook_secret"`
+}
+
 type ServePlugin struct {
 	*core.Core
+	Config       *Config
+	githubStates []string // 用于存储GitHub integration的state值
 }
 
 func Setup(core *core.Core) {
 	plugin := &ServePlugin{
-		Core: core,
+		Core:         core,
+		Config:       &Config{},
+		githubStates: make([]string, 0),
 	}
 	core.GetRootCommand().AddCommand(plugin.NewServeCommand())
 }

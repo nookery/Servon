@@ -70,6 +70,45 @@ const closeTaskManager = () => {
     isTaskManagerVisible.value = false
 }
 
+const startGitHubIntegration = async () => {
+    try {
+        // 弹出对话框让用户输入基本信息
+        const appName = prompt('请输入GitHub App名称:', 'Servon App')
+        if (!appName) return
+
+        const description = prompt('请输入描述(可选):', 'Servon GitHub integration for automation')
+
+        // 调用后端API启动GitHub App Manifest flow
+        const response = await axios.post('/web_api/github/setup', {
+            name: appName,
+            description: description || undefined,
+        }, {
+            responseType: 'text'  // 接收HTML响应
+        })
+
+        // 创建一个临时div来执行返回的HTML
+        const div = document.createElement('div')
+        div.innerHTML = response.data
+        document.body.appendChild(div)
+
+        // 立即提交表单
+        const form = div.querySelector('#github-form') as HTMLFormElement
+        if (form) {
+            form.submit()
+        } else {
+            throw new Error('表单创建失败')
+        }
+
+        // 清理临时div（延迟清理，确保表单提交完成）
+        setTimeout(() => {
+            document.body.removeChild(div)
+        }, 2000)
+    } catch (error: any) {
+        console.error('启动GitHub集成失败:', error)
+        alert('启动GitHub集成失败: ' + (error.response?.data?.error || error.message))
+    }
+}
+
 onMounted(async () => {
     try {
         const res = await axios.get('/web_api/system/user')
@@ -109,6 +148,11 @@ onMounted(async () => {
 
         <div class="flex-none gap-6">
             <div class="flex items-center gap-6">
+                <!-- Add GitHub integration button before the log viewer button -->
+                <button @click="startGitHubIntegration" class="btn btn-ghost btn-circle" title="GitHub集成">
+                    <i class="ri-github-line text-xl"></i>
+                </button>
+
                 <!-- CPU Usage -->
                 <div class="w-36">
                     <div class="text-xs text-base-content/70 mb-1">
