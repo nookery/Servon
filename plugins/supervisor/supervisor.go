@@ -6,24 +6,23 @@ import (
 	"os"
 	"os/exec"
 	"servon/core"
-	"servon/core/contract"
 	"strings"
 )
 
 type SupervisorPlugin struct {
-	info contract.SoftwareInfo
-	*core.Core
+	info core.SoftwareInfo
+	*core.App
 }
 
-func Setup(core *core.Core) {
-	supervisor := NewSupervisorPlugin(core)
-	core.RegisterSoftware("supervisor", supervisor)
+func Setup(app *core.App) {
+	supervisor := NewSupervisorPlugin(app)
+	app.RegisterSoftware("supervisor", supervisor)
 }
 
-func NewSupervisorPlugin(core *core.Core) contract.SuperSoft {
+func NewSupervisorPlugin(app *core.App) core.SuperSoft {
 	return &SupervisorPlugin{
-		Core: core,
-		info: contract.SoftwareInfo{
+		App: app,
+		info: core.SoftwareInfo{
 			Name:        "supervisor",
 			Description: "Supervisor 是运行时环境",
 		},
@@ -229,7 +228,7 @@ func (s *SupervisorPlugin) checkConfig() error {
 	return nil
 }
 
-func (s *SupervisorPlugin) GetInfo() contract.SoftwareInfo {
+func (s *SupervisorPlugin) GetInfo() core.SoftwareInfo {
 	return s.info
 }
 

@@ -4,24 +4,23 @@ import (
 	"fmt"
 	"os/exec"
 	"servon/core"
-	"servon/core/contract"
 	"strings"
 )
 
-func Setup(core *core.Core) {
-	core.RegisterSoftware("git", NewGit(core))
+func Setup(app *core.App) {
+	app.RegisterSoftware("git", NewGit(app))
 }
 
 // Git 实现 Software 接口
 type Git struct {
-	info contract.SoftwareInfo
-	*core.Core
+	info core.SoftwareInfo
+	*core.App
 }
 
-func NewGit(core *core.Core) contract.SuperSoft {
+func NewGit(app *core.App) core.SuperSoft {
 	return &Git{
-		Core: core,
-		info: contract.SoftwareInfo{
+		App: app,
+		info: core.SoftwareInfo{
 			Name:        "git",
 			Description: "分布式版本控制系统",
 		},
@@ -120,7 +119,7 @@ func (g *Git) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (g *Git) GetInfo() contract.SoftwareInfo {
+func (g *Git) GetInfo() core.SoftwareInfo {
 	return g.info
 }
 

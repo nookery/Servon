@@ -2,7 +2,7 @@ package libs
 
 import (
 	"fmt"
-	"servon/core/contract"
+	"servon/core/internal/contract"
 
 	"github.com/spf13/cobra"
 )

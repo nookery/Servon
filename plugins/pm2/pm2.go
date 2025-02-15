@@ -3,25 +3,24 @@ package pm2
 import (
 	"fmt"
 	"servon/core"
-	"servon/core/contract"
 	"strings"
 )
 
-func Setup(core *core.Core) {
-	p := NewPm2(core)
-	core.RegisterSoftware("pm2", p)
+func Setup(app *core.App) {
+	p := NewPm2(app)
+	app.RegisterSoftware("pm2", p)
 }
 
 // Pm2 实现 Software 接口
 type Pm2 struct {
-	info contract.SoftwareInfo
-	*core.Core
+	info core.SoftwareInfo
+	*core.App
 }
 
-func NewPm2(core *core.Core) contract.SuperSoft {
+func NewPm2(app *core.App) core.SuperSoft {
 	return &Pm2{
-		Core: core,
-		info: contract.SoftwareInfo{
+		App: app,
+		info: core.SoftwareInfo{
 			Name:        "pnpm",
 			Description: "快速的、节省磁盘空间的包管理器",
 		},
@@ -104,7 +103,7 @@ func (p *Pm2) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (p *Pm2) GetInfo() contract.SoftwareInfo {
+func (p *Pm2) GetInfo() core.SoftwareInfo {
 	return p.info
 }
 

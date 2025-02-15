@@ -3,24 +3,23 @@ package yarn
 import (
 	"fmt"
 	"servon/core"
-	"servon/core/contract"
 	"strings"
 )
 
 // Yarn 实现 Software 接口
 type Yarn struct {
-	info contract.SoftwareInfo
-	*core.Core
+	info core.SoftwareInfo
+	*core.App
 }
 
-func Setup(core *core.Core) {
-	core.RegisterSoftware("yarn", NewYarn(core))
+func Setup(app *core.App) {
+	app.RegisterSoftware("yarn", NewYarn(app))
 }
 
-func NewYarn(core *core.Core) contract.SuperSoft {
+func NewYarn(app *core.App) core.SuperSoft {
 	return &Yarn{
-		Core: core,
-		info: contract.SoftwareInfo{
+		App: app,
+		info: core.SoftwareInfo{
 			Name:        "yarn",
 			Description: "快速、可靠、安全的依赖管理工具",
 		},
@@ -87,7 +86,7 @@ func (y *Yarn) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (y *Yarn) GetInfo() contract.SoftwareInfo {
+func (y *Yarn) GetInfo() core.SoftwareInfo {
 	return y.info
 }
 

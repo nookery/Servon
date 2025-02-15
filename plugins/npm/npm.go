@@ -4,25 +4,24 @@ import (
 	"fmt"
 	"os/exec"
 	"servon/core"
-	"servon/core/contract"
 	"strings"
 )
 
-func Setup(core *core.Core) {
-	npm := NewNpm(core)
-	core.RegisterSoftware("npm", npm)
+func Setup(app *core.App) {
+	npm := NewNpm(app)
+	app.RegisterSoftware("npm", npm)
 }
 
 // Npm 实现 Software 接口
 type Npm struct {
-	info contract.SoftwareInfo
-	*core.Core
+	info core.SoftwareInfo
+	*core.App
 }
 
-func NewNpm(core *core.Core) contract.SuperSoft {
+func NewNpm(app *core.App) core.SuperSoft {
 	return &Npm{
-		Core: core,
-		info: contract.SoftwareInfo{
+		App: app,
+		info: core.SoftwareInfo{
 			Name:        "npm",
 			Description: "Node.js 默认的包管理器",
 		},
@@ -88,7 +87,7 @@ func (n *Npm) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (n *Npm) GetInfo() contract.SoftwareInfo {
+func (n *Npm) GetInfo() core.SoftwareInfo {
 	return n.info
 }
 

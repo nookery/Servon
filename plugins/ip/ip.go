@@ -8,13 +8,14 @@ import (
 	"net/http"
 	"strings"
 
+	"servon/core"
+
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"servon/core"
 )
 
-func Setup(core *core.Core) {
-	core.AddCommand(IPCmd)
+func Setup(app *core.App) {
+	app.AddCommand(IPCmd)
 }
 
 var IPCmd = &cobra.Command{

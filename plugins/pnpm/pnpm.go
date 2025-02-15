@@ -3,25 +3,24 @@ package pnpm
 import (
 	"fmt"
 	"servon/core"
-	"servon/core/contract"
 	"strings"
 )
 
-func Setup(core *core.Core) {
-	p := NewPnpm(core)
-	core.RegisterSoftware("pnpm", p)
+func Setup(app *core.App) {
+	p := NewPnpm(app)
+	app.RegisterSoftware("pnpm", p)
 }
 
 // Pnpm 实现 Software 接口
 type Pnpm struct {
-	info contract.SoftwareInfo
-	*core.Core
+	info core.SoftwareInfo
+	*core.App
 }
 
-func NewPnpm(core *core.Core) contract.SuperSoft {
+func NewPnpm(app *core.App) core.SuperSoft {
 	return &Pnpm{
-		Core: core,
-		info: contract.SoftwareInfo{
+		App: app,
+		info: core.SoftwareInfo{
 			Name:        "pnpm",
 			Description: "快速的、节省磁盘空间的包管理器",
 		},
@@ -104,7 +103,7 @@ func (p *Pnpm) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (p *Pnpm) GetInfo() contract.SoftwareInfo {
+func (p *Pnpm) GetInfo() core.SoftwareInfo {
 	return p.info
 }
 

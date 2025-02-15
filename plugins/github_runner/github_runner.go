@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"servon/core"
-	"servon/core/contract"
 )
 
 // ProgressReader 用于跟踪读取进度
@@ -27,25 +26,25 @@ func (pr *ProgressReader) Read(p []byte) (int, error) {
 	return n, err
 }
 
-func Setup(core *core.Core) {
-	plugin := NewGitHubRunner(core)
-	core.RegisterSoftware("github-runner", plugin)
+func Setup(app *core.App) {
+	plugin := NewGitHubRunner(app)
+	app.RegisterSoftware("github-runner", plugin)
 }
 
 type GitHubRunner struct {
-	info      contract.SoftwareInfo
+	info      core.SoftwareInfo
 	targetDir string
-	*core.Core
+	*core.App
 }
 
-func NewGitHubRunner(core *core.Core) contract.SuperSoft {
+func NewGitHubRunner(app *core.App) core.SuperSoft {
 	return &GitHubRunner{
-		info: contract.SoftwareInfo{
+		info: core.SoftwareInfo{
 			Name:        "github-runner",
 			Description: "GitHub Actions self-hosted runner",
 		},
-		targetDir: core.GetSoftwareRootFolder("github-runner"),
-		Core:      core,
+		targetDir: app.GetSoftwareRootFolder("github-runner"),
+		App:       app,
 	}
 }
 
@@ -94,7 +93,7 @@ func (g *GitHubRunner) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (g *GitHubRunner) GetInfo() contract.SoftwareInfo {
+func (g *GitHubRunner) GetInfo() core.SoftwareInfo {
 	return g.info
 }
 

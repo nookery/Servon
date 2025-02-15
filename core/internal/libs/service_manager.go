@@ -5,9 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"servon/core/templates"
 	"strings"
 	"text/template"
+
+	"servon/core/internal/templates"
 
 	"github.com/spf13/cobra"
 )

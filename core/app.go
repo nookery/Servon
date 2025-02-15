@@ -1,16 +1,23 @@
 package core
 
 import (
-	"servon/core/libs"
+	"servon/core/internal/contract"
+	"servon/core/internal/libs"
 )
-
-// 调用关系 Core -> Core API -> Libs
-// 或 Core -> Libs
 
 const DataRootFolder = "/data"
 const LoggerFolder = "/logs"
 
-type Core struct {
+type OSType = libs.OSType
+type CommandOptions = libs.CommandOptions
+type CronTask = libs.CronTask
+type ValidationError = libs.ValidationError
+type ValidationErrors = libs.ValidationErrors
+type Task = libs.Task
+type SoftwareInfo = contract.SoftwareInfo
+type SuperSoft = contract.SuperSoft
+
+type App struct {
 	*libs.CommandManager
 	*libs.DataManager
 	*libs.Printer
@@ -33,14 +40,8 @@ type Core struct {
 	*libs.GitManager
 	*libs.TaskManager
 	*libs.ProxyManager
+	*libs.WebServerManager
 }
-
-type OSType = libs.OSType
-type CommandOptions = libs.CommandOptions
-type CronTask = libs.CronTask
-type ValidationError = libs.ValidationError
-type ValidationErrors = libs.ValidationErrors
-type Task = libs.Task
 
 const (
 	Ubuntu  OSType = "ubuntu"
@@ -51,8 +52,8 @@ const (
 )
 
 // New 创建Core实例
-func New() *Core {
-	core := &Core{
+func New() *App {
+	core := &App{
 		CommandManager:         libs.DefaultCommandManager,
 		SoftManager:            libs.DefaultSoftManager,
 		DataManager:            libs.DefaultDataManager,
@@ -75,6 +76,7 @@ func New() *Core {
 		GitManager:             libs.DefaultGitManager,
 		TaskManager:            libs.DefaultTaskManager,
 		ProxyManager:           libs.DefaultProxyManager,
+		WebServerManager:       libs.NewWebServerManager(),
 	}
 
 	core.AddCommand(core.GetDeployCommand())

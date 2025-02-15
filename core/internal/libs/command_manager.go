@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"servon/core/templates"
+
+	"servon/core/internal/templates"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

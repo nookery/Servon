@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"servon/core"
-	"servon/core/libs"
 	"strconv"
 
 	"github.com/fatih/color"
@@ -33,18 +32,21 @@ type Config struct {
 }
 
 type ServePlugin struct {
-	*core.Core
+	*core.App
 	Config       *Config
 	githubStates []string // 用于存储GitHub integration的state值
 }
 
-func Setup(core *core.Core) {
+func Setup(app *core.App) {
 	plugin := &ServePlugin{
-		Core:         core,
-		Config:       &Config{},
+		App: app,
+		Config: &Config{
+			Host: "43.142.208.212",
+			Port: 9754,
+		},
 		githubStates: make([]string, 0),
 	}
-	core.GetRootCommand().AddCommand(plugin.NewServeCommand())
+	app.GetRootCommand().AddCommand(plugin.NewServeCommand())
 }
 
 func (p *ServePlugin) NewServeCommand() *cobra.Command {
@@ -57,7 +59,7 @@ func (p *ServePlugin) NewServeCommand() *cobra.Command {
 			// 清晰的启动横幅
 			fmt.Printf("\n  %s\n\n", color.HiCyanString("SERVON"))
 
-			printKeyValue("Version:", libs.DefaultVersionManager.GetVersion())
+			printKeyValue("Version:", p.VersionManager.GetVersion())
 			printKeyValue("API Only:", color.HiGreenString("%t", apiOnly))
 			fmt.Println()
 
@@ -80,7 +82,7 @@ func printKeyValue(key string, value string) {
 }
 
 func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
-	router := libs.NewWebServer(host, port, withUI)
+	router := p.NewWebServer(host, port, withUI)
 
 	// 设置API路由
 	p.setupAPIRoutes(router)

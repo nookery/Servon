@@ -5,17 +5,17 @@ import (
 )
 
 type AstroPlugin struct {
-	*core.Core
+	*core.App
 }
 
-func Setup(core *core.Core) {
-	astro := NewAstroPlugin(core)
+func Setup(app *core.App) {
+	astro := NewAstroPlugin(app)
 
-	core.AppendDeploySubCommand(astro.newAstroCommand())
+	app.AppendDeploySubCommand(astro.newAstroCommand())
 }
 
-func NewAstroPlugin(core *core.Core) *AstroPlugin {
+func NewAstroPlugin(app *core.App) *AstroPlugin {
 	return &AstroPlugin{
-		Core: core,
+		App: app,
 	}
 }

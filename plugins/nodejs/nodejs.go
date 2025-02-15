@@ -4,24 +4,23 @@ import (
 	"fmt"
 	"os/exec"
 	"servon/core"
-	"servon/core/contract"
 	"strings"
 )
 
 type NodeJSPlugin struct {
-	info contract.SoftwareInfo
-	*core.Core
+	info core.SoftwareInfo
+	*core.App
 }
 
-func Setup(core *core.Core) {
-	nodejs := NewNodeJSPlugin(core)
-	core.RegisterSoftware("nodejs", nodejs)
+func Setup(app *core.App) {
+	nodejs := NewNodeJSPlugin(app)
+	app.RegisterSoftware("nodejs", nodejs)
 }
 
-func NewNodeJSPlugin(core *core.Core) contract.SuperSoft {
+func NewNodeJSPlugin(app *core.App) core.SuperSoft {
 	return &NodeJSPlugin{
-		Core: core,
-		info: contract.SoftwareInfo{
+		App: app,
+		info: core.SoftwareInfo{
 			Name:        "nodejs",
 			Description: "JavaScript 运行时环境",
 		},
@@ -117,7 +116,7 @@ func (n *NodeJSPlugin) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (n *NodeJSPlugin) GetInfo() contract.SoftwareInfo {
+func (n *NodeJSPlugin) GetInfo() core.SoftwareInfo {
 	return n.info
 }
 

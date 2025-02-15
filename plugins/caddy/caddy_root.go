@@ -8,18 +8,18 @@ import (
 
 type CommandOptions = core.CommandOptions
 
-func Setup(core *core.Core) {
+func Setup(app *core.App) {
 	caddy := Caddy{
-		Core:    core,
-		BaseDir: core.DataManager.GetSoftwareRootFolder("caddy"),
+		App:     app,
+		BaseDir: app.GetSoftwareRootFolder("caddy"),
 	}
 
-	core.RegisterSoftware("caddy", &caddy)
-	core.AddCommand(caddy.NewCaddyCommand(core))
+	app.RegisterSoftware("caddy", &caddy)
+	app.AddCommand(caddy.NewCaddyCommand(app))
 }
 
-func (c *Caddy) NewCaddyCommand(core *core.Core) *cobra.Command {
-	rootCmd := core.NewCommand(CommandOptions{
+func (c *Caddy) NewCaddyCommand(app *core.App) *cobra.Command {
+	rootCmd := app.NewCommand(core.CommandOptions{
 		Use:   "caddy",
 		Short: "Caddy 管理命令",
 	})

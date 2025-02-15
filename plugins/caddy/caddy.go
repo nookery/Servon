@@ -4,19 +4,18 @@ import (
 	"fmt"
 	"os/exec"
 	"servon/core"
-	"servon/core/contract"
 	"strings"
 )
 
 type Caddy struct {
 	BaseDir string
 	CaddyTemplate
-	*core.Core
-	info contract.SoftwareInfo
+	*core.App
+	info core.SoftwareInfo
 }
 
 // GetInfo 获取软件信息
-func (c *Caddy) GetInfo() contract.SoftwareInfo {
+func (c *Caddy) GetInfo() core.SoftwareInfo {
 	return c.info
 }
 

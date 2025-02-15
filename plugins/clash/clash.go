@@ -5,33 +5,32 @@ import (
 	"os"
 	"os/exec"
 	"servon/core"
-	"servon/core/contract"
 	"strings"
 )
 
 const repoUrl = "https://github.com/wnlen/clash-for-linux.git"
 
-var softInfo = contract.SoftwareInfo{
+var softInfo = core.SoftwareInfo{
 	Name:            "clash",
 	Description:     "A rule-based tunnel in Go",
 	IsProxySoftware: true,
 }
 
-func Setup(core *core.Core) {
-	plugin := NewClash(core)
+func Setup(app *core.App) {
+	plugin := NewClash(app)
 
-	core.RegisterSoftware("clash", plugin)
+	app.RegisterSoftware("clash", plugin)
 }
 
 type Clash struct {
 	targetDir string
-	*core.Core
+	*core.App
 }
 
-func NewClash(core *core.Core) contract.SuperSoft {
+func NewClash(app *core.App) core.SuperSoft {
 	return &Clash{
-		targetDir: core.DataManager.GetSoftwareRootFolder("clash"),
-		Core:      core,
+		targetDir: app.GetSoftwareRootFolder("clash"),
+		App:       app,
 	}
 }
 
@@ -132,7 +131,7 @@ func (c *Clash) GetStatus() (map[string]string, error) {
 	}, nil
 }
 
-func (c *Clash) GetInfo() contract.SoftwareInfo {
+func (c *Clash) GetInfo() core.SoftwareInfo {
 	return softInfo
 }
 
