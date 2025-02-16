@@ -312,6 +312,31 @@ func HandleGitHubWebhook(c *gin.Context) {
 		printer.PrintInfo(fmt.Sprintf("Received PR event for %s: %s", prEvent.Repository.FullName, prEvent.Action))
 		// TODO: 处理PR事件的具体逻辑
 
+	case "check_suite":
+		var checkSuiteEvent struct {
+			Action     string `json:"action"`
+			CheckSuite struct {
+				ID         int64  `json:"id"`
+				HeadBranch string `json:"head_branch"`
+				HeadSha    string `json:"head_sha"`
+				Status     string `json:"status"`
+				Conclusion string `json:"conclusion"`
+			} `json:"check_suite"`
+			Repository struct {
+				FullName string `json:"full_name"`
+			} `json:"repository"`
+		}
+		if err := json.Unmarshal(payload, &checkSuiteEvent); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid check suite event payload"})
+			return
+		}
+
+		printer.PrintInfo(fmt.Sprintf("Received check_suite event for %s: action=%s, status=%s",
+			checkSuiteEvent.Repository.FullName,
+			checkSuiteEvent.Action,
+			checkSuiteEvent.CheckSuite.Status))
+		// TODO: 处理 check_suite 事件的具体逻辑
+
 	default:
 		printer.PrintInfo(fmt.Sprintf("Received unhandled event type: %s", event))
 	}
