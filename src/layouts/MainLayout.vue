@@ -2,15 +2,11 @@
 import Header from './Header.vue'
 import Sidebar from './Sidebar.vue'
 import LogViewer from '../components/LogViewer.vue'
-import { ref } from 'vue'
 import { useLogViewerStore } from '../stores/logViewer'
+import { useLayoutStore } from '../stores/layout'
 
-const collapsed = ref(false)
+const layoutStore = useLayoutStore()
 const logViewerStore = useLogViewerStore()
-
-// 创建 LogViewer 的引用
-const logViewerRef = ref()
-defineExpose({ logViewerRef })
 </script>
 
 <template>
@@ -21,36 +17,35 @@ defineExpose({ logViewerRef })
         </div>
 
         <!-- Main Layout -->
-        <div class="flex flex-1">
+        <div class="flex flex-1 overflow-hidden">
             <!-- Sidebar -->
             <div :class="[
-                'transition-all duration-300 border-r border-base-300 h-full bg-base-100 fixed left-0 top-16',
-                collapsed ? 'w-16' : 'w-40'
+                'transition-all duration-300 border-r border-base-300 h-[calc(100vh-4rem)] bg-base-100 fixed left-0 top-16',
+                layoutStore.collapsed ? 'w-16' : 'w-40'
             ]">
                 <div class="sticky top-16 border-0 border-red-500 h-full">
-                    <button @click="collapsed = !collapsed"
+                    <button @click="layoutStore.toggleCollapsed"
                         class="btn btn-ghost btn-sm absolute -right-3 top-3 z-50 rounded-full bg-base-100 border border-base-300">
                         <i :class="[
-                            collapsed ? 'ri-arrow-right-s-line' : 'ri-arrow-left-s-line',
+                            layoutStore.collapsed ? 'ri-arrow-right-s-line' : 'ri-arrow-left-s-line',
                             'text-lg'
                         ]"></i>
                     </button>
-                    <Sidebar :collapsed="collapsed" />
+                    <Sidebar :collapsed="layoutStore.collapsed" />
                 </div>
             </div>
 
             <div class="flex flex-row w-full">
-
                 <!-- Content -->
                 <div :class="[
-                    'flex-1 p-4 transition-all duration-300',
-                    collapsed ? 'ml-16' : 'ml-40',
-                    logViewerStore.isVisible ? 'w-1/2' : 'w-full'
+                    'flex-1 p-4 transition-all duration-300 overflow-auto h-[calc(100vh-4rem)]',
+                    layoutStore.collapsed ? 'ml-16' : 'ml-40',
+                    logViewerStore.isVisible ? 'w-2/3' : 'w-full'
                 ]">
                     <slot></slot>
                 </div>
 
-                <div class="w-1/2" v-if="logViewerStore.isVisible">
+                <div class="w-1/3 h-[calc(100vh-4rem)] overflow-hidden" v-if="logViewerStore.isVisible">
                     <!-- Log Viewer -->
                     <LogViewer :visible="logViewerStore.isVisible" />
                 </div>
@@ -58,10 +53,3 @@ defineExpose({ logViewerRef })
         </div>
     </div>
 </template>
-
-<style>
-body {
-    margin: 0;
-    padding: 0;
-}
-</style>
