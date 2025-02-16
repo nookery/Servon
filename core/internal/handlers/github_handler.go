@@ -196,6 +196,7 @@ func HandleGitHubWebhook(c *gin.Context) {
 
 	// 解析事件类型
 	event := c.GetHeader("X-GitHub-Event")
+	printer.PrintInfo(fmt.Sprintf("Received event type: %s", event))
 	switch event {
 	case "installation", "installation_repositories":
 		var installEvent struct {

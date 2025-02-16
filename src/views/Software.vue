@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from '../composables/useToast'
 import Alert from '../components/Alert.vue'
+import PageContainer from '../components/PageContainer.vue'
 import { systemAPI, type Software } from '../api/info'
 
 const softwares = ref<Software[]>([])
@@ -94,52 +95,49 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <h2 class="card-title">软件管理</h2>
-
+    <PageContainer title="软件管理">
+        <template #header>
             <Alert v-if="error" type="error" :message="error" />
+        </template>
 
-
-            <div class="overflow-x-auto">
-                <table class="table table-zebra w-full">
-                    <thead>
-                        <tr>
-                            <th>软件名称</th>
-                            <th>状态</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="item in softwares" :key="item.name">
-                            <td>{{ item.name }}</td>
-                            <td :class="{
-                                'text-info': item.status === 'not_installed',
-                                'text-warning': item.status === 'stopped',
-                                'text-success': item.status === 'running'
-                            }">{{ item.status }}</td>
-                            <td>
-                                <div class="flex gap-2">
-                                    <button class="btn btn-sm"
-                                        :class="item.status === 'not_installed' ? 'btn-primary' : 'btn-error'"
-                                        :disabled="installing && currentSoftware === item.name"
-                                        @click="handleAction(item)" v-if="item.status !== 'running'">
-                                        {{ item.status === 'not_installed' ? '安装' : '卸载' }}
-                                    </button>
-                                    <button v-if="item.status === 'stopped'" class="btn btn-sm btn-primary"
-                                        @click="handleStart(item.name)">
-                                        启动
-                                    </button>
-                                    <button v-if="item.status === 'running'" class="btn btn-sm btn-secondary"
-                                        @click="handleStop(item.name)">
-                                        停止
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr>
+                        <th>软件名称</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in softwares" :key="item.name">
+                        <td>{{ item.name }}</td>
+                        <td :class="{
+                            'text-info': item.status === 'not_installed',
+                            'text-warning': item.status === 'stopped',
+                            'text-success': item.status === 'running'
+                        }">{{ item.status }}</td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button class="btn btn-sm"
+                                    :class="item.status === 'not_installed' ? 'btn-primary' : 'btn-error'"
+                                    :disabled="installing && currentSoftware === item.name" @click="handleAction(item)"
+                                    v-if="item.status !== 'running'">
+                                    {{ item.status === 'not_installed' ? '安装' : '卸载' }}
+                                </button>
+                                <button v-if="item.status === 'stopped'" class="btn btn-sm btn-primary"
+                                    @click="handleStart(item.name)">
+                                    启动
+                                </button>
+                                <button v-if="item.status === 'running'" class="btn btn-sm btn-secondary"
+                                    @click="handleStop(item.name)">
+                                    停止
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
+    </PageContainer>
 </template>

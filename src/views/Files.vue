@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import FileEditor from '../components/FileEditor.vue'
+import PageContainer from '../components/PageContainer.vue'
 import { fileAPI, type FileInfo } from '../api/file'
 
 const files = ref<FileInfo[]>([])
@@ -142,10 +143,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <h2 class="card-title">文件管理</h2>
-
+    <PageContainer title="文件管理">
+        <template #header>
             <div v-if="error" class="alert alert-error shadow-lg mb-4">
                 <div>
                     <i class="ri-error-warning-line"></i>
@@ -153,163 +152,161 @@ onMounted(() => {
                 </div>
             </div>
 
-            <template v-else>
-                <div class="bg-base-200 border border-base-300 rounded-lg p-3 mb-4">
-                    <div class="flex items-center gap-2">
-                        <i class="ri-folder-line text-lg"></i>
-                        <div class="breadcrumbs text-sm">
-                            <ul>
-                                <li>
-                                    <a @click="loadFiles('/')" class="hover:bg-base-300 px-2 py-1 rounded">
-                                        <i class="ri-home-line mr-1"></i>根目录
-                                    </a>
-                                </li>
-                                <li v-for="(part, index) in currentPath.split('/').filter(Boolean)" :key="index">
-                                    <a @click="navigateTo(index)" class="hover:bg-base-300 px-2 py-1 rounded">
-                                        {{ part }}
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="text-xs text-base-content/60 mt-1 ml-7">
-                        当前路径: {{ currentPath }}
+            <div class="bg-base-200 border border-base-300 rounded-lg p-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="ri-folder-line text-lg"></i>
+                    <div class="breadcrumbs text-sm">
+                        <ul>
+                            <li>
+                                <a @click="loadFiles('/')" class="hover:bg-base-300 px-2 py-1 rounded">
+                                    <i class="ri-home-line mr-1"></i>根目录
+                                </a>
+                            </li>
+                            <li v-for="(part, index) in currentPath.split('/').filter(Boolean)" :key="index">
+                                <a @click="navigateTo(index)" class="hover:bg-base-300 px-2 py-1 rounded">
+                                    {{ part }}
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
-
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <div class="flex gap-2">
-                        <button class="btn btn-primary" @click="showCreateDialog = true">
-                            <i class="ri-add-line mr-1"></i>新建
-                        </button>
-                        <button class="btn" @click="loadFiles(currentPath)">
-                            <i class="ri-refresh-line mr-1"></i>刷新
-                        </button>
-                    </div>
-
-                    <div class="divider divider-horizontal"></div>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="btn btn-sm btn-ghost" @click="loadFiles('/data')" title="数据目录">
-                            <i class="ri-settings-3-line mr-1"></i>data
-                        </button>
-                        <button class="btn btn-sm btn-ghost" @click="loadFiles('/etc')" title="系统配置目录">
-                            <i class="ri-settings-3-line mr-1"></i>etc
-                        </button>
-                        <button class="btn btn-sm btn-ghost" @click="loadFiles('/home')" title="用户目录">
-                            <i class="ri-home-4-line mr-1"></i>home
-                        </button>
-                        <button class="btn btn-sm btn-ghost" @click="loadFiles('/var/log')" title="系统日志目录">
-                            <i class="ri-file-list-3-line mr-1"></i>logs
-                        </button>
-                        <button class="btn btn-sm btn-ghost" @click="loadFiles('/usr/local')" title="本地安装的软件">
-                            <i class="ri-apps-2-line mr-1"></i>local
-                        </button>
-                        <button class="btn btn-sm btn-ghost" @click="loadFiles('/tmp')" title="临时文件目录">
-                            <i class="ri-time-line mr-1"></i>tmp
-                        </button>
-                    </div>
-
-                    <div class="flex-1 flex justify-end">
-                        <div class="form-control">
-                            <div class="input-group">
-                                <input type="text" placeholder="搜索文件..." class="input input-bordered input-sm w-64"
-                                    v-model="searchQuery" @keyup.enter="searchFiles">
-                                <button class="btn btn-square btn-sm" @click="searchFiles">
-                                    <i class="ri-search-line"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="text-xs text-base-content/60 mt-1 ml-7">
+                    当前路径: {{ currentPath }}
                 </div>
+            </div>
 
-                <div class="overflow-x-auto">
-                    <table class="table table-zebra w-full">
-                        <thead>
-                            <tr>
-                                <th>名称</th>
-                                <th>权限</th>
-                                <th>所有者</th>
-                                <th>大小</th>
-                                <th>修改时间</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="file in paginatedFiles" :key="file.path">
-                                <td class="flex items-center gap-2">
-                                    <i :class="getFileIcon(file)" class="text-lg"></i>
-                                    <span class="cursor-pointer" @click="openFile(file)">
-                                        {{ file.name }}
-                                    </span>
-                                </td>
-                                <td>{{ file.mode }}</td>
-                                <td>{{ file.owner }}:{{ file.group }}</td>
-                                <td>{{ formatFileSize(file.size) }}</td>
-                                <td>{{ new Date(file.modTime).toLocaleString() }}</td>
-                                <td class="space-x-2">
-                                    <button class="btn btn-xs" @click="downloadFile(file)" v-if="!file.isDir">
-                                        <i class="ri-download-line"></i>
-                                    </button>
-                                    <button class="btn btn-xs btn-error" @click="deleteFile(file)">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="flex justify-center mt-4 space-x-2">
-                    <button class="btn btn-sm" :disabled="currentPage === 1" @click="currentPage--">
-                        上一页
+            <div class="flex flex-wrap gap-2 mb-4">
+                <div class="flex gap-2">
+                    <button class="btn btn-primary" @click="showCreateDialog = true">
+                        <i class="ri-add-line mr-1"></i>新建
                     </button>
-                    <span class="flex items-center">{{ currentPage }} / {{ totalPages }}</span>
-                    <button class="btn btn-sm" :disabled="currentPage === totalPages" @click="currentPage++">
-                        下一页
+                    <button class="btn" @click="loadFiles(currentPath)">
+                        <i class="ri-refresh-line mr-1"></i>刷新
                     </button>
                 </div>
-            </template>
 
-            <FileEditor v-model:show="showEditor" :file="editingFile" @saved="loadFiles(currentPath)" />
+                <div class="divider divider-horizontal"></div>
+                <div class="flex flex-wrap gap-2">
+                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/data')" title="数据目录">
+                        <i class="ri-settings-3-line mr-1"></i>data
+                    </button>
+                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/etc')" title="系统配置目录">
+                        <i class="ri-settings-3-line mr-1"></i>etc
+                    </button>
+                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/home')" title="用户目录">
+                        <i class="ri-home-4-line mr-1"></i>home
+                    </button>
+                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/var/log')" title="系统日志目录">
+                        <i class="ri-file-list-3-line mr-1"></i>logs
+                    </button>
+                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/usr/local')" title="本地安装的软件">
+                        <i class="ri-apps-2-line mr-1"></i>local
+                    </button>
+                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/tmp')" title="临时文件目录">
+                        <i class="ri-time-line mr-1"></i>tmp
+                    </button>
+                </div>
 
-            <dialog class="modal" :class="{ 'modal-open': showCreateDialog }">
-                <div class="modal-box">
-                    <h3 class="font-bold text-lg mb-4">新建文件/目录</h3>
-
-                    <div v-if="error" class="alert alert-error shadow-lg mb-4">
-                        <div>
-                            <i class="ri-error-warning-line"></i>
-                            <span>{{ error }}</span>
-                        </div>
-                    </div>
-
+                <div class="flex-1 flex justify-end">
                     <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">类型</span>
-                        </label>
-                        <select v-model="newFileType" class="select select-bordered">
-                            <option value="file">文件</option>
-                            <option value="directory">目录</option>
-                        </select>
-                    </div>
-                    <div class="form-control mt-4">
-                        <label class="label">
-                            <span class="label-text">名称</span>
-                        </label>
-                        <input type="text" v-model="newFileName" class="input input-bordered" placeholder="输入名称">
-                    </div>
-                    <div class="modal-action">
-                        <button class="btn" @click="() => {
-                            showCreateDialog = false;
-                            if (error) error = null;
-                            newFileName = '';
-                        }">取消</button>
-                        <button class="btn btn-primary" @click="createFile" :disabled="!newFileName">创建</button>
+                        <div class="input-group">
+                            <input type="text" placeholder="搜索文件..." class="input input-bordered input-sm w-64"
+                                v-model="searchQuery" @keyup.enter="searchFiles">
+                            <button class="btn btn-square btn-sm" @click="searchFiles">
+                                <i class="ri-search-line"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </dialog>
+            </div>
+        </template>
+
+        <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th>权限</th>
+                        <th>所有者</th>
+                        <th>大小</th>
+                        <th>修改时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="file in paginatedFiles" :key="file.path">
+                        <td class="flex items-center gap-2">
+                            <i :class="getFileIcon(file)" class="text-lg"></i>
+                            <span class="cursor-pointer" @click="openFile(file)">
+                                {{ file.name }}
+                            </span>
+                        </td>
+                        <td>{{ file.mode }}</td>
+                        <td>{{ file.owner }}:{{ file.group }}</td>
+                        <td>{{ formatFileSize(file.size) }}</td>
+                        <td>{{ new Date(file.modTime).toLocaleString() }}</td>
+                        <td class="space-x-2">
+                            <button class="btn btn-xs" @click="downloadFile(file)" v-if="!file.isDir">
+                                <i class="ri-download-line"></i>
+                            </button>
+                            <button class="btn btn-xs btn-error" @click="deleteFile(file)">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
+
+        <div class="flex justify-center mt-4 space-x-2">
+            <button class="btn btn-sm" :disabled="currentPage === 1" @click="currentPage--">
+                上一页
+            </button>
+            <span class="flex items-center">{{ currentPage }} / {{ totalPages }}</span>
+            <button class="btn btn-sm" :disabled="currentPage === totalPages" @click="currentPage++">
+                下一页
+            </button>
+        </div>
+
+        <FileEditor v-model:show="showEditor" :file="editingFile" @saved="loadFiles(currentPath)" />
+
+        <dialog class="modal" :class="{ 'modal-open': showCreateDialog }">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg mb-4">新建文件/目录</h3>
+
+                <div v-if="error" class="alert alert-error shadow-lg mb-4">
+                    <div>
+                        <i class="ri-error-warning-line"></i>
+                        <span>{{ error }}</span>
+                    </div>
+                </div>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">类型</span>
+                    </label>
+                    <select v-model="newFileType" class="select select-bordered">
+                        <option value="file">文件</option>
+                        <option value="directory">目录</option>
+                    </select>
+                </div>
+                <div class="form-control mt-4">
+                    <label class="label">
+                        <span class="label-text">名称</span>
+                    </label>
+                    <input type="text" v-model="newFileName" class="input input-bordered" placeholder="输入名称">
+                </div>
+                <div class="modal-action">
+                    <button class="btn" @click="() => {
+                        showCreateDialog = false;
+                        if (error) error = null;
+                        newFileName = '';
+                    }">取消</button>
+                    <button class="btn btn-primary" @click="createFile" :disabled="!newFileName">创建</button>
+                </div>
+            </div>
+        </dialog>
+    </PageContainer>
 </template>
 
 <style>

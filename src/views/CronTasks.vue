@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import Alert from '../components/Alert.vue'
 import CronTaskForm from '../components/CronTaskForm.vue'
+import PageContainer from '../components/PageContainer.vue'
 import { type CronTask, getTasks, createTask, updateTask, deleteTask, toggleTask } from '../api/cronTasks'
 
 const tasks = ref<CronTask[]>([])
@@ -115,15 +116,16 @@ onMounted(fetchTasks)
 </script>
 
 <template>
-    <div class="p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">定时任务管理</h1>
-            <button class="btn btn-primary" @click="showModal = true">
-                <i class="ri-add-line mr-1"></i>新建任务
-            </button>
-        </div>
+    <PageContainer title="定时任务管理">
+        <template #header>
+            <div class="flex justify-between items-center mb-6">
+                <button class="btn btn-primary" @click="showModal = true">
+                    <i class="ri-add-line mr-1"></i>新建任务
+                </button>
+            </div>
 
-        <Alert v-if="error" type="error" :message="error" />
+            <Alert v-if="error" type="error" :message="error" />
+        </template>
 
         <!-- 任务列表 -->
         <div class="overflow-x-auto">
@@ -186,7 +188,7 @@ onMounted(fetchTasks)
         <!-- 使用确认对话框组件 -->
         <ConfirmDialog v-model:show="showDeleteConfirm" title="确认删除" message="该操作无法撤销，是否确认删除此任务？" type="warning"
             confirm-text="删除" @confirm="handleDelete" />
-    </div>
+    </PageContainer>
 </template>
 
 <style scoped>

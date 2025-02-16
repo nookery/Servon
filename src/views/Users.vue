@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import PageContainer from '../components/PageContainer.vue'
 import { type User, type NewUser, getUsers, createUser, deleteUser } from '../api/users'
 
 const users = ref<User[]>([])
@@ -67,10 +68,9 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="card-title">用户管理</h2>
+    <PageContainer title="用户管理">
+        <template #header>
+            <div class="flex justify-end mb-4">
                 <button class="btn btn-primary" @click="showCreateModal = true">
                     创建用户
                 </button>
@@ -79,81 +79,81 @@ onMounted(() => {
             <div v-if="error" class="alert alert-error mb-4">
                 {{ error }}
             </div>
+        </template>
 
-            <div class="overflow-x-auto">
-                <table class="table table-zebra w-full">
-                    <thead>
-                        <tr>
-                            <th>用户名</th>
-                            <th>用户组</th>
-                            <th>Shell</th>
-                            <th>主目录</th>
-                            <th>创建时间</th>
-                            <th>最后登录</th>
-                            <th>权限</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="user in users" :key="user.username">
-                            <td>{{ user.username }}</td>
-                            <td>
-                                <div class="flex flex-wrap gap-1">
-                                    <span v-for="group in user.groups" :key="group" class="badge badge-sm">
-                                        {{ group }}
-                                    </span>
-                                </div>
-                            </td>
-                            <td>{{ user.shell }}</td>
-                            <td class="text-xs">{{ user.home_dir }}</td>
-                            <td>{{ formatDate(user.create_time) }}</td>
-                            <td>{{ formatDate(user.last_login) }}</td>
-                            <td>
-                                <span class="badge" :class="user.sudo ? 'badge-warning' : 'badge-ghost'">
-                                    {{ user.sudo ? 'sudo' : 'normal' }}
+        <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr>
+                        <th>用户名</th>
+                        <th>用户组</th>
+                        <th>Shell</th>
+                        <th>主目录</th>
+                        <th>创建时间</th>
+                        <th>最后登录</th>
+                        <th>权限</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="user in users" :key="user.username">
+                        <td>{{ user.username }}</td>
+                        <td>
+                            <div class="flex flex-wrap gap-1">
+                                <span v-for="group in user.groups" :key="group" class="badge badge-sm">
+                                    {{ group }}
                                 </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-error btn-sm" @click="confirmDelete(user.username)"
-                                    :disabled="user.sudo">
-                                    <i class="ri-delete-bin-line"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                            </div>
+                        </td>
+                        <td>{{ user.shell }}</td>
+                        <td class="text-xs">{{ user.home_dir }}</td>
+                        <td>{{ formatDate(user.create_time) }}</td>
+                        <td>{{ formatDate(user.last_login) }}</td>
+                        <td>
+                            <span class="badge" :class="user.sudo ? 'badge-warning' : 'badge-ghost'">
+                                {{ user.sudo ? 'sudo' : 'normal' }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-error btn-sm" @click="confirmDelete(user.username)"
+                                :disabled="user.sudo">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 创建用户模态框 -->
+        <dialog class="modal" :class="{ 'modal-open': showCreateModal }">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg mb-4">创建新用户</h3>
+                <form @submit.prevent="handleCreateUser">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">用户名</span>
+                        </label>
+                        <input type="text" v-model="newUser.username" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text">密码</span>
+                        </label>
+                        <input type="password" v-model="newUser.password" class="input input-bordered" required />
+                    </div>
+                    <div class="modal-action">
+                        <button type="submit" class="btn btn-primary">创建</button>
+                        <button type="button" class="btn" @click="showCreateModal = false">
+                            取消
+                        </button>
+                    </div>
+                </form>
             </div>
-        </div>
-    </div>
+        </dialog>
 
-    <!-- 创建用户模态框 -->
-    <dialog class="modal" :class="{ 'modal-open': showCreateModal }">
-        <div class="modal-box">
-            <h3 class="font-bold text-lg mb-4">创建新用户</h3>
-            <form @submit.prevent="handleCreateUser">
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">用户名</span>
-                    </label>
-                    <input type="text" v-model="newUser.username" class="input input-bordered" required />
-                </div>
-                <div class="form-control mt-4">
-                    <label class="label">
-                        <span class="label-text">密码</span>
-                    </label>
-                    <input type="password" v-model="newUser.password" class="input input-bordered" required />
-                </div>
-                <div class="modal-action">
-                    <button type="submit" class="btn btn-primary">创建</button>
-                    <button type="button" class="btn" @click="showCreateModal = false">
-                        取消
-                    </button>
-                </div>
-            </form>
-        </div>
-    </dialog>
-
-    <!-- 添加确认对话框组件 -->
-    <ConfirmDialog v-model:show="showDeleteConfirm" title="确认删除" message="该操作无法撤销，是否确认删除此用户？" type="warning"
-        confirm-text="删除" @confirm="handleDelete" />
+        <!-- 确认删除对话框 -->
+        <ConfirmDialog v-model:show="showDeleteConfirm" title="确认删除" message="该操作无法撤销，是否确认删除此用户？" type="warning"
+            confirm-text="删除" @confirm="handleDelete" />
+    </PageContainer>
 </template>
