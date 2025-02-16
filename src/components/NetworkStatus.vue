@@ -23,7 +23,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="flex gap-4">
+    <div class="flex flex-col">
         <div class="flex items-center gap-1">
             <i class="ri-download-line text-xs text-base-content/70"></i>
             <span class="text-xs text-base-content/70">
