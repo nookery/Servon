@@ -61,3 +61,13 @@ func HandleOSInfo(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"os_info": osInfo})
 }
+
+// HandleIPInfo 处理获取IP配置信息的请求
+func HandleIPInfo(c *gin.Context) {
+	ipConfig, err := NetworkManager.GetIPConfig()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, ipConfig)
+}

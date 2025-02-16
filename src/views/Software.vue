@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from '../composables/useToast'
 import Alert from '../components/Alert.vue'
-import { systemAPI, type Software } from '../api/system'
+import { systemAPI, type Software } from '../api/info'
 
 const softwares = ref<Software[]>([])
 const loading = ref(false)

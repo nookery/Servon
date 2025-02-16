@@ -1,13 +1,13 @@
 <script setup lang="ts">
 /// <reference lib="es2015" />
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
 import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
 import pkg from '../../package.json'
 import { useLogViewerStore } from '../stores/logViewer'
 import TaskManager from '../components/TaskManager.vue'
-import { systemAPI } from '../api/system'
-import { githubAPI } from '../api/github'
+import { systemAPI } from '../api/info'
+import GitHubAppForm from '../components/GitHubAppForm.vue'
+import type { IPInfo } from '../api/info'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
@@ -18,8 +18,11 @@ const currentTheme = ref(localStorage.getItem('theme') || 'light')
 const downloadSpeed = ref(0)
 const uploadSpeed = ref(0)
 const isTaskManagerVisible = ref(false)
+const ipInfo = ref<IPInfo | null>(null)
+const isIPInfoVisible = ref(false)
 
 const logViewerStore = useLogViewerStore()
+const githubFormRef = ref<InstanceType<typeof GitHubAppForm> | null>(null)
 
 const toggleLogViewer = () => {
     logViewerStore.toggleVisibility()
@@ -58,6 +61,16 @@ const fetchNetworkResources = async () => {
     }
 }
 
+// 获取IP信息
+const fetchIPInfo = async () => {
+    try {
+        const res = await systemAPI.getIPInfo()
+        ipInfo.value = res.data
+    } catch (error) {
+        console.error('获取IP信息失败:', error)
+    }
+}
+
 function changeTheme(theme: string) {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
@@ -72,39 +85,20 @@ const closeTaskManager = () => {
     isTaskManagerVisible.value = false
 }
 
-const startGitHubIntegration = async () => {
-    try {
-        const appName = prompt('请输入GitHub App名称:', 'Servon App')
-        if (!appName) return
+const startGitHubIntegration = () => {
+    githubFormRef.value?.showModal()
+}
 
-        const description = prompt('请输入描述(可选):', 'Servon GitHub integration for automation')
+const handleGitHubSuccess = () => {
+    // 可以添加成功提示
+}
 
-        const response = await githubAPI.setup({
-            name: appName,
-            description: description || undefined,
-        })
+const handleGitHubError = (error: string) => {
+    alert('启动GitHub集成失败: ' + error)
+}
 
-        // 创建一个临时div来执行返回的HTML
-        const div = document.createElement('div')
-        div.innerHTML = response.data
-        document.body.appendChild(div)
-
-        // 立即提交表单
-        const form = div.querySelector('#github-form') as HTMLFormElement
-        if (form) {
-            form.submit()
-        } else {
-            throw new Error('表单创建失败')
-        }
-
-        // 清理临时div（延迟清理，确保表单提交完成）
-        setTimeout(() => {
-            document.body.removeChild(div)
-        }, 2000)
-    } catch (error: any) {
-        console.error('启动GitHub集成失败:', error)
-        alert('启动GitHub集成失败: ' + (error.response?.data?.error || error.message))
-    }
+const toggleIPInfo = () => {
+    isIPInfoVisible.value = !isIPInfoVisible.value
 }
 
 onMounted(async () => {
@@ -118,10 +112,12 @@ onMounted(async () => {
     fetchSystemResources()
     fetchOSInfo()
     fetchNetworkResources()
+    fetchIPInfo()
     setInterval(() => {
         fetchSystemResources()
         fetchOSInfo()
         fetchNetworkResources()
+        fetchIPInfo()
     }, 50000)
 
     // 初始化主题
@@ -146,6 +142,44 @@ onMounted(async () => {
 
         <div class="flex-none gap-6">
             <div class="flex items-center gap-6">
+                <!-- Add IP info button before GitHub integration button -->
+                <div class="relative">
+                    <button @click="toggleIPInfo" class="btn btn-ghost btn-circle" title="IP信息">
+                        <i class="ri-global-line text-xl"></i>
+                    </button>
+
+                    <!-- IP Info Dropdown -->
+                    <div v-if="isIPInfoVisible" class="absolute right-0 mt-2 w-96 card bg-base-100 shadow-xl z-50">
+                        <div class="card-body p-4">
+                            <h3 class="card-title text-sm mb-2">IP 信息</h3>
+
+                            <!-- Public IPs -->
+                            <div class="mb-4">
+                                <div class="text-sm font-semibold mb-1">公网IP</div>
+                                <div class="text-sm">IPv4: {{ ipInfo?.public_ip || '未获取' }}</div>
+                                <div class="text-sm">IPv6: {{ ipInfo?.public_ipv6 || '未获取' }}</div>
+                            </div>
+
+                            <!-- Local IPs -->
+                            <div class="mb-4">
+                                <div class="text-sm font-semibold mb-1">本地IP</div>
+                                <div v-for="ip in ipInfo?.local_ips" :key="ip.ip" class="text-sm mb-1">
+                                    <div>{{ ip.interface }}: {{ ip.ip }}</div>
+                                    <div class="text-xs opacity-70">掩码: {{ ip.netmask }}</div>
+                                </div>
+                            </div>
+
+                            <!-- DNS Servers -->
+                            <div class="mb-4">
+                                <div class="text-sm font-semibold mb-1">DNS 服务器</div>
+                                <div v-for="dns in ipInfo?.dns_servers" :key="dns" class="text-sm">
+                                    {{ dns }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Add GitHub integration button before the log viewer button -->
                 <button @click="startGitHubIntegration" class="btn btn-ghost btn-circle" title="GitHub集成">
                     <i class="ri-github-line text-xl"></i>
@@ -227,6 +261,8 @@ onMounted(async () => {
             </div>
         </div>
     </div>
+
+    <GitHubAppForm ref="githubFormRef" @success="handleGitHubSuccess" @error="handleGitHubError" />
 </template>
 
 <style scoped>

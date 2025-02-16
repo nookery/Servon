@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import Alert from '../components/Alert.vue'
-import { systemAPI } from '../api/system'
-
+import { systemAPI } from '../api/info'
 interface SystemBasicInfo {
     hostname: string
     os: string
@@ -20,7 +19,7 @@ onMounted(async () => {
             systemAPI.getCurrentUser()
         ])
         systemInfo.value = infoRes.data
-        currentUser.value = userRes.data.username
+        currentUser.value = userRes.data
         error.value = ''
     } catch (err) {
         error.value = '获取系统信息失败'

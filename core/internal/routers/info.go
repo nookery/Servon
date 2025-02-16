@@ -13,4 +13,5 @@ func SetupInfoRouter(r *gin.RouterGroup) {
 	api.GET("/user", handlers.HandleCurrentUser)
 	api.GET("/os", handlers.HandleOSInfo)
 	api.GET("/basic", handlers.HandleBasicInfo)
+	api.GET("/ip", handlers.HandleIPInfo)
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { systemAPI, type Process } from '../api/system'
+import { systemAPI, type Process } from '../api/info'
 
 const processes = ref<Process[]>([])
 const filteredProcesses = ref<Process[]>([])

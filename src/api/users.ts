@@ -1,5 +1,9 @@
 import axios from 'axios'
 
+export interface UserInfo {
+    username: string
+}
+
 export interface User {
     username: string
     groups: string[]

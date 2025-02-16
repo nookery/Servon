@@ -12,7 +12,6 @@ import (
 	"servon/plugins/clash"
 	"servon/plugins/git"
 	"servon/plugins/github_runner"
-	"servon/plugins/ip"
 	"servon/plugins/nodejs"
 	"servon/plugins/npm"
 	"servon/plugins/pm2"
@@ -31,7 +30,6 @@ func main() {
 	git.Setup(core)
 	pnpm.Setup(core)
 	clash.Setup(core)
-	ip.Setup(core)
 	astro.Setup(core)
 	npm.Setup(core)
 	github_runner.Setup(core)

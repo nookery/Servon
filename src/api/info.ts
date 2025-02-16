@@ -15,10 +15,6 @@ export interface OSInfo {
     os_info: string
 }
 
-export interface UserInfo {
-    username: string
-}
-
 export interface SystemBasicInfo {
     hostname: string
     os: string
@@ -37,6 +33,29 @@ export interface Process {
     memory: number
 }
 
+export interface IPInfo {
+    local_ips: LocalIP[]
+    public_ip: string
+    public_ipv6: string
+    dns_servers: string[]
+    network_cards: NetworkCard[]
+}
+
+interface LocalIP {
+    ip: string
+    interface: string
+    is_ipv6: boolean
+    netmask: string
+}
+
+interface NetworkCard {
+    name: string
+    mac_address: string
+    is_up: boolean
+    mtu: number
+    ips: string[]
+}
+
 export const systemAPI = {
     getResources: () =>
         axios.get<SystemResources>('/web_api/info/resources'),
@@ -48,7 +67,7 @@ export const systemAPI = {
         axios.get<NetworkResources>('/web_api/info/network'),
 
     getCurrentUser: () =>
-        axios.get<UserInfo>('/web_api/info/user'),
+        axios.get<string>('/web_api/info/user'),
 
     getBasicInfo: () =>
         axios.get<SystemBasicInfo>('/web_api/info/basic'),
@@ -80,4 +99,7 @@ export const systemAPI = {
     // 结束进程
     killProcess: (pid: number) =>
         axios.post(`/web_api/processes/${pid}/kill`),
+
+    getIPInfo: () =>
+        axios.get<IPInfo>('/web_api/info/ip'),
 } 
