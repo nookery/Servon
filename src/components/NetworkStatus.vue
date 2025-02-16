@@ -27,13 +27,13 @@ onMounted(() => {
         <div class="flex items-center gap-1">
             <i class="ri-download-line text-xs text-base-content/70"></i>
             <span class="text-xs text-base-content/70">
-                {{ (downloadSpeed / 1024 / 1024).toFixed(1) }} MB/s
+                {{ downloadSpeed ? (downloadSpeed / 1024 / 1024).toFixed(1) : '0.0' }} MB/s
             </span>
         </div>
         <div class="flex items-center gap-1">
             <i class="ri-upload-line text-xs text-base-content/70"></i>
             <span class="text-xs text-base-content/70">
-                {{ (uploadSpeed / 1024 / 1024).toFixed(1) }} MB/s
+                {{ uploadSpeed ? (uploadSpeed / 1024 / 1024).toFixed(1) : '0.0' }} MB/s
             </span>
         </div>
     </div>
