@@ -6,14 +6,10 @@ var DefaultPrinter = utils.DefaultPrinter
 var DefaultSystemResourcesManager = NewSystemResourcesManager()
 var DefaultPortManager = NewPortManager()
 var DefaultBasicInfoManager = newBasicInfoManager()
-var DefaultProcessManager = NewProcessManager()
-var DefaultFilesManager = NewFilesManager()
 var DefaultOSInfoManager = NewOSInfoManager()
 var DefaultNetworkManager = NewNetworkManager()
 var DefaultDpkg = NewDpkg()
-var DefaultCronManager = NewCronManager()
 var DefaultUserManager = NewUserLib()
-var DefaultTaskManager = NewTaskManager()
 
 // 以下为快捷函数
 

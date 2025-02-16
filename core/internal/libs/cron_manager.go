@@ -8,6 +8,8 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
+var DefaultCronManager = newCronManager()
+
 type CronTask struct {
 	ID          int       `json:"id"`
 	Name        string    `json:"name"`
@@ -35,7 +37,7 @@ func init() {
 type CronManager struct {
 }
 
-func NewCronManager() *CronManager {
+func newCronManager() *CronManager {
 	return &CronManager{}
 }
 

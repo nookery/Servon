@@ -5,7 +5,9 @@ import (
 	"servon/core/internal/contract"
 	"servon/core/internal/libs"
 	"servon/core/internal/managers"
+	"servon/core/internal/models"
 	"servon/core/internal/utils"
+	"servon/core/internal/web"
 )
 
 const DataRootFolder = "/data"
@@ -18,7 +20,7 @@ type CommandOptions = utils.CommandOptions
 type CronTask = libs.CronTask
 type ValidationError = libs.ValidationError
 type ValidationErrors = libs.ValidationErrors
-type Task = libs.Task
+type Task = models.Task
 type SoftwareInfo = contract.SoftwareInfo
 type SuperSoft = contract.SuperSoft
 
@@ -30,7 +32,6 @@ type App struct {
 	*libs.OSInfoManager
 	*libs.SystemResourcesManager
 	*libs.ProcessManager
-	*libs.FilesManager
 	*libs.NetworkManager
 	*libs.Dpkg
 	*libs.CronManager
@@ -45,7 +46,6 @@ type App struct {
 	*managers.AptManager
 	*managers.SoftManager
 	*managers.VersionManager
-	*managers.WebServerManager
 	*managers.CommandManager
 	*managers.DataManager
 	*managers.ServiceManager
@@ -54,6 +54,11 @@ type App struct {
 
 	*utils.Printer
 	*utils.CommandUtil
+	*utils.FileUtil
+
+	// WebServer
+
+	*web.WebServerManager
 }
 
 const (
@@ -70,7 +75,7 @@ func New() *App {
 
 	core := &App{
 		CommandManager:         managers.NewCommandManager(rootCmd),
-		SoftManager:            managers.NewSoftManager(),
+		SoftManager:            managers.DefaultSoftManager,
 		DataManager:            managers.DefaultDataManager,
 		Printer:                utils.DefaultPrinter,
 		PortManager:            libs.DefaultPortManager,
@@ -78,7 +83,7 @@ func New() *App {
 		OSInfoManager:          libs.DefaultOSInfoManager,
 		SystemResourcesManager: libs.DefaultSystemResourcesManager,
 		ProcessManager:         libs.DefaultProcessManager,
-		FilesManager:           libs.DefaultFilesManager,
+		FileUtil:               utils.DefaultFileUtil,
 		NetworkManager:         libs.DefaultNetworkManager,
 		ServiceManager:         managers.DefaultServiceManager,
 		AptManager:             managers.DefaultAptManager,
@@ -90,10 +95,9 @@ func New() *App {
 		GitManager:             managers.NewGitManager(),
 		TaskManager:            libs.DefaultTaskManager,
 		DeployManager:          managers.NewDeployManager(commands.GetDeployCommand()),
-		WebServerManager: managers.NewWebServerManager(
+		WebServerManager: web.NewWebServerManager(
 			DefaultHost,
 			DefaultPort,
-			true,
 		),
 	}
 

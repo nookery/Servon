@@ -14,62 +14,6 @@ import (
 
 // setupAPIRoutes 设置所有API路由
 func (p *ServePlugin) setupAPIRoutes(router *gin.Engine) {
-	api := router.Group("/web_api")
-	{
-		api.GET("/system/resources", p.HandleSystemResources)
-		api.GET("/system/network", p.HandleNetworkResources)
-		api.GET("/system/user", p.HandleCurrentUser)
-		api.GET("/system/os", p.HandleOSInfo)
-		api.GET("/system/basic", p.HandleBasicInfo)
-
-		// 软件管理相关API
-		api.GET("/system/software", p.HandleGetSoftwareList)
-		api.POST("/system/software/:name/install", p.HandleInstallSoftware)
-		api.POST("/system/software/:name/uninstall", p.HandleUninstallSoftware)
-		api.POST("/system/software/:name/stop", p.HandleStopSoftware)
-		api.POST("/system/software/:name/start", p.HandleStartSoftware)
-		api.GET("/system/software/:name/status", p.HandleGetSoftwareStatus)
-
-		// 进程管理相关API
-		api.GET("/system/processes", p.HandleProcessList)
-
-		// 文件管理相关API
-		api.GET("/system/files", p.HandleFileList)
-		api.GET("/system/files/download", p.HandleFileDownload)
-		api.GET("/system/files/content", p.HandleFileContent)
-		api.POST("/system/files/save", p.HandleSaveFile)
-		api.DELETE("/system/files/delete", p.HandleDeleteFile)
-		api.POST("/system/files/create", p.HandleCreateFile)
-
-		// 端口管理相关API
-		api.GET("/system/ports", p.HandlePortList)
-
-		// Add new streaming logs endpoint
-		api.GET("/logs/:channel", p.HandleStreamLogs)
-
-		// 定时任务相关API
-		api.GET("/cron/tasks", p.HandleListCronTasks)              // 获取所有定时任务
-		api.POST("/cron/tasks", p.HandleCreateCronTask)            // 创建定时任务
-		api.PUT("/cron/tasks/:id", p.HandleUpdateCronTask)         // 更新定时任务
-		api.DELETE("/cron/tasks/:id", p.HandleDeleteCronTask)      // 删除定时任务
-		api.POST("/cron/tasks/:id/toggle", p.HandleToggleCronTask) // 启用/禁用定时任务
-
-		// 用户管理相关API
-		api.GET("/users", p.HandleListUsers)               // 获取用户列表
-		api.POST("/users", p.HandleCreateUser)             // 创建用户
-		api.DELETE("/users/:username", p.HandleDeleteUser) // 删除用户
-
-		// 任务管理相关API
-		api.GET("/tasks", p.HandleListTasks)                // 获取任务列表
-		api.DELETE("/tasks/:id", p.HandleRemoveTask)        // 删除任务
-		api.POST("/tasks/:id/execute", p.HandleExecuteTask) // 执行任务
-
-		// GitHub integration routes
-		api.POST("/github/setup", p.HandleGitHubSetup)
-		api.GET("/github/callback", p.HandleGitHubCallback)
-		api.POST("/github/webhook", p.HandleGitHubWebhook)
-	}
-
 	p.PrintKeyValue("API:", color.HiGreenString("http://localhost:%d/web_api", port)) // 仅当监听非本地地址时显示网络访问信息
 	if host != "127.0.0.1" && host != "localhost" {
 		p.PrintKeyValue("Network:", color.HiGreenString("http://%s:%d", host, port))

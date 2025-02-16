@@ -2,26 +2,26 @@ package libs
 
 import (
 	"fmt"
+	"servon/core/internal/models"
 )
 
-type Task struct {
-	ID      string       `json:"id"`
-	Execute func() error // 可执行的函数
-}
+var DefaultTaskManager = newTaskManager()
+
+type Task = models.Task
 
 type TaskManager struct {
 	tasks map[string]Task // 存储任务的映射
 }
 
-func NewTaskManager() *TaskManager {
+func newTaskManager() *TaskManager {
 	return &TaskManager{
-		tasks: make(map[string]Task),
+		tasks: make(map[string]models.Task),
 	}
 }
 
 // GetTasks 获取所有任务
-func (tm *TaskManager) GetTasks() []Task {
-	tasks := make([]Task, 0, len(tm.tasks))
+func (tm *TaskManager) GetTasks() []models.Task {
+	tasks := make([]models.Task, 0, len(tm.tasks))
 	for _, task := range tm.tasks {
 		tasks = append(tasks, task)
 	}

@@ -1,4 +1,4 @@
-package libs
+package utils
 
 import (
 	"fmt"
@@ -9,12 +9,13 @@ import (
 	"syscall"
 )
 
-type FilesManager struct {
-	files []FileInfo
+var DefaultFileUtil = newFileUtil()
+
+type FileUtil struct {
 }
 
-func NewFilesManager() *FilesManager {
-	return &FilesManager{}
+func newFileUtil() *FileUtil {
+	return &FileUtil{}
 }
 
 // FileInfo 表示文件或目录的信息
@@ -30,7 +31,7 @@ type FileInfo struct {
 }
 
 // GetFileList 获取指定目录下的文件列表
-func (p *FilesManager) GetFileList(dirPath string) ([]FileInfo, error) {
+func (p *FileUtil) GetFileList(dirPath string) ([]FileInfo, error) {
 	// 清理和规范化路径
 	dirPath = filepath.Clean(dirPath)
 	if !strings.HasPrefix(dirPath, "/") {
@@ -105,7 +106,7 @@ func FormatFileSize(size int64) string {
 }
 
 // IsDirExists 判断目录是否存在
-func (p *FilesManager) IsDirExists(dirPath string) bool {
+func (p *FileUtil) IsDirExists(dirPath string) bool {
 	info, err := os.Stat(dirPath)
 	if os.IsNotExist(err) {
 		return false
@@ -114,7 +115,7 @@ func (p *FilesManager) IsDirExists(dirPath string) bool {
 }
 
 // GetDirSize 获取目录大小
-func (p *FilesManager) GetDirSize(dirPath string) int64 {
+func (p *FileUtil) GetDirSize(dirPath string) int64 {
 	info, err := os.Stat(dirPath)
 	if os.IsNotExist(err) {
 		return 0

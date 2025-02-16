@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/fatih/color"
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 )
 
@@ -24,11 +23,6 @@ var (
 type Config struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
-
-	// GitHub integration settings
-	GitHubAppID         int64  `json:"github_app_id"`
-	GitHubAppPrivateKey string `json:"github_app_private_key"`
-	GitHubWebhookSecret string `json:"github_webhook_secret"`
 }
 
 type ServePlugin struct {
@@ -112,41 +106,5 @@ func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
 	if err != nil {
 		p.PrintErrorf("启动 Web 服务器失败: %v", err)
 		os.Exit(1)
-	}
-}
-
-// HandleStreamLogs streams logs from a specified channel using Server-Sent Events (SSE)
-func (p *ServePlugin) HandleStreamLogs(c *gin.Context) {
-	// Set headers for SSE
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("Transfer-Encoding", "chunked")
-
-	// Create a channel to notify if client disconnects
-	clientGone := c.Writer.CloseNotify()
-
-	// Get the log channel (you'll need to implement this based on your logging system)
-	logChan := p.LogChan
-	if logChan == nil {
-		c.String(404, "Log channel not found")
-		return
-	}
-
-	// Stream logs
-	for {
-		select {
-		case <-clientGone:
-			// Client disconnected
-			return
-		case msg, ok := <-logChan:
-			if !ok {
-				// Channel closed
-				return
-			}
-			// Send log message as SSE
-			c.SSEvent("log", msg)
-			c.Writer.Flush()
-		}
 	}
 }

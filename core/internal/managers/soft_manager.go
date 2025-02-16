@@ -7,11 +7,13 @@ import (
 	"servon/core/internal/contract"
 )
 
+var DefaultSoftManager = newSoftManager()
+
 type SoftManager struct {
 	Softwares map[string]contract.SuperSoft
 }
 
-func NewSoftManager() *SoftManager {
+func newSoftManager() *SoftManager {
 	return &SoftManager{
 		Softwares: make(map[string]contract.SuperSoft),
 	}

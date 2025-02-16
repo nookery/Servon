@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewWebServer(host string, port int, withUI bool) *gin.Engine {
+func NewWebServer() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.RedirectTrailingSlash = false

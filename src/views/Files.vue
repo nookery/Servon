@@ -1,24 +1,21 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
 import FileEditor from '../components/FileEditor.vue'
-
-interface FileInfo {
-    name: string
-    path: string
-    size: number
-    isDir: boolean
-    mode: string
-    modTime: string
-    owner: string
-    group: string
-}
+import { fileAPI, type FileInfo } from '../api/file'
 
 const files = ref<FileInfo[]>([])
 const currentPath = ref('/')
 const error = ref<string | null>(null)
 const itemsPerPage = 10
 const currentPage = ref(1)
+
+// 状态变量
+const showEditor = ref(false)
+const editingFile = ref<FileInfo | null>(null)
+const showCreateDialog = ref(false)
+const newFileName = ref('')
+const newFileType = ref<'file' | 'directory'>('file')
+const searchQuery = ref('')
 
 // Pagination
 const totalPages = computed(() => Math.ceil(files.value.length / itemsPerPage))
@@ -27,16 +24,82 @@ const paginatedFiles = computed(() => {
     return files.value.slice(start, start + itemsPerPage)
 })
 
-// 新增状态变量
-const showEditor = ref(false)
-const editingFile = ref<FileInfo | null>(null)
-const showCreateDialog = ref(false)
-const newFileName = ref('')
-const newFileType = ref('file') // 'file' 或 'directory'
+async function loadFiles(path: string) {
+    try {
+        const res = await fileAPI.getFiles(path)
+        files.value = res.data
+        currentPath.value = path
+        error.value = null
+        currentPage.value = 1
+    } catch (err: any) {
+        error.value = `获取文件列表失败: ${err.response?.data?.error || err.message || '未知错误'}`
+    }
+}
 
-// 添加搜索相关的状态
-const searchQuery = ref('')
+async function downloadFile(file: FileInfo) {
+    try {
+        const response = await fileAPI.downloadFile(file.path)
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.download = file.name
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    } catch (err) {
+        error.value = '下载文件失败'
+    }
+}
 
+async function deleteFile(file: FileInfo) {
+    if (!confirm(`确定要删除 ${file.name} 吗？`)) return
+    try {
+        await fileAPI.deleteFile(file.path)
+        loadFiles(currentPath.value)
+    } catch (err) {
+        error.value = '删除文件失败'
+    }
+}
+
+async function createFile() {
+    if (!newFileName.value) return
+    try {
+        const newPath = `${currentPath.value}/${newFileName.value}`.replace(/\/+/g, '/')
+        await fileAPI.createFile(newPath, newFileType.value)
+        showCreateDialog.value = false
+        newFileName.value = ''
+        loadFiles(currentPath.value)
+    } catch (err: any) {
+        const errorMessage = err.response?.data?.error || err.message || '创建文件失败'
+        error.value = errorMessage
+        setTimeout(() => {
+            error.value = null
+        }, 5000)
+    }
+}
+
+async function searchFiles() {
+    if (!searchQuery.value) {
+        loadFiles(currentPath.value)
+        return
+    }
+    try {
+        const res = await fileAPI.searchFiles(currentPath.value, searchQuery.value)
+        files.value = res.data
+        error.value = null
+        currentPage.value = 1
+    } catch (err) {
+        error.value = '搜索文件失败'
+    }
+}
+
+function navigateTo(index: number) {
+    const parts = currentPath.value.split('/').filter(Boolean)
+    const newPath = '/' + parts.slice(0, index + 1).join('/')
+    loadFiles(newPath)
+}
+
+// 其他辅助函数保持不变
 function getFileIcon(file: FileInfo) {
     if (file.isDir) return 'ri-folder-fill'
     const ext = file.name.split('.').pop()?.toLowerCase()
@@ -64,101 +127,12 @@ function formatFileSize(size: number) {
     return `${size.toFixed(1)} ${units[index]}`
 }
 
-async function loadFiles(path: string) {
-    try {
-        const res = await axios.get(`/web_api/system/files?path=${path}`)
-        files.value = res.data
-        currentPath.value = path
-        error.value = null
-        currentPage.value = 1
-    } catch (err: any) {
-        error.value = `获取文件列表失败: ${err.response?.data?.error || err.message || '未知错误'}`
-    }
-}
-
-function navigateTo(index: number) {
-    const parts = currentPath.value.split('/').filter(Boolean)
-    const newPath = '/' + parts.slice(0, index + 1).join('/')
-    loadFiles(newPath)
-}
-
-async function downloadFile(file: FileInfo) {
-    try {
-        const response = await axios.get(`/web_api/system/files/download?path=${file.path}`, {
-            responseType: 'blob'
-        })
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.download = file.name
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-    } catch (err) {
-        error.value = '下载文件失败'
-    }
-}
-
-// 文件操作函数
 async function openFile(file: FileInfo) {
     if (file.isDir) {
         loadFiles(file.path)
     } else {
         editingFile.value = file
         showEditor.value = true
-    }
-}
-
-async function deleteFile(file: FileInfo) {
-    if (!confirm(`确定要删除 ${file.name} 吗？`)) return
-    try {
-        await axios.delete(`/web_api/system/files/delete?path=${file.path}`)
-        loadFiles(currentPath.value)
-    } catch (err) {
-        error.value = '删除文件失败'
-    }
-}
-
-async function createFile() {
-    if (!newFileName.value) return
-    try {
-        const newPath = `${currentPath.value}/${newFileName.value}`.replace(/\/+/g, '/')
-        await axios.post('/web_api/system/files/create', {
-            path: newPath,
-            type: newFileType.value
-        })
-        showCreateDialog.value = false
-        newFileName.value = ''
-        loadFiles(currentPath.value)
-    } catch (err: any) {
-        // 获取详细的错误信息
-        const errorMessage = err.response?.data?.error || err.message || '创建文件失败'
-        error.value = errorMessage
-        // 保持对话框打开，让用户可以看到错误信息
-        setTimeout(() => {
-            error.value = null
-        }, 5000) // 5秒后自动清除错误信息
-    }
-}
-
-// 添加搜索函数
-async function searchFiles() {
-    if (!searchQuery.value) {
-        loadFiles(currentPath.value)
-        return
-    }
-    try {
-        const res = await axios.get(`/web_api/system/files/search`, {
-            params: {
-                path: currentPath.value,
-                query: searchQuery.value
-            }
-        })
-        files.value = res.data
-        error.value = null
-        currentPage.value = 1
-    } catch (err) {
-        error.value = '搜索文件失败'
     }
 }
 

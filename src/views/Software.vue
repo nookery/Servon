@@ -1,13 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
 import { useToast } from '../composables/useToast'
 import Alert from '../components/Alert.vue'
-
-interface Software {
-    name: string
-    status: string
-}
+import { systemAPI, type Software } from '../api/system'
 
 const softwares = ref<Software[]>([])
 const loading = ref(false)
@@ -27,11 +22,10 @@ async function handleAction(software: Software) {
     error.value = null
 
     try {
-        await axios.post(
-            `/web_api/system/software/${software.name}/${software.status === 'not_installed' ? 'install' : 'uninstall'}`
-        )
+        const action = software.status === 'not_installed' ? 'install' : 'uninstall'
+        await systemAPI.manageSoftware(software.name, action)
         installing.value = false
-        toast.success(`${software.status === 'not_installed' ? '安装任务' : '卸载任务'}已启动`)
+        toast.success(`${action === 'install' ? '安装任务' : '卸载任务'}已启动`)
     } catch (err) {
         console.error('操作失败:', err)
         installing.value = false
@@ -42,7 +36,7 @@ async function handleAction(software: Software) {
 
 async function handleStop(name: string) {
     try {
-        await axios.post(`/web_api/system/software/${name}/stop`)
+        await systemAPI.stopSoftware(name)
         toast.success('服务已停止')
         error.value = null
     } catch (error: any) {
@@ -53,7 +47,7 @@ async function handleStop(name: string) {
 
 async function handleStart(name: string) {
     try {
-        await axios.post(`/web_api/system/software/${name}/start`)
+        await systemAPI.startSoftware(name)
         toast.success('服务已启动')
         error.value = null
     } catch (err: any) {
@@ -64,12 +58,10 @@ async function handleStart(name: string) {
 
 async function handleStatus(name: string) {
     try {
-        const response = await axios.get(`/web_api/system/software/${name}/status`)
-        const status = response.data.status
-        // 更新软件状态
+        const response = await systemAPI.getSoftwareStatus(name)
         const software = softwares.value.find(s => s.name === name)
         if (software) {
-            software.status = status
+            software.status = response.data.status
         }
     } catch (error) {
         console.error('获取软件状态失败:', error)
@@ -79,7 +71,7 @@ async function handleStatus(name: string) {
 async function loadSoftwareList() {
     loading.value = true
     try {
-        const response = await axios.get('/web_api/system/software')
+        const response = await systemAPI.getSoftwareList()
         softwares.value = response.data.map((item: string) => ({
             name: item,
             status: 'not_installed'

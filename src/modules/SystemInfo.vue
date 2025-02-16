@@ -1,21 +1,27 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
 import Alert from '../components/Alert.vue'
+import { systemAPI } from '../api/system'
 
-const systemInfo = ref<any>(null)
+interface SystemBasicInfo {
+    hostname: string
+    os: string
+    platform: string
+}
+
+const systemInfo = ref<SystemBasicInfo | null>(null)
 const currentUser = ref<string>('')
 const error = ref<string>('')
 
 onMounted(async () => {
     try {
         const [infoRes, userRes] = await Promise.all([
-            axios.get('/web_api/system/basic'),
-            axios.get('/web_api/system/user')
+            systemAPI.getBasicInfo(),
+            systemAPI.getCurrentUser()
         ])
         systemInfo.value = infoRes.data
         currentUser.value = userRes.data.username
-        error.value = '' // 清除可能存在的错误信息
+        error.value = ''
     } catch (err) {
         error.value = '获取系统信息失败'
     }

@@ -6,6 +6,8 @@ import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
 import pkg from '../../package.json'
 import { useLogViewerStore } from '../stores/logViewer'
 import TaskManager from '../components/TaskManager.vue'
+import { systemAPI } from '../api/system'
+import { githubAPI } from '../api/github'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
@@ -26,7 +28,7 @@ const toggleLogViewer = () => {
 // 获取系统资源使用情况
 const fetchSystemResources = async () => {
     try {
-        const res = await axios.get('/web_api/system/resources')
+        const res = await systemAPI.getResources()
         cpuUsage.value = res.data.cpu_usage
         memoryUsage.value = res.data.memory_usage
         diskUsage.value = res.data.disk_usage
@@ -38,7 +40,7 @@ const fetchSystemResources = async () => {
 // 获取操作系统信息
 const fetchOSInfo = async () => {
     try {
-        const res = await axios.get('/web_api/system/os')
+        const res = await systemAPI.getOSInfo()
         osInfo.value = res.data.os_info
     } catch (error) {
         console.error('获取操作系统信息失败:', error)
@@ -48,7 +50,7 @@ const fetchOSInfo = async () => {
 // 获取网络资源使用情况
 const fetchNetworkResources = async () => {
     try {
-        const res = await axios.get('/web_api/system/network')
+        const res = await systemAPI.getNetworkResources()
         downloadSpeed.value = res.data.download_speed
         uploadSpeed.value = res.data.upload_speed
     } catch (error) {
@@ -72,18 +74,14 @@ const closeTaskManager = () => {
 
 const startGitHubIntegration = async () => {
     try {
-        // 弹出对话框让用户输入基本信息
         const appName = prompt('请输入GitHub App名称:', 'Servon App')
         if (!appName) return
 
         const description = prompt('请输入描述(可选):', 'Servon GitHub integration for automation')
 
-        // 调用后端API启动GitHub App Manifest flow
-        const response = await axios.post('/web_api/github/setup', {
+        const response = await githubAPI.setup({
             name: appName,
             description: description || undefined,
-        }, {
-            responseType: 'text'  // 接收HTML响应
         })
 
         // 创建一个临时div来执行返回的HTML
@@ -111,7 +109,7 @@ const startGitHubIntegration = async () => {
 
 onMounted(async () => {
     try {
-        const res = await axios.get('/web_api/system/user')
+        const res = await systemAPI.getCurrentUser()
         currentUser.value = res.data.username
     } catch (error) {
         console.error('获取用户信息失败:', error)

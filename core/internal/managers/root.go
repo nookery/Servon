@@ -22,5 +22,3 @@ var PrintErrorMessage = DefaultPrinter.PrintErrorMessage
 var RunShell = DefaultPrinter.RunShell
 var RunShellWithSudo = DefaultPrinter.RunShellWithSudo
 var RunShellWithOutput = DefaultPrinter.RunShellWithOutput
-
-var DefaultSoftManager = NewSoftManager()

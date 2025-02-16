@@ -6,9 +6,11 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 )
 
+var DefaultProcessManager = newProcessManager()
+
 type ProcessManager struct{}
 
-func NewProcessManager() *ProcessManager {
+func newProcessManager() *ProcessManager {
 	return &ProcessManager{}
 }
 

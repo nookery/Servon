@@ -1,20 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import Alert from '../components/Alert.vue'
 import CronTaskForm from '../components/CronTaskForm.vue'
-
-interface CronTask {
-    id: number
-    name: string
-    command: string
-    schedule: string
-    description: string
-    enabled: boolean
-    last_run?: string
-    next_run?: string
-}
+import { type CronTask, getTasks, createTask, updateTask, deleteTask, toggleTask } from '../api/cronTasks'
 
 const tasks = ref<CronTask[]>([])
 const showModal = ref(false)
@@ -37,12 +26,10 @@ const error = ref<string | null>(null)
 // 获取所有定时任务
 const fetchTasks = async () => {
     try {
-        const res = await axios.get('/web_api/cron/tasks')
-        tasks.value = res.data
+        tasks.value = await getTasks()
         error.value = null
-    } catch (error: any) {
-        const errorMessage = error.response?.data?.error || error.message || '未知错误'
-        error.value = '获取定时任务失败: ' + errorMessage
+    } catch (err: any) {
+        error.value = '获取定时任务失败: ' + (err.response?.data?.error || err.message || '未知错误')
     }
 }
 
@@ -56,16 +43,15 @@ const clearErrors = () => {
 const saveTask = async (task: CronTask) => {
     try {
         if (editingTask.value) {
-            await axios.put(`/web_api/cron/tasks/${task.id}`, task)
+            await updateTask(task)
         } else {
-            await axios.post('/web_api/cron/tasks', task)
+            await createTask(task)
         }
         showModal.value = false
         await fetchTasks()
         resetForm()
-    } catch (error: any) {
-        const errorMessage = error.response?.data?.error || error.message || '未知错误'
-        throw new Error(errorMessage)
+    } catch (err: any) {
+        throw new Error(err.response?.data?.error || err.message || '未知错误')
     }
 }
 
@@ -79,11 +65,10 @@ const handleDelete = async () => {
     if (!taskToDelete.value) return
 
     try {
-        await axios.delete(`/web_api/cron/tasks/${taskToDelete.value}`)
+        await deleteTask(taskToDelete.value)
         await fetchTasks()
-    } catch (error: any) {
-        const errorMessage = error.response?.data?.error || error.message || '未知错误'
-        error.value = '删除任务失败: ' + errorMessage
+    } catch (err: any) {
+        error.value = '删除任务失败: ' + (err.response?.data?.error || err.message || '未知错误')
     } finally {
         showDeleteConfirm.value = false
         taskToDelete.value = null
@@ -91,13 +76,12 @@ const handleDelete = async () => {
 }
 
 // 启用/禁用任务
-const toggleTask = async (id: number) => {
+const handleToggleTask = async (id: number) => {
     try {
-        await axios.post(`/web_api/cron/tasks/${id}/toggle`)
+        await toggleTask(id)
         await fetchTasks()
-    } catch (error: any) {
-        const errorMessage = error.response?.data?.error || error.message || '未知错误'
-        error.value = '切换任务状态失败: ' + errorMessage
+    } catch (err: any) {
+        error.value = '切换任务状态失败: ' + (err.response?.data?.error || err.message || '未知错误')
     }
 }
 
@@ -165,7 +149,7 @@ onMounted(fetchTasks)
                         <td>
                             <div class="form-control">
                                 <input type="checkbox" class="toggle toggle-primary" :checked="task.enabled"
-                                    @change="toggleTask(task.id)" />
+                                    @change="handleToggleTask(task.id)" />
                             </div>
                         </td>
                         <td>{{ formatTime(task.last_run) }}</td>

@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { getPorts } from '../api/ports'
 
 const ports = ref<any[]>([])
 const error = ref<string | null>(null)
 
 async function loadPorts() {
     try {
-        const res = await axios.get('/web_api/system/ports')
-        ports.value = res.data
+        ports.value = await getPorts()
         error.value = null
     } catch (err: any) {
         error.value = `获取端口列表失败: ${err.response?.data?.message || err.message || '未知错误'}`
