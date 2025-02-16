@@ -2,7 +2,8 @@
 import { ref } from 'vue'
 import { systemAPI } from '../api/info'
 import type { IPInfo } from '../models/IpInfo'
-import IPInfoDisplay from './IPInfoDisplay.vue'
+import IPInfoDisplay from '../components/IPInfoDisplay.vue'
+import IconButton from '../components/IconButton.vue'
 
 const ipInfo = ref<IPInfo | null>(null)
 const isIPInfoVisible = ref(false)
@@ -27,9 +28,7 @@ setInterval(fetchIPInfo, 50000)
 
 <template>
     <div class="relative">
-        <button @click="toggleIPInfo" class="btn btn-ghost btn-circle" title="IP信息">
-            <i class="ri-global-line text-xl"></i>
-        </button>
+        <IconButton @click="toggleIPInfo" icon="ri-global-line" variant="ghost" circle title="IP信息" />
         <IPInfoDisplay :ip-info="ipInfo" :is-visible="isIPInfoVisible" />
     </div>
 </template>

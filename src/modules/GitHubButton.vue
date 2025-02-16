@@ -1,8 +1,6 @@
 <template>
     <div>
-        <button @click="showModal" class="btn btn-ghost btn-circle" title="GitHub集成">
-            <i class="ri-github-line text-xl"></i>
-        </button>
+        <IconButton @click="showModal" icon="ri-github-line" variant="ghost" circle title="GitHub集成" />
 
         <dialog ref="modalRef" class="modal">
             <div class="modal-box">
@@ -35,6 +33,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { githubAPI } from '../api/github'
+import IconButton from '../components/IconButton.vue'
 
 const modalRef = ref<HTMLDialogElement | null>(null)
 const formData = reactive({

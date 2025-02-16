@@ -4,10 +4,10 @@ import NetworkStatus from '../components/NetworkStatus.vue'
 import SystemResources from '../components/SystemResources.vue'
 import OSInfo from '../components/OSInfo.vue'
 import UserInfo from '../components/UserInfo.vue'
-import TaskManagerButton from '../components/TaskManagerButton.vue'
-import IPInfoButton from '../components/IPInfoButton.vue'
+import TaskManagerButton from '../modules/TaskManagerButton.vue'
+import IPInfoButton from '../modules/IPInfoButton.vue'
 import LogViewerButton from '../modules/LogViewerButton.vue'
-import GitHubButton from '../components/GitHubButton.vue'
+import GitHubButton from '../modules/GitHubButton.vue'
 </script>
 
 <template>

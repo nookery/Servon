@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-
+import IconButton from '../components/IconButton.vue'
 const isTaskManagerVisible = ref(false)
 const tasks = ref<string[]>([])
 
@@ -48,9 +48,7 @@ onMounted(() => {
 <template>
     <div>
         <!-- 任务管理按钮 -->
-        <button @click="showTaskManager" class="btn btn-ghost btn-circle" title="任务管理">
-            <i class="ri-task-line text-xl"></i>
-        </button>
+        <IconButton @click="showTaskManager" icon="ri-task-line" variant="ghost" circle title="任务管理" />
 
         <!-- Task Manager Modal -->
         <div v-if="isTaskManagerVisible" class="modal modal-open">
