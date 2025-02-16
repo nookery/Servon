@@ -11,4 +11,5 @@ func SetupGitHubRouter(r *gin.RouterGroup) {
 	group.POST("/setup", handlers.HandleGitHubSetup)
 	group.GET("/callback", handlers.HandleGitHubCallback)
 	group.POST("/webhook", handlers.HandleGitHubWebhook)
+	group.GET("/webhooks", handlers.HandleGetWebhooks)
 }

@@ -6,7 +6,7 @@ import Processes from '../views/Processes.vue'
 import Files from '../views/Files.vue'
 import Ports from '../views/Ports.vue'
 import Users from '../views/Users.vue'
-
+import GitHub from '../views/GitHub.vue'
 const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -45,6 +45,11 @@ const router = createRouter({
             meta: {
                 title: '定时任务'
             }
+        },
+        {
+            path: '/github',
+            name: 'github',
+            component: GitHub
         }
     ]
 })

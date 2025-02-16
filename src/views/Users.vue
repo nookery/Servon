@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
-import PageContainer from '../components/PageContainer.vue'
+import PageContainer from '../layouts/PageContainer.vue'
 import { type User, type NewUser, getUsers, createUser, deleteUser } from '../api/users'
 
 const users = ref<User[]>([])

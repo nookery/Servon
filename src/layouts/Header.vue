@@ -6,7 +6,7 @@ import OSInfo from '../components/OSInfo.vue'
 import UserInfo from '../components/UserInfo.vue'
 import TaskManagerButton from '../components/TaskManagerButton.vue'
 import IPInfoButton from '../components/IPInfoButton.vue'
-import LogViewerButton from '../components/LogViewerButton.vue'
+import LogViewerButton from '../modules/LogViewerButton.vue'
 import GitHubButton from '../components/GitHubButton.vue'
 </script>
 

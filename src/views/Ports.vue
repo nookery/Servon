@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getPorts } from '../api/ports'
-import PageContainer from '../components/PageContainer.vue'
+import PageContainer from '../layouts/PageContainer.vue'
 
 const ports = ref<any[]>([])
 const error = ref<string | null>(null)

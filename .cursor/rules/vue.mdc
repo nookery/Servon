@@ -1,0 +1,7 @@
+---
+description: 构建vue组件时使用这个规则
+globs: *.vue
+---
+使用 DaisyUI 和 TailwindCSS 来构建界面，尽量避免使用原生CSS。
+
+如果这个规则被应用，则在输出的开头说：我注意到了项目的vue组件构建规则。

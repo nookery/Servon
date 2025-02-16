@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import FileEditor from '../components/FileEditor.vue'
-import PageContainer from '../components/PageContainer.vue'
+import PageContainer from '../layouts/PageContainer.vue'
 import { fileAPI, type FileInfo } from '../api/file'
 
 const files = ref<FileInfo[]>([])

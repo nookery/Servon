@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import Alert from '../components/Alert.vue'
 import CronTaskForm from '../components/CronTaskForm.vue'
-import PageContainer from '../components/PageContainer.vue'
+import PageContainer from '../layouts/PageContainer.vue'
 import { type CronTask, getTasks, createTask, updateTask, deleteTask, toggleTask } from '../api/cronTasks'
 
 const tasks = ref<CronTask[]>([])
@@ -119,8 +119,8 @@ onMounted(fetchTasks)
     <PageContainer title="定时任务管理">
         <template #header>
             <div class="flex justify-between items-center mb-6">
-                <button class="btn btn-primary" @click="showModal = true">
-                    <i class="ri-add-line mr-1"></i>新建任务
+                <button class="btn btn-primary btn-md">
+                    <i class="ri-add-line"></i>新建任务
                 </button>
             </div>
 
@@ -128,29 +128,37 @@ onMounted(fetchTasks)
         </template>
 
         <!-- 任务列表 -->
-        <div class="overflow-x-auto">
-            <table class="table w-full">
+        <div class="overflow-x-auto bg-base-100 rounded-lg shadow">
+            <table class="table table-zebra">
                 <thead>
-                    <tr>
-                        <th>名称</th>
-                        <th>命令</th>
-                        <th>定时表达式</th>
-                        <th>描述</th>
-                        <th>状态</th>
-                        <th>上次执行</th>
-                        <th>下次执行</th>
-                        <th>操作</th>
+                    <tr class="bg-base-200">
+                        <th class="font-bold">名称</th>
+                        <th class="font-bold">命令</th>
+                        <th class="font-bold">定时表达式</th>
+                        <th class="font-bold">描述</th>
+                        <th class="font-bold">状态</th>
+                        <th class="font-bold">上次执行</th>
+                        <th class="font-bold">下次执行</th>
+                        <th class="font-bold">操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="task in tasks" :key="task.id">
+                    <tr v-for="task in tasks" :key="task.id" class="hover">
                         <td>{{ task.name }}</td>
-                        <td class="max-w-xs truncate">{{ task.command }}</td>
+                        <td class="max-w-xs truncate">
+                            <div class="tooltip" :data-tip="task.command">
+                                {{ task.command }}
+                            </div>
+                        </td>
                         <td>{{ task.schedule }}</td>
-                        <td class="max-w-xs truncate">{{ task.description }}</td>
+                        <td class="max-w-xs truncate">
+                            <div class="tooltip" :data-tip="task.description">
+                                {{ task.description }}
+                            </div>
+                        </td>
                         <td>
                             <div class="form-control">
-                                <input type="checkbox" class="toggle toggle-primary" :checked="task.enabled"
+                                <input type="checkbox" class="toggle toggle-primary toggle-sm" :checked="task.enabled"
                                     @change="handleToggleTask(task.id)" />
                             </div>
                         </td>
@@ -158,11 +166,11 @@ onMounted(fetchTasks)
                         <td>{{ formatTime(task.next_run) }}</td>
                         <td>
                             <div class="flex gap-2">
-                                <button class="btn btn-sm btn-ghost" @click="editTask(task)">
-                                    <i class="ri-edit-line"></i>
+                                <button class="btn btn-ghost btn-sm" @click="editTask(task)">
+                                    <i class="ri-edit-line text-primary"></i>
                                 </button>
-                                <button class="btn btn-sm btn-ghost text-error" @click="confirmDelete(task.id)">
-                                    <i class="ri-delete-bin-line"></i>
+                                <button class="btn btn-ghost btn-sm" @click="confirmDelete(task.id)">
+                                    <i class="ri-delete-bin-line text-error"></i>
                                 </button>
                             </div>
                         </td>
@@ -173,7 +181,7 @@ onMounted(fetchTasks)
 
         <!-- 创建/编辑任务模态框 -->
         <dialog class="modal" :class="{ 'modal-open': showModal }">
-            <div class="modal-box">
+            <div class="modal-box max-w-2xl">
                 <h3 class="font-bold text-lg mb-4">
                     {{ editingTask ? '编辑任务' : '新建任务' }}
                 </h3>
@@ -190,13 +198,3 @@ onMounted(fetchTasks)
             confirm-text="删除" @confirm="handleDelete" />
     </PageContainer>
 </template>
-
-<style scoped>
-.input-error {
-    border-color: rgb(252, 165, 165);
-}
-
-.label-text-alt.text-error {
-    color: rgb(153, 27, 27);
-}
-</style>

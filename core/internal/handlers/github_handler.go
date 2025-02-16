@@ -6,6 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -342,6 +347,12 @@ func HandleGitHubWebhook(c *gin.Context) {
 		printer.PrintInfo(fmt.Sprintf("Received unhandled event type: %s", event))
 	}
 
+	// 保存原始webhook数据
+	eventID := c.GetHeader("X-GitHub-Delivery")
+	if err := saveWebhookPayload(event, eventID, payload); err != nil {
+		printer.PrintError(fmt.Errorf("failed to save webhook payload: %v", err))
+	}
+
 	c.Status(http.StatusOK)
 }
 
@@ -350,4 +361,81 @@ func saveConfig() error {
 	// TODO: 实现配置的持久化存储
 	// 可以保存到文件或数据库
 	return nil
+}
+
+// saveWebhookPayload 将webhook数据保存到文件
+func saveWebhookPayload(eventType, eventID string, payload []byte) error {
+	// 确保目录存在
+	dataDir := "/data/github"
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %v", err)
+	}
+
+	// 生成文件名：时间戳_事件ID_事件类型.json
+	filename := fmt.Sprintf("%s/%d_%s_%s.json",
+		dataDir,
+		time.Now().Unix(),
+		eventID,
+		eventType,
+	)
+
+	// 将数据写入文件
+	if err := os.WriteFile(filename, payload, 0644); err != nil {
+		return fmt.Errorf("failed to write file: %v", err)
+	}
+
+	printer.PrintInfo(fmt.Sprintf("Saved webhook payload to %s", filename))
+	return nil
+}
+
+// HandleGetWebhooks 获取保存的webhook数据
+func HandleGetWebhooks(c *gin.Context) {
+	dataDir := "/data/github"
+
+	// 确保目录存在
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create webhooks directory"})
+		return
+	}
+
+	files, err := os.ReadDir(dataDir)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read webhooks directory"})
+		return
+	}
+
+	webhooks := make([]map[string]interface{}, 0)
+	for _, file := range files {
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
+			// 解析文件名：timestamp_eventID_eventType.json
+			parts := strings.Split(strings.TrimSuffix(file.Name(), ".json"), "_")
+			if len(parts) != 3 {
+				continue
+			}
+
+			timestamp, _ := strconv.ParseInt(parts[0], 10, 64)
+			eventID := parts[1]
+			eventType := parts[2]
+
+			// 读取文件内容
+			data, err := os.ReadFile(filepath.Join(dataDir, file.Name()))
+			if err != nil {
+				continue
+			}
+
+			var payload interface{}
+			if err := json.Unmarshal(data, &payload); err != nil {
+				continue
+			}
+
+			webhooks = append(webhooks, map[string]interface{}{
+				"id":        eventID,
+				"type":      eventType,
+				"timestamp": timestamp,
+				"payload":   payload,
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, webhooks)
 }

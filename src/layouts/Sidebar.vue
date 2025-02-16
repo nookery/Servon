@@ -36,6 +36,11 @@ const menuOptions = [
         key: 'users',
         icon: 'ri-user-settings-line'
     },
+    {
+        label: 'GitHub管理',
+        key: 'github',
+        icon: 'ri-github-fill'
+    },
     // {
     //     label: '定时任务',
     //     key: 'cron',

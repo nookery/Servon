@@ -1,15 +1,5 @@
 import axios from 'axios'
-
-export interface FileInfo {
-    name: string
-    path: string
-    size: number
-    isDir: boolean
-    mode: string
-    modTime: string
-    owner: string
-    group: string
-}
+import type { FileInfo } from '../models/FileInfo'
 
 export const fileAPI = {
     // 获取文件列表

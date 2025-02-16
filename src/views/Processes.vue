@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { systemAPI, type Process } from '../api/info'
-import PageContainer from '../components/PageContainer.vue'
+import PageContainer from '../layouts/PageContainer.vue'
 
 const processes = ref<Process[]>([])
 const filteredProcesses = ref<Process[]>([])
