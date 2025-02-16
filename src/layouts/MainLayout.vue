@@ -23,14 +23,7 @@ const logViewerStore = useLogViewerStore()
                 'transition-all duration-300 border-r border-base-300 h-[calc(100vh-4rem)] bg-base-100 fixed left-0 top-16',
                 layoutStore.collapsed ? 'w-16' : 'w-40'
             ]">
-                <div class="sticky top-16 border-0 border-red-500 h-full">
-                    <button @click="layoutStore.toggleCollapsed"
-                        class="btn btn-ghost btn-sm absolute -right-3 top-3 z-50 rounded-full bg-base-100 border border-base-300">
-                        <i :class="[
-                            layoutStore.collapsed ? 'ri-arrow-right-s-line' : 'ri-arrow-left-s-line',
-                            'text-lg'
-                        ]"></i>
-                    </button>
+                <div class="sticky top-16 h-full">
                     <Sidebar :collapsed="layoutStore.collapsed" />
                 </div>
             </div>

@@ -9,7 +9,7 @@ defineProps<{
         <div class="card-body p-0 flex flex-col h-full">
             <!-- 固定头部 -->
             <div class="sticky top-0 bg-base-100 z-10 p-6 pb-0">
-                <h2 class="card-title mb-4">{{ title }}</h2>
+                <!-- <h2 class="card-title mb-4">{{ title }}</h2> -->
                 <!-- 头部内容插槽 -->
                 <slot name="header"></slot>
             </div>

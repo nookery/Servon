@@ -170,9 +170,6 @@ onMounted(() => {
                         </ul>
                     </div>
                 </div>
-                <div class="text-xs text-base-content/60 mt-1 ml-7">
-                    当前路径: {{ currentPath }}
-                </div>
             </div>
 
             <div class="flex flex-wrap gap-2 mb-4">

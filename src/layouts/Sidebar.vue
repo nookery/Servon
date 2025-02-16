@@ -46,10 +46,6 @@ const menuOptions = [
 const handleMenuClick = (key: string) => {
     router.push(`/${key}`)
 }
-
-defineProps<{
-    collapsed?: boolean
-}>()
 </script>
 
 <template>
@@ -64,9 +60,8 @@ defineProps<{
                 <i :class="[
                     item.icon,
                     'text-xl',
-                    !collapsed && 'mr-1'
                 ]"></i>
-                <span v-if="!collapsed">{{ item.label }}</span>
+                <span>{{ item.label }}</span>
             </a>
         </li>
     </ul>
