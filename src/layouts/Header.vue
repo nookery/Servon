@@ -8,6 +8,7 @@ import TaskManager from '../components/TaskManager.vue'
 import { systemAPI } from '../api/info'
 import GitHubAppForm from '../components/GitHubAppForm.vue'
 import type { IPInfo } from '../api/info'
+import NetworkStatus from '../components/NetworkStatus.vue'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
@@ -15,8 +16,6 @@ const memoryUsage = ref(0)
 const diskUsage = ref(0)
 const osInfo = ref('')
 const currentTheme = ref(localStorage.getItem('theme') || 'light')
-const downloadSpeed = ref(0)
-const uploadSpeed = ref(0)
 const isTaskManagerVisible = ref(false)
 const ipInfo = ref<IPInfo | null>(null)
 const isIPInfoVisible = ref(false)
@@ -47,17 +46,6 @@ const fetchOSInfo = async () => {
         osInfo.value = res.data.os_info
     } catch (error) {
         console.error('获取操作系统信息失败:', error)
-    }
-}
-
-// 获取网络资源使用情况
-const fetchNetworkResources = async () => {
-    try {
-        const res = await systemAPI.getNetworkResources()
-        downloadSpeed.value = res.data.download_speed
-        uploadSpeed.value = res.data.upload_speed
-    } catch (error) {
-        console.error('获取网络资源信息失败:', error)
     }
 }
 
@@ -111,12 +99,10 @@ onMounted(async () => {
 
     fetchSystemResources()
     fetchOSInfo()
-    fetchNetworkResources()
     fetchIPInfo()
     setInterval(() => {
         fetchSystemResources()
         fetchOSInfo()
-        fetchNetworkResources()
         fetchIPInfo()
     }, 50000)
 
@@ -210,20 +196,7 @@ onMounted(async () => {
                 </div>
 
                 <!-- Network Usage -->
-                <div class="flex gap-4">
-                    <div class="flex items-center gap-1">
-                        <i class="ri-download-line text-xs text-base-content/70"></i>
-                        <span class="text-xs text-base-content/70">
-                            {{ (downloadSpeed / 1024 / 1024).toFixed(1) }} MB/s
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <i class="ri-upload-line text-xs text-base-content/70"></i>
-                        <span class="text-xs text-base-content/70">
-                            {{ (uploadSpeed / 1024 / 1024).toFixed(1) }} MB/s
-                        </span>
-                    </div>
-                </div>
+                <NetworkStatus />
 
                 <!-- Log Viewer Button -->
                 <button @click="toggleLogViewer" class="btn btn-ghost btn-circle">

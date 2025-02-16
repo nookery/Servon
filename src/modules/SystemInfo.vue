@@ -19,7 +19,7 @@ onMounted(async () => {
             systemAPI.getCurrentUser()
         ])
         systemInfo.value = infoRes.data
-        currentUser.value = userRes.data
+        currentUser.value = userRes.data.username
         error.value = ''
     } catch (err) {
         error.value = '获取系统信息失败'

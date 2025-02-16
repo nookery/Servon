@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { IPInfo } from '../models/IpInfo'
 
 export interface SystemResources {
     cpu_usage: number
@@ -33,27 +34,11 @@ export interface Process {
     memory: number
 }
 
-export interface IPInfo {
-    local_ips: LocalIP[]
-    public_ip: string
-    public_ipv6: string
-    dns_servers: string[]
-    network_cards: NetworkCard[]
-}
 
-interface LocalIP {
-    ip: string
-    interface: string
-    is_ipv6: boolean
-    netmask: string
-}
 
-interface NetworkCard {
-    name: string
-    mac_address: string
-    is_up: boolean
-    mtu: number
-    ips: string[]
+
+interface UserResponse {
+    username: string
 }
 
 export const systemAPI = {
@@ -67,7 +52,7 @@ export const systemAPI = {
         axios.get<NetworkResources>('/web_api/info/network'),
 
     getCurrentUser: () =>
-        axios.get<string>('/web_api/info/user'),
+        axios.get<UserResponse>('/web_api/info/user'),
 
     getBasicInfo: () =>
         axios.get<SystemBasicInfo>('/web_api/info/basic'),
@@ -102,4 +87,7 @@ export const systemAPI = {
 
     getIPInfo: () =>
         axios.get<IPInfo>('/web_api/info/ip'),
+
+    getNetworkStatus: () =>
+        axios.get('/api/system/network'),
 } 
