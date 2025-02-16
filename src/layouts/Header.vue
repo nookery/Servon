@@ -10,6 +10,7 @@ import GitHubAppForm from '../components/GitHubAppForm.vue'
 import type { IPInfo } from '../models/IpInfo'
 import NetworkStatus from '../components/NetworkStatus.vue'
 import IPInfoDisplay from '../components/IPInfoDisplay.vue'
+import SystemResources from '../components/SystemResources.vue'
 
 const currentUser = ref('')
 const cpuUsage = ref(0)
@@ -142,30 +143,6 @@ onMounted(async () => {
                     <i class="ri-github-line text-xl"></i>
                 </button>
 
-                <!-- CPU Usage -->
-                <div class="w-36">
-                    <div class="text-xs text-base-content/70 mb-1">
-                        CPU: {{ cpuUsage.toFixed(1) }}%
-                    </div>
-                    <progress class="progress progress-primary h-2" :value="cpuUsage" max="100"></progress>
-                </div>
-
-                <!-- Memory Usage -->
-                <div class="w-36">
-                    <div class="text-xs text-base-content/70 mb-1">
-                        内存: {{ memoryUsage.toFixed(1) }}%
-                    </div>
-                    <progress class="progress progress-primary h-2" :value="memoryUsage" max="100"></progress>
-                </div>
-
-                <!-- Disk Usage -->
-                <div class="w-36">
-                    <div class="text-xs text-base-content/70 mb-1">
-                        磁盘: {{ diskUsage.toFixed(1) }}%
-                    </div>
-                    <progress class="progress progress-primary h-2" :value="diskUsage" max="100"></progress>
-                </div>
-
                 <!-- Network Usage -->
                 <NetworkStatus />
 
@@ -181,6 +158,9 @@ onMounted(async () => {
 
                 <!-- Theme Switcher Component -->
                 <ThemeSwitcher />
+
+                <!-- System Resources Component -->
+                <SystemResources />
 
                 <!-- User Avatar -->
                 <div class="flex items-center gap-2">
