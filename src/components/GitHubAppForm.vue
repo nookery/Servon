@@ -32,7 +32,7 @@ import { githubAPI } from '../api/github'
 
 const modalRef = ref<HTMLDialogElement | null>(null)
 const formData = reactive({
-    name: 'Servon App',
+    name: 'Servon',
     description: 'Servon GitHub integration for automation'
 })
 
