@@ -13,11 +13,35 @@ import (
 var printer = DefaultPrinter
 var config = &GitHubConfig{}
 
+// GitHub App 集成流程:
+// 1. 用户调用 /web_api/github/setup 接口，提供 App 名称和描述
+// 2. 系统生成 GitHub App Manifest，重定向到 GitHub 创建页面
+// 3. 用户在 GitHub 确认创建后，GitHub 回调 /web_api/github/callback
+// 4. 系统保存 App 配置，并重定向用户到 App 安装页面
+// 5. 用户选择要安装 App 的仓库
+// 6. GitHub 发送 installation 事件到 webhook
+// 7. 后续用户仓库的 push、PR 等操作都会触发相应的 webhook 事件
+
+// 添加新的配置和存储结构
+type Installation struct {
+	ID           int64    `json:"id"`
+	AccountID    int64    `json:"account_id"`
+	AccountLogin string   `json:"account_login"`
+	Repositories []string `json:"repositories"` // 仓库全名列表
+}
+
 type GitHubConfig struct {
 	// GitHub integration settings
 	GitHubAppID         int64  `json:"github_app_id"`
 	GitHubAppPrivateKey string `json:"github_app_private_key"`
 	GitHubWebhookSecret string `json:"github_webhook_secret"`
+
+	// 新增字段用于存储安装信息
+	Installations map[int64]*Installation `json:"installations"` // key: installation_id
+}
+
+func init() {
+	config.Installations = make(map[int64]*Installation)
 }
 
 // GitHubManifest represents the GitHub App manifest configuration
@@ -48,7 +72,7 @@ func HandleGitHubSetup(c *gin.Context) {
 		return
 	}
 
-	baseURL := fmt.Sprintf("http://apple.com")
+	baseURL := "http://43.142.208.212:9754"
 
 	// 构建manifest
 	manifest := GitHubManifest{
@@ -140,13 +164,15 @@ func HandleGitHubCallback(c *gin.Context) {
 	// 保存App配置
 	config.GitHubAppID = result.ID
 	config.GitHubAppPrivateKey = result.PEM
-	// TODO: 保存配置到文件
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "GitHub App created successfully",
-		"app_id":  result.ID,
-		"name":    result.Name,
-	})
+	// TODO: 将配置保存到持久化存储
+	if err := saveConfig(); err != nil {
+		printer.PrintError(err)
+	}
+
+	// 重定向到GitHub App安装页面
+	installURL := fmt.Sprintf("https://github.com/apps/%s/installations/new", result.Name)
+	c.Redirect(http.StatusTemporaryRedirect, installURL)
 }
 
 // HandleGitHubWebhook 处理来自GitHub的webhook请求
@@ -171,6 +197,80 @@ func HandleGitHubWebhook(c *gin.Context) {
 	// 解析事件类型
 	event := c.GetHeader("X-GitHub-Event")
 	switch event {
+	case "installation", "installation_repositories":
+		var installEvent struct {
+			Action       string `json:"action"`
+			Installation struct {
+				ID      int64 `json:"id"`
+				Account struct {
+					ID    int64  `json:"id"`
+					Login string `json:"login"`
+				} `json:"account"`
+			} `json:"installation"`
+			Repositories []struct {
+				FullName string `json:"full_name"`
+			} `json:"repositories"`
+		}
+		if err := json.Unmarshal(payload, &installEvent); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid installation event payload"})
+			return
+		}
+
+		switch installEvent.Action {
+		case "created", "added":
+			// 新安装或添加仓库
+			installation, exists := config.Installations[installEvent.Installation.ID]
+			if !exists {
+				installation = &Installation{
+					ID:           installEvent.Installation.ID,
+					AccountID:    installEvent.Installation.Account.ID,
+					AccountLogin: installEvent.Installation.Account.Login,
+					Repositories: make([]string, 0),
+				}
+				config.Installations[installEvent.Installation.ID] = installation
+			}
+
+			// 更新仓库列表
+			for _, repo := range installEvent.Repositories {
+				installation.Repositories = append(installation.Repositories, repo.FullName)
+			}
+
+			printer.PrintInfo(fmt.Sprintf("Installation %d: Added repositories for %s",
+				installation.ID, installation.AccountLogin))
+
+		case "removed":
+			// 移除仓库
+			if installation, exists := config.Installations[installEvent.Installation.ID]; exists {
+				removedRepos := make(map[string]bool)
+				for _, repo := range installEvent.Repositories {
+					removedRepos[repo.FullName] = true
+				}
+
+				// 过滤出未被移除的仓库
+				remaining := make([]string, 0)
+				for _, repo := range installation.Repositories {
+					if !removedRepos[repo] {
+						remaining = append(remaining, repo)
+					}
+				}
+				installation.Repositories = remaining
+
+				printer.PrintInfo(fmt.Sprintf("Installation %d: Removed repositories for %s",
+					installation.ID, installation.AccountLogin))
+			}
+
+		case "deleted":
+			// 完全卸载
+			delete(config.Installations, installEvent.Installation.ID)
+			printer.PrintInfo(fmt.Sprintf("Installation %d: Deleted for %s",
+				installEvent.Installation.ID, installEvent.Installation.Account.Login))
+		}
+
+		// 保存更新后的配置
+		if err := saveConfig(); err != nil {
+			printer.PrintError(err)
+		}
+
 	case "push":
 		// 处理push事件
 		var pushEvent struct {
@@ -217,4 +317,11 @@ func HandleGitHubWebhook(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
+}
+
+// saveConfig 保存配置到持久化存储
+func saveConfig() error {
+	// TODO: 实现配置的持久化存储
+	// 可以保存到文件或数据库
+	return nil
 }
