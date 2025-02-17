@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -119,6 +120,10 @@ func readWebhookFile(dataDir, filename string) (models.WebhookPayload, error) {
 
 // parseTimestamp 将字符串时间戳解析为 Unix 时间戳
 func parseTimestamp(ts string) int64 {
-	timestamp, _ := time.Parse(time.RFC3339, ts)
-	return timestamp.Unix()
+	timestamp, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
+		printer.PrintErrorf("parseTimestamp: failed to parse timestamp: %v", err)
+		return 0
+	}
+	return timestamp
 }
