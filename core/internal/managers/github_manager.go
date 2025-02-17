@@ -74,6 +74,7 @@ func (m *GitHubManager) HandleCallback(c *gin.Context) (string, error) {
 // HandleWebhook 处理接收到的 GitHub webhook 事件
 // 验证、处理事件并保存到存储中
 func (m *GitHubManager) HandleWebhook(c *gin.Context) error {
+	printer.PrintInfof("HandleWebhook")
 	if err := webhook.HandleWebhook(c, m.config.GitHubWebhookSecret); err != nil {
 		return err
 	}

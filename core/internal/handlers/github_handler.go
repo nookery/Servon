@@ -27,6 +27,7 @@ func HandleGitHubSetup(c *gin.Context) {
 
 // HandleGitHubCallback handles callback after GitHub App creation
 func HandleGitHubCallback(c *gin.Context) {
+	printer.PrintInfof("HandleGitHubCallback")
 	redirectURL, err := githubManager.HandleCallback(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -38,6 +39,7 @@ func HandleGitHubCallback(c *gin.Context) {
 
 // HandleGitHubWebhook 处理来自 GitHub 的 webhook 请求
 func HandleGitHubWebhook(c *gin.Context) {
+	printer.PrintInfof("HandleGitHubWebhook")
 	if err := githubManager.HandleWebhook(c); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -48,6 +50,7 @@ func HandleGitHubWebhook(c *gin.Context) {
 
 // HandleGetWebhooks 获取存储的 webhook 数据
 func HandleGetWebhooks(c *gin.Context) {
+	printer.PrintInfof("HandleGetWebhooks")
 	webhooks, err := githubManager.GetStoredWebhooks()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
