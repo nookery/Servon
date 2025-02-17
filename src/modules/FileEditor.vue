@@ -1,17 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import axios from 'axios'
-
-interface FileInfo {
-    name: string
-    path: string
-    size: number
-    isDir: boolean
-    mode: string
-    modTime: string
-    owner: string
-    group: string
-}
+import { fileAPI } from '@/api/file_api'
+import type { FileInfo } from '@/models/FileInfo'
 
 const props = defineProps<{
     show: boolean
@@ -35,7 +25,7 @@ watch(() => props.show, async (newVal) => {
 async function loadFileContent() {
     if (!props.file) return
     try {
-        const res = await axios.get(`/web_api/system/files/content?path=${props.file.path}`)
+        const res = await fileAPI.getFileContent(props.file.path)
         content.value = res.data.content
         error.value = null
     } catch (err: any) {
@@ -46,10 +36,7 @@ async function loadFileContent() {
 async function saveFile() {
     if (!props.file) return
     try {
-        await axios.post('/web_api/system/files/save', {
-            path: props.file.path,
-            content: content.value
-        })
+        await fileAPI.saveFileContent(props.file.path, content.value)
         error.value = null
         emit('saved')
         emit('update:show', false)
@@ -71,10 +58,7 @@ async function saveFile() {
                 </div>
             </div>
 
-            <textarea 
-                v-model="content" 
-                class="textarea textarea-bordered w-full h-96 font-mono"
-            ></textarea>
+            <textarea v-model="content" class="textarea textarea-bordered w-full h-96 font-mono"></textarea>
 
             <div class="modal-action">
                 <button class="btn" @click="$emit('update:show', false)">取消</button>
@@ -82,4 +66,4 @@ async function saveFile() {
             </div>
         </div>
     </dialog>
-</template> 
+</template>

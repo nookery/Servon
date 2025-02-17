@@ -26,4 +26,14 @@ export const fileAPI = {
         axios.get<FileInfo[]>(`/web_api/files/search`, {
             params: { path, query }
         }),
+
+    // 获取文件内容
+    getFileContent: (path: string) =>
+        axios.get<{ content: string }>(`/web_api/files/content`, {
+            params: { path }
+        }),
+
+    // 保存文件内容
+    saveFileContent: (path: string, content: string) =>
+        axios.post('/web_api/files/save', { path, content }),
 }

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import FileEditor from '../components/FileEditor.vue'
+import FileEditor from '../modules/FileEditor.vue'
 import PageContainer from '../layouts/PageContainer.vue'
-import { fileAPI, type FileInfo } from '../api/file'
+import { fileAPI, type FileInfo } from '../api/file_api'
 
 const files = ref<FileInfo[]>([])
 const currentPath = ref('/')

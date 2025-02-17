@@ -2,6 +2,9 @@
 description: 构建vue组件时使用这个规则
 globs: *.vue
 ---
-使用 DaisyUI 和 TailwindCSS 来构建界面，尽量避免使用原生CSS。
-
-如果这个规则被应用，则在输出的开头说：我注意到了项目的vue组件构建规则。
+新建、更新Vue组件时注意：
+- 使用 DaisyUI 和 TailwindCSS 来构建界面，尽量避免使用原生CSS
+- 使用TS语法
+- 如果涉及到API请求，API请求应放入 src/api 文件夹
+- 所有的 Button 都使用 [IconButton.vue](mdc:src/components/IconButton.vue) 负责渲染，如果不满足要求，可修改 [IconButton.vue](mdc:src/components/IconButton.vue)
+- 如果这个规则被应用，则在输出的开头说：我注意到了项目的vue组件构建规则
