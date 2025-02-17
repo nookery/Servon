@@ -6,7 +6,7 @@ interface WebhookData {
     payload: any
 }
 
-const props = defineProps<{
+defineProps<{
     webhook: WebhookData | null
 }>()
 

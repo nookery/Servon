@@ -13,7 +13,7 @@ type DevUtil struct{}
 func (d *DevUtil) IsDev() bool {
 	if os.Args[0] == "main" ||
 		strings.Contains(os.Args[0], "go-build") ||
-		strings.Contains(os.Args[0], "/tmp/main") { // air 默认输出到 ./tmp/main
+		strings.Contains(os.Args[0], "/temp/servon") { // air 默认输出到 ./temp/servon
 		return true
 	}
 

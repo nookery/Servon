@@ -71,6 +71,85 @@ sudo mv servon-linux-amd64 /usr/local/bin/servon
 - 建议内存：>= 512MB
 - 磁盘空间：>= 200MB
 
+## 构建说明
+
+本项目使用 Makefile 管理构建流程。在构建之前，某些插件（如 web 插件）需要执行预处理步骤（如 npm build）。
+
+### 构建命令
+
+```bash 
+# 完整构建（包含所有预处理步骤）
+make build
+# 开发模式构建（跳过预处理步骤）
+make dev
+# 仅执行生成步骤
+make generate
+# 清理构建产物
+make clean
+```
+
+
+### 构建模式说明
+
+1. **完整构建** (`make build`)
+   - 执行所有预处理步骤（如 web 插件的 npm build）
+   - 编译整个项目
+   - 输出位置：`bin/servon`
+   - 适用于：生产环境部署、发布新版本
+
+2. **开发模式** (`make dev`)
+   - 跳过耗时的预处理步骤
+   - 直接编译项目
+   - 适用于：日常开发、快速测试
+
+3. **生成步骤** (`make generate`)
+   - 仅执行预处理步骤
+   - 不进行项目编译
+   - 适用于：单独更新前端资源
+
+4. **清理构建** (`make clean`)
+   - 清除所有构建产物
+   - 删除 `bin/` 目录
+   - 删除插件生成的资源（如 `plugins/web/dist/`）
+
+### 环境变量
+
+- `SKIP_GENERATE`：设置此变量可跳过预处理步骤
+  ```bash
+  SKIP_GENERATE=1 make build  # 跳过预处理直接构建
+  ```
+
+### 插件开发者注意事项
+
+如果你的插件需要在构建前执行特定的预处理步骤：
+
+1. 在插件目录添加 `generate.go`：
+   ```go
+   //go:generate your-command
+   package yourplugin
+   ```
+
+2. 创建插件级别的 Makefile：
+   ```makefile
+   .PHONY: build generate
+   
+   generate:
+       @if [ "$(SKIP_GENERATE)" = "" ]; then \
+           go generate ./... ; \
+       fi
+   
+   build: generate
+       go build
+   ```
+
+3. 在根目录的 Makefile 中添加你的插件：
+   ```makefile
+   generate:
+       @echo "Generating assets..."
+       @cd plugins/web && make generate
+       @cd plugins/your-plugin && make generate  # 添加这行
+   ```
+
 ## 贡献
 
 欢迎提交 Pull Request 或创建 Issue！
