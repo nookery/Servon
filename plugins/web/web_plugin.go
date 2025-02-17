@@ -1,3 +1,6 @@
+//go:generate pnpm install
+//go:generate pnpm build
+
 package web
 
 import (
