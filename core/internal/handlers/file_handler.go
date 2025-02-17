@@ -6,8 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gin-gonic/gin"
 	"servon/core/internal/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
 var FileUtil = utils.DefaultFileUtil
@@ -152,4 +153,30 @@ func HandleFileList(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, files)
+}
+
+// HandleRenameFile 处理重命名文件的请求
+func HandleRenameFile(c *gin.Context) {
+	var req struct {
+		OldPath string `json:"oldPath"`
+		NewPath string `json:"newPath"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据: " + err.Error()})
+		return
+	}
+
+	// 检查新路径是否已存在
+	if _, err := os.Stat(req.NewPath); err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "目标文件已存在"})
+		return
+	}
+
+	// 执行重命名
+	if err := os.Rename(req.OldPath, req.NewPath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "重命名失败: " + err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

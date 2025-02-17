@@ -8,17 +8,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
 )
-
-// setupAPIRoutes 设置所有API路由
-func (p *ServePlugin) setupAPIRoutes(router *gin.Engine) {
-	p.PrintKeyValue("API:", color.HiGreenString("http://localhost:%d/web_api", port)) // 仅当监听非本地地址时显示网络访问信息
-	if host != "127.0.0.1" && host != "localhost" {
-		p.PrintKeyValue("Network:", color.HiGreenString("http://%s:%d", host, port))
-	}
-}
 
 //go:embed dist
 var distFS embed.FS

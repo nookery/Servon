@@ -36,7 +36,6 @@ func NewWebServerManager(host string, port int) *WebServerManager {
 	routers.SetupPortRouter(api)
 	routers.SetupLogsRouter(api)
 	routers.SetupUserRouter(api)
-	routers.SetupHomeRouter(router.Group("/"))
 	routers.SetupWebApiRouter(api)
 
 	return server

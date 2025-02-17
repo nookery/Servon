@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import PageContainer from '../layouts/PageContainer.vue'
 import { githubAPI } from '../api/github'
+import WebhookDetailDialog from '../modules/github/WebhookDetailDialog.vue'
 
 interface WebhookData {
     id: string
@@ -95,19 +96,6 @@ onMounted(() => {
             </table>
         </div>
 
-        <dialog class="modal" :class="{ 'modal-open': showPayloadDialog }">
-            <div class="modal-box w-11/12 max-w-5xl">
-                <h3 class="font-bold text-lg mb-4">
-                    Webhook详情
-                    <div class="badge badge-primary ml-2">{{ selectedWebhook?.type }}</div>
-                </h3>
-                <div class="mockup-code">
-                    <pre><code>{{ JSON.stringify(selectedWebhook?.payload, null, 2) }}</code></pre>
-                </div>
-                <div class="modal-action">
-                    <button class="btn" @click="showPayloadDialog = false">关闭</button>
-                </div>
-            </div>
-        </dialog>
+        <WebhookDetailDialog v-model:show="showPayloadDialog" :webhook="selectedWebhook" />
     </PageContainer>
 </template>

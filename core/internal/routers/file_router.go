@@ -15,4 +15,5 @@ func SetupFileRouter(r *gin.RouterGroup) {
 	api.POST("/save", handlers.HandleSaveFile)
 	api.DELETE("/delete", handlers.HandleDeleteFile)
 	api.POST("/create", handlers.HandleCreateFile)
+	api.POST("/rename", handlers.HandleRenameFile)
 }

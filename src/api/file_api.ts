@@ -36,4 +36,8 @@ export const fileAPI = {
     // 保存文件内容
     saveFileContent: (path: string, content: string) =>
         axios.post('/web_api/files/save', { path, content }),
+
+    // 重命名文件
+    renameFile: (oldPath: string, newPath: string) =>
+        axios.post('/web_api/files/rename', { oldPath, newPath }),
 }

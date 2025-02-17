@@ -72,13 +72,12 @@ func (p *ServePlugin) NewServeCommand() *cobra.Command {
 func (p *ServePlugin) StartWebServer(host string, port int, withUI bool) {
 	router := p.GetRouter()
 
-	// 设置API路由
-	p.setupAPIRoutes(router)
-
 	// 如果启用了UI，设置UI路由
 	if withUI {
-		// 检查是否为开发环境（通过检查是否使用 go run 启动）
-		if os.Args[0] == "main" || strings.Contains(os.Args[0], "go-build") {
+		// 检查是否为开发环境（通过检查是否使用 go run、go-build 或 air 启动）
+		if os.Args[0] == "main" ||
+			strings.Contains(os.Args[0], "go-build") ||
+			strings.Contains(os.Args[0], "/tmp/main") { // air 默认输出到 ./tmp/main
 			go func() {
 				p.PrintLn()
 				p.PrintInfof("开发环境，启动 npm dev server")

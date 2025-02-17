@@ -2,7 +2,9 @@
 import { ref, onMounted, computed } from 'vue'
 import FileEditor from '../modules/FileEditor.vue'
 import PageContainer from '../layouts/PageContainer.vue'
-import { fileAPI, type FileInfo } from '../api/file_api'
+import { fileAPI } from '../api/file_api'
+import RenameFileDialog from '../modules/RenameFileDialog.vue'
+import type { FileInfo } from '../models/FileInfo'
 
 const files = ref<FileInfo[]>([])
 const currentPath = ref('/')
@@ -17,6 +19,8 @@ const showCreateDialog = ref(false)
 const newFileName = ref('')
 const newFileType = ref<'file' | 'directory'>('file')
 const searchQuery = ref('')
+const showRenameDialog = ref(false)
+const renamingFile = ref<FileInfo | null>(null)
 
 // Pagination
 const totalPages = computed(() => Math.ceil(files.value.length / itemsPerPage))
@@ -137,6 +141,26 @@ async function openFile(file: FileInfo) {
     }
 }
 
+async function renameFile(file: FileInfo) {
+    renamingFile.value = file
+    showRenameDialog.value = true
+}
+
+async function handleRename(oldPath: string, newPath: string) {
+    try {
+        await fileAPI.renameFile(oldPath, newPath)
+        showRenameDialog.value = false
+        renamingFile.value = null
+        loadFiles(currentPath.value)
+    } catch (err: any) {
+        const errorMessage = err.response?.data?.error || err.message || '重命名失败'
+        error.value = errorMessage
+        setTimeout(() => {
+            error.value = null
+        }, 5000)
+    }
+}
+
 onMounted(() => {
     loadFiles(currentPath.value)
 })
@@ -246,6 +270,9 @@ onMounted(() => {
                             <button class="btn btn-xs" @click="downloadFile(file)" v-if="!file.isDir">
                                 <i class="ri-download-line"></i>
                             </button>
+                            <button class="btn btn-xs btn-warning" @click="renameFile(file)">
+                                <i class="ri-edit-line"></i>
+                            </button>
                             <button class="btn btn-xs btn-error" @click="deleteFile(file)">
                                 <i class="ri-delete-bin-line"></i>
                             </button>
@@ -303,6 +330,8 @@ onMounted(() => {
                 </div>
             </div>
         </dialog>
+
+        <RenameFileDialog v-model:show="showRenameDialog" :file="renamingFile" @rename="handleRename" />
     </PageContainer>
 </template>
 
