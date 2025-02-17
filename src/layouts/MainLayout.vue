@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Header from './Header.vue'
 import Sidebar from './Sidebar.vue'
-import LogViewer from '../components/LogViewer.vue'
+import LogViewer from '../modules/LogViewer.vue'
 import { useLogViewerStore } from '../stores/logViewer'
 import { useLayoutStore } from '../stores/layout'
 

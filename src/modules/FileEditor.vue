@@ -2,6 +2,8 @@
 import { ref, watch } from 'vue'
 import { fileAPI } from '@/api/file_api'
 import type { FileInfo } from '@/models/FileInfo'
+import * as monaco from 'monaco-editor'
+import { onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps<{
     show: boolean
@@ -15,10 +17,35 @@ const emit = defineEmits<{
 
 const content = ref('')
 const error = ref<string | null>(null)
+const editorContainer = ref<HTMLElement | null>(null)
+let editor: monaco.editor.IStandaloneCodeEditor | null = null
+
+onMounted(() => {
+    if (editorContainer.value) {
+        editor = monaco.editor.create(editorContainer.value, {
+            value: content.value,
+            language: 'plaintext',
+            theme: 'vs-dark',
+            automaticLayout: true,
+            minimap: { enabled: true },
+            scrollBeyondLastLine: false,
+        })
+
+        // Sync editor content with content ref
+        editor.onDidChangeModelContent(() => {
+            content.value = editor?.getValue() || ''
+        })
+    }
+})
+
+onBeforeUnmount(() => {
+    editor?.dispose()
+})
 
 watch(() => props.show, async (newVal) => {
     if (newVal && props.file) {
         await loadFileContent()
+        editor?.setValue(content.value)
     }
 })
 
@@ -58,7 +85,7 @@ async function saveFile() {
                 </div>
             </div>
 
-            <textarea v-model="content" class="textarea textarea-bordered w-full h-96 font-mono"></textarea>
+            <div ref="editorContainer" class="h-96"></div>
 
             <div class="modal-action">
                 <button class="btn" @click="$emit('update:show', false)">取消</button>

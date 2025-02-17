@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import Alert from '../components/Alert.vue'
-import CronTaskForm from '../components/CronTaskForm.vue'
+import CronTaskForm from '../modules/CronTaskForm.vue'
 import PageContainer from '../layouts/PageContainer.vue'
 import { type CronTask, getTasks, createTask, updateTask, deleteTask, toggleTask } from '../api/cronTasks'
 

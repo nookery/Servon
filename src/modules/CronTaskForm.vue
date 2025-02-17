@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import Alert from './Alert.vue'
+import Alert from '../components/Alert.vue'
 
 interface CronTask {
     id: number
