@@ -1,27 +1,19 @@
+// Package webhook 提供了处理 GitHub webhook 事件的功能
+// 主要负责：
+// 1. 验证 webhook 请求的签名
+// 2. 解析不同类型的 webhook 事件
+// 3. 处理各种 GitHub 事件（安装、推送、PR等）
 package webhook
 
 import (
 	"fmt"
 
-	"servon/core/internal/libs/github/config"
-	"servon/core/internal/libs/github/storage"
-
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct {
-	config  *config.Manager
-	storage *storage.Manager
-}
-
-func NewHandler(config *config.Manager) *Handler {
-	return &Handler{
-		config:  config,
-		storage: storage.NewManager(),
-	}
-}
-
-func (h *Handler) Handle(c *gin.Context) error {
+// HandleWebhook 处理 GitHub webhook 请求
+// 验证请求签名并根据事件类型调用相应的处理函数
+func HandleWebhook(c *gin.Context, webhookSecret string) error {
 	// 验证webhook签名
 	signature := c.GetHeader("X-Hub-Signature-256")
 	if signature == "" {
@@ -31,56 +23,56 @@ func (h *Handler) Handle(c *gin.Context) error {
 	// 读取请求体
 	payload, err := c.GetRawData()
 	if err != nil {
-		return fmt.Errorf("failed to read payload")
+		return fmt.Errorf("failed to read payload: %v", err)
 	}
 
-	// TODO: 实现签名验证
+	// TODO: 使用webhookSecret验证签名
 
 	event := c.GetHeader("X-GitHub-Event")
-	eventID := c.GetHeader("X-GitHub-Delivery")
-
-	// 处理不同类型的事件
-	if err := h.handleEvent(event, payload); err != nil {
-		return err
+	if event == "" {
+		return fmt.Errorf("missing event type")
 	}
 
-	// 保存webhook数据
-	return h.storage.SaveWebhookPayload(event, eventID, payload)
+	return handleEvent(event, payload)
 }
 
-func (h *Handler) handleEvent(event string, payload []byte) error {
+// handleEvent 根据事件类型分发到具体的处理函数
+func handleEvent(event string, payload []byte) error {
 	switch event {
 	case "installation", "installation_repositories":
-		return h.handleInstallationEvent(payload)
+		return handleInstallationEvent(payload)
 	case "push":
-		return h.handlePushEvent(payload)
+		return handlePushEvent(payload)
 	case "pull_request":
-		return h.handlePullRequestEvent(payload)
+		return handlePullRequestEvent(payload)
 	case "check_suite":
-		return h.handleCheckSuiteEvent(payload)
+		return handleCheckSuiteEvent(payload)
 	default:
 		// 记录未处理的事件类型
 		return nil
 	}
 }
 
-// 实现各种事件处理方法...
-func (h *Handler) handleInstallationEvent(payload []byte) error {
+// handleInstallationEvent 处理 GitHub App 安装相关的事件
+func handleInstallationEvent(payload []byte) error {
 	// TODO: 实现安装事件处理逻辑
 	return nil
 }
 
-func (h *Handler) handlePushEvent(payload []byte) error {
+// handlePushEvent 处理代码推送事件
+func handlePushEvent(payload []byte) error {
 	// TODO: 实现推送事件处理逻辑
 	return nil
 }
 
-func (h *Handler) handlePullRequestEvent(payload []byte) error {
+// handlePullRequestEvent 处理拉取请求事件
+func handlePullRequestEvent(payload []byte) error {
 	// TODO: 实现PR事件处理逻辑
 	return nil
 }
 
-func (h *Handler) handleCheckSuiteEvent(payload []byte) error {
+// handleCheckSuiteEvent 处理检查套件事件
+func handleCheckSuiteEvent(payload []byte) error {
 	// TODO: 实现检查套件事件处理逻辑
 	return nil
 }

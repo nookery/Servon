@@ -3,22 +3,16 @@ package handlers
 import (
 	"net/http"
 
-	"servon/core/internal/libs/github/config"
-	"servon/core/internal/libs/github/storage"
-	"servon/core/internal/libs/github/webhook"
+	"servon/core/internal/managers"
 
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	githubConfig   = config.NewGitHubConfig()
-	webhookHandler = webhook.NewHandler(githubConfig)
-	storageManager = storage.NewManager()
-)
+var githubManager = managers.DefaultGitHubManager
 
 // HandleGitHubSetup handles GitHub App Manifest flow setup request
 func HandleGitHubSetup(c *gin.Context) {
-	manifest, err := githubConfig.HandleSetup(c)
+	manifest, err := githubManager.HandleSetup(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -30,7 +24,7 @@ func HandleGitHubSetup(c *gin.Context) {
 
 // HandleGitHubCallback handles callback after GitHub App creation
 func HandleGitHubCallback(c *gin.Context) {
-	redirectURL, err := githubConfig.HandleCallback(c)
+	redirectURL, err := githubManager.HandleCallback(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -41,7 +35,7 @@ func HandleGitHubCallback(c *gin.Context) {
 
 // HandleGitHubWebhook handles webhook requests from GitHub
 func HandleGitHubWebhook(c *gin.Context) {
-	if err := webhookHandler.Handle(c); err != nil {
+	if err := githubManager.HandleWebhook(c); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -51,7 +45,7 @@ func HandleGitHubWebhook(c *gin.Context) {
 
 // HandleGetWebhooks retrieves stored webhook data
 func HandleGetWebhooks(c *gin.Context) {
-	webhooks, err := storageManager.GetWebhooks()
+	webhooks, err := githubManager.GetStoredWebhooks()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
