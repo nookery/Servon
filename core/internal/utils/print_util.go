@@ -468,3 +468,12 @@ func (p *Printer) PrintKeyValues(keyValues map[string]string) {
 		p.PrintKeyValue(paddedKey, keyValues[key])
 	}
 }
+
+// PrintEmojiForBool 打印布尔值的emoji
+func (p *Printer) PrintEmojiForBool(value bool) {
+	if value {
+		p.PrintSuccess("✅")
+	} else {
+		p.PrintError(fmt.Errorf("❌"))
+	}
+}

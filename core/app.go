@@ -1,30 +1,18 @@
 package core
 
 import (
+	"fmt"
+	"path/filepath"
 	"servon/core/internal/commands"
-	"servon/core/internal/contract"
+	"servon/core/internal/events"
 	"servon/core/internal/libs"
 	"servon/core/internal/managers"
-	"servon/core/internal/models"
 	"servon/core/internal/utils"
-	"servon/core/internal/web"
 )
 
-const DataRootFolder = "/data"
-const LoggerFolder = "/logs"
-const DefaultHost = "0.0.0.0"
-const DefaultPort = 8080
-
-type OSType = libs.OSType
-type CommandOptions = utils.CommandOptions
-type CronTask = libs.CronTask
-type ValidationError = libs.ValidationError
-type ValidationErrors = libs.ValidationErrors
-type Task = models.Task
-type SoftwareInfo = contract.SoftwareInfo
-type SuperSoft = contract.SuperSoft
-
 type App struct {
+	eventBus *events.EventBus
+
 	// Libs，无状态的
 
 	*libs.PortManager
@@ -49,31 +37,28 @@ type App struct {
 	*managers.CommandManager
 	*managers.DataManager
 	*managers.ServiceManager
+	*managers.GitHubManager
+	*managers.WebServerManager
 
 	// Utils
 
 	*utils.Printer
 	*utils.CommandUtil
 	*utils.FileUtil
-
-	// WebServer
-
-	*web.WebServerManager
+	*utils.DevUtil
+	*utils.StringUtil
 }
-
-const (
-	Ubuntu  OSType = "ubuntu"
-	Debian  OSType = "debian"
-	CentOS  OSType = "centos"
-	RedHat  OSType = "redhat"
-	Unknown OSType = "unknown"
-)
 
 // New 创建Core实例
 func New() *App {
 	rootCmd := commands.RootCmd
+	eventBus, err := events.NewEventBus(filepath.Join(DataRootFolder, "events"))
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create event bus: %v", err))
+	}
 
 	core := &App{
+		eventBus:               eventBus,
 		CommandManager:         managers.NewCommandManager(rootCmd),
 		SoftManager:            managers.DefaultSoftManager,
 		DataManager:            managers.DefaultDataManager,
@@ -94,11 +79,11 @@ func New() *App {
 		DownloadManager:        managers.NewDownloadManager(),
 		GitManager:             managers.NewGitManager(),
 		TaskManager:            libs.DefaultTaskManager,
-		DeployManager:          managers.NewDeployManager(commands.GetDeployCommand()),
-		WebServerManager: web.NewWebServerManager(
-			DefaultHost,
-			DefaultPort,
-		),
+		GitHubManager:          managers.GetGitHubManager(eventBus),
+		DeployManager:          managers.NewDeployManager(eventBus),
+		WebServerManager:       managers.NewWebServerManager(DefaultHost, DefaultPort),
+		DevUtil:                utils.DefaultDevUtil,
+		StringUtil:             utils.DefaultStringUtil,
 	}
 
 	core.AddCommand(commands.GetDeployCommand())

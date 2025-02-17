@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref } from 'vue'
+import { ref } from 'vue'
 import IconButton from '../../components/IconButton.vue'
 import ParsedWebhookView from './ParsedWebhookView.vue'
 import RawWebhookView from './RawWebhookView.vue'

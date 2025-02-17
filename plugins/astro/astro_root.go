@@ -9,9 +9,9 @@ type AstroPlugin struct {
 }
 
 func Setup(app *core.App) {
-	astro := NewAstroPlugin(app)
+	// astro := NewAstroPlugin(app)
 
-	app.AppendDeploySubCommand(astro.newAstroCommand())
+	// app.AppendDeploySubCommand(astro.newAstroCommand())
 }
 
 func NewAstroPlugin(app *core.App) *AstroPlugin {

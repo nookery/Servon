@@ -16,28 +16,28 @@ import (
 	"servon/plugins/npm"
 	"servon/plugins/pm2"
 	"servon/plugins/pnpm"
-	"servon/plugins/serve"
 	"servon/plugins/supervisor"
+	"servon/plugins/web"
 	"servon/plugins/yarn"
 )
 
 func main() {
-	core := core.New()
+	app := core.New()
 
-	caddy.Setup(core)
-	nodejs.Setup(core)
-	yarn.Setup(core)
-	git.Setup(core)
-	pnpm.Setup(core)
-	clash.Setup(core)
-	astro.Setup(core)
-	npm.Setup(core)
-	github_runner.Setup(core)
-	serve.Setup(core)
-	pm2.Setup(core)
-	supervisor.Setup(core)
+	caddy.Setup(app)
+	nodejs.Setup(app)
+	yarn.Setup(app)
+	git.Setup(app)
+	pnpm.Setup(app)
+	clash.Setup(app)
+	astro.Setup(app)
+	npm.Setup(app)
+	github_runner.Setup(app)
+	web.Setup(app)
+	pm2.Setup(app)
+	supervisor.Setup(app)
 
-	if err := core.GetRootCommand().Execute(); err != nil {
+	if err := app.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)
 		os.Exit(1)
 	}

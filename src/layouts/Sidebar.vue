@@ -41,6 +41,11 @@ const menuOptions = [
         key: 'github',
         icon: 'ri-github-fill'
     },
+    {
+        label: '部署日志',
+        key: 'deploy-logs',
+        icon: 'ri-file-list-line'
+    },
     // {
     //     label: '定时任务',
     //     key: 'cron',

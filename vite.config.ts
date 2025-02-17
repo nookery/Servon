@@ -21,7 +21,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'plugins/serve/dist',
+    outDir: 'plugins/web/routers/dist',
     assetsDir: 'assets',
     emptyOutDir: false,
     rollupOptions: {

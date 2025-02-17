@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"sync"
 
+	"servon/core/internal/events"
 	"servon/core/internal/libs/github/config"
 	"servon/core/internal/libs/github/models"
 	"servon/core/internal/libs/github/storage"
@@ -18,14 +19,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// DefaultGitHubManager 提供了 GitHubManager 的全局默认实例
-var DefaultGitHubManager = GetGitHubManager()
-
 // GitHubManager 管理 GitHub App 的所有操作
 // 使用单例模式确保全局只有一个实例
 type GitHubManager struct {
-	config *models.GitHubConfig // GitHub App 的配置信息
-	mu     sync.RWMutex         // 用于保护配置访问的互斥锁
+	config   *models.GitHubConfig // GitHub App 的配置信息
+	mu       sync.RWMutex         // 用于保护配置访问的互斥锁
+	eventBus *events.EventBus     // 添加事件总线
 }
 
 var (
@@ -38,10 +37,11 @@ const dataDir = "/data/github" // TODO: 从配置中读取
 
 // GetGitHubManager 返回 GitHubManager 的单例实例
 // 确保全局只有一个 GitHubManager 实例在运行
-func GetGitHubManager() *GitHubManager {
+func GetGitHubManager(eventBus *events.EventBus) *GitHubManager {
 	once.Do(func() {
 		instance = &GitHubManager{
-			config: &models.GitHubConfig{Installations: make(map[int64]*models.Installation)},
+			config:   &models.GitHubConfig{Installations: make(map[int64]*models.Installation)},
+			eventBus: eventBus,
 		}
 	})
 	return instance
@@ -86,6 +86,25 @@ func (m *GitHubManager) HandleWebhook(c *gin.Context) error {
 
 	event := c.GetHeader("X-GitHub-Event")
 	eventID := c.GetHeader("X-GitHub-Delivery")
+
+	// 如果是push事件，触发部署
+	if event == "push" {
+		// 这里使用样本数据，实际应该从payload中解析
+		sampleDeployData := map[string]interface{}{
+			"repository": "https://github.com/yourusername/yourrepo",
+			"branch":     "main",
+			"commit":     "abc123",
+		}
+
+		// 发布部署事件
+		err := m.eventBus.Publish(events.Event{
+			Type: events.GitPush,
+			Data: sampleDeployData,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to publish deploy event: %v", err)
+		}
+	}
 
 	return storage.SaveWebhookPayload(dataDir, event, eventID, payload)
 }
