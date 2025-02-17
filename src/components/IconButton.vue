@@ -42,7 +42,7 @@ const buttonClass = computed(() => {
 
 <template>
     <button :class="buttonClass" :title="title">
-        <i :class="[icon, 'text-xl']"></i>
+        <i :class="[icon, 'text-xl text-primary']"></i>
         <slot></slot>
     </button>
 </template>
