@@ -24,14 +24,18 @@ onMounted(() => {
     if (editorContainer.value) {
         editor = monaco.editor.create(editorContainer.value, {
             value: content.value,
-            language: 'plaintext',
+            language: 'json',
             theme: 'vs-dark',
             automaticLayout: true,
             minimap: { enabled: true },
             scrollBeyondLastLine: false,
+            formatOnPaste: true,
         })
 
-        // Sync editor content with content ref
+        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF, () => {
+            formatJson()
+        })
+
         editor.onDidChangeModelContent(() => {
             content.value = editor?.getValue() || ''
         })
@@ -71,12 +75,37 @@ async function saveFile() {
         error.value = `保存文件失败: ${err.response?.data?.error || err.message || '未知错误'}`
     }
 }
+
+const formatJson = () => {
+    if (!editor) return
+
+    try {
+        const content = editor.getValue()
+        const formatted = JSON.stringify(JSON.parse(content), null, 2)
+        editor.setValue(formatted)
+    } catch (e) {
+        error.value = '无效的 JSON 格式'
+    }
+}
 </script>
 
 <template>
     <dialog class="modal" :class="{ 'modal-open': show }">
         <div class="modal-box w-11/12 max-w-5xl">
-            <h3 class="font-bold text-lg mb-4">编辑文件: {{ file?.name }}</h3>
+            <h3 class="font-bold text-lg">编辑文件: {{ file?.name }}</h3>
+
+            <!-- Toolbar -->
+            <div class="flex justify-between items-center py-2 mb-4 border-b">
+                <div class="flex gap-2">
+                    <button class="btn btn-sm" @click="formatJson" title="格式化 JSON (Shift+Alt+F)">
+                        格式化
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-sm" @click="$emit('update:show', false)">取消</button>
+                    <button class="btn btn-sm btn-primary" @click="saveFile">保存</button>
+                </div>
+            </div>
 
             <div v-if="error" class="alert alert-error shadow-lg mb-4">
                 <div>
@@ -86,11 +115,6 @@ async function saveFile() {
             </div>
 
             <div ref="editorContainer" class="h-96"></div>
-
-            <div class="modal-action">
-                <button class="btn" @click="$emit('update:show', false)">取消</button>
-                <button class="btn btn-primary" @click="saveFile">保存</button>
-            </div>
         </div>
     </dialog>
 </template>
