@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { defineProps, ref, onMounted, watch, onBeforeUnmount } from 'vue'
+import { defineProps, ref } from 'vue'
 import IconButton from '../../components/IconButton.vue'
-import * as monaco from 'monaco-editor'
+import ParsedWebhookView from './ParsedWebhookView.vue'
+import RawWebhookView from './RawWebhookView.vue'
 
 interface WebhookData {
     id: string
@@ -15,39 +16,7 @@ const props = defineProps<{
     show: boolean
 }>()
 
-// 添加 editor 实例引用
-const editorContainer = ref<HTMLElement | null>(null)
-let editor: any = null
-
-onMounted(() => {
-    if (editorContainer.value) {
-        editor = monaco.editor.create(editorContainer.value, {
-            value: props.webhook?.payload ? JSON.stringify(props.webhook.payload, null, 2) : '',
-            language: 'json',
-            theme: 'vs-dark',
-            readOnly: true,
-            minimap: { enabled: false },
-            automaticLayout: true,
-        })
-    }
-})
-
-// 添加 watch 来监听 webhook 变化
-watch(
-    () => props.webhook?.payload,
-    (newPayload) => {
-        if (editor) {
-            editor.setValue(newPayload ? JSON.stringify(newPayload, null, 2) : '')
-        }
-    }
-)
-
-// 组件卸载时清理 editor
-onBeforeUnmount(() => {
-    if (editor) {
-        editor.dispose()
-    }
-})
+const viewMode = ref<'raw' | 'parsed'>('parsed')
 
 async function copyPayload() {
     if (props.webhook?.payload) {
@@ -70,13 +39,22 @@ async function copyPayload() {
                         <div class="badge badge-primary ml-2">{{ webhook?.type }}</div>
                     </h3>
                     <div class="flex gap-2">
+                        <IconButton :icon="viewMode === 'raw' ? 'ri-code-line' : 'ri-file-list-line'"
+                            @click="viewMode = viewMode === 'raw' ? 'parsed' : 'raw'">
+                            {{ viewMode === 'raw' ? '原始数据' : '解析视图' }}
+                        </IconButton>
                         <IconButton icon="ri-file-copy-line" @click="copyPayload">复制</IconButton>
                         <IconButton icon="ri-close-line" circle @click="$emit('update:show', false)" />
                     </div>
                 </div>
             </div>
             <div class="h-full overflow-y-auto">
-                <div ref="editorContainer" style="height: 100%;"></div>
+                <template v-if="viewMode === 'raw'">
+                    <RawWebhookView :webhook="webhook" />
+                </template>
+                <template v-else>
+                    <ParsedWebhookView :webhook="webhook" />
+                </template>
             </div>
         </div>
     </dialog>
