@@ -72,10 +72,10 @@ func (m *GitHubManager) HandleCallback(c *gin.Context) (string, error) {
 }
 
 // HandleWebhook 处理接收到的 GitHub webhook 事件
-// 验证、处理事件并保存到存储中
 func (m *GitHubManager) HandleWebhook(c *gin.Context) error {
 	printer.PrintInfof("HandleWebhook")
 	if err := webhook.HandleWebhook(c, m.config.GitHubWebhookSecret); err != nil {
+		printer.PrintErrorf("HandleWebhook error: %v", err)
 		return err
 	}
 
@@ -87,7 +87,13 @@ func (m *GitHubManager) HandleWebhook(c *gin.Context) error {
 	event := c.GetHeader("X-GitHub-Event")
 	eventID := c.GetHeader("X-GitHub-Delivery")
 
-	// 如果是push事件，触发部署
+	// 优先保存 webhook 数据
+	if err := storage.SaveWebhookPayload(dataDir, event, eventID, payload); err != nil {
+		printer.PrintErrorf("failed to save webhook payload: %v", err)
+		return fmt.Errorf("failed to save webhook payload: %v", err)
+	}
+
+	// 数据保存成功后，处理特定事件
 	if event == "push" {
 		// 这里使用样本数据，实际应该从payload中解析
 		sampleDeployData := map[string]interface{}{
@@ -97,16 +103,17 @@ func (m *GitHubManager) HandleWebhook(c *gin.Context) error {
 		}
 
 		// 发布部署事件
-		err := m.eventBus.Publish(events.Event{
+		if err := m.eventBus.Publish(events.Event{
 			Type: events.GitPush,
 			Data: sampleDeployData,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to publish deploy event: %v", err)
+		}); err != nil {
+			printer.PrintErrorf("failed to publish deploy event: %v", err)
+			// 注意：这里的错误不会影响webhook数据的保存，因为数据已经保存成功
+			return err
 		}
 	}
 
-	return storage.SaveWebhookPayload(dataDir, event, eventID, payload)
+	return nil
 }
 
 // GetStoredWebhooks 获取所有存储的 webhook 事件数据
