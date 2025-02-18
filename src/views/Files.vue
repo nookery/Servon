@@ -5,6 +5,7 @@ import PageContainer from '../layouts/PageContainer.vue'
 import { fileAPI } from '../api/file_api'
 import RenameFileDialog from '../modules/RenameFileDialog.vue'
 import type { FileInfo } from '../models/FileInfo'
+import IconButton from '../components/IconButton.vue'
 
 const files = ref<FileInfo[]>([])
 const currentPath = ref('/')
@@ -208,24 +209,29 @@ onMounted(() => {
 
                 <div class="divider divider-horizontal"></div>
                 <div class="flex flex-wrap gap-2">
-                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/data')" title="数据目录">
-                        <i class="ri-settings-3-line mr-1"></i>data
-                    </button>
-                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/etc')" title="系统配置目录">
-                        <i class="ri-settings-3-line mr-1"></i>etc
-                    </button>
-                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/home')" title="用户目录">
-                        <i class="ri-home-4-line mr-1"></i>home
-                    </button>
-                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/var/log')" title="系统日志目录">
-                        <i class="ri-file-list-3-line mr-1"></i>logs
-                    </button>
-                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/usr/local')" title="本地安装的软件">
-                        <i class="ri-apps-2-line mr-1"></i>local
-                    </button>
-                    <button class="btn btn-sm btn-ghost" @click="loadFiles('/tmp')" title="临时文件目录">
-                        <i class="ri-time-line mr-1"></i>tmp
-                    </button>
+                    <IconButton icon="ri-settings-3-line" variant="ghost" size="sm" title="数据目录"
+                        @click="loadFiles('/data')">
+                        data
+                    </IconButton>
+                    <IconButton icon="ri-settings-3-line" variant="ghost" size="sm" title="系统配置目录"
+                        @click="loadFiles('/etc')">
+                        etc
+                    </IconButton>
+                    <IconButton icon="ri-home-4-line" variant="ghost" size="sm" title="用户目录"
+                        @click="loadFiles('/home')">
+                        home
+                    </IconButton>
+                    <IconButton icon="ri-file-list-3-line" variant="ghost" size="sm" title="系统日志目录"
+                        @click="loadFiles('/var/log')">
+                        logs
+                    </IconButton>
+                    <IconButton icon="ri-apps-2-line" variant="ghost" size="sm" title="本地安装的软件"
+                        @click="loadFiles('/usr/local')">
+                        local
+                    </IconButton>
+                    <IconButton icon="ri-time-line" variant="ghost" size="sm" title="临时文件目录" @click="loadFiles('/tmp')">
+                        tmp
+                    </IconButton>
                 </div>
 
                 <div class="flex-1 flex justify-end">
