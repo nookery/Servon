@@ -4,15 +4,17 @@ import { computed } from 'vue'
 interface Props {
     icon: string                    // Remix icon 类名
     title?: string                  // 按钮提示文字
-    variant?: 'default' | 'ghost'   // 按钮样式变体
+    variant?: 'default' | 'ghost' | 'primary' | 'error'   // 按钮样式变体
     size?: 'sm' | 'md' | 'lg'      // 按钮大小
     circle?: boolean                // 是否为圆形按钮
+    active?: boolean                // 是否激活状态
 }
 
 const props = withDefaults(defineProps<Props>(), {
     variant: 'default',
     size: 'md',
-    circle: false
+    circle: false,
+    active: false
 })
 
 // 计算按钮的 class
@@ -22,6 +24,10 @@ const buttonClass = computed(() => {
     // 变体样式
     if (props.variant === 'ghost') {
         classes.push('btn-ghost')
+    } else if (props.variant === 'primary') {
+        classes.push('btn-primary')
+    } else if (props.variant === 'error') {
+        classes.push('btn-error')
     }
 
     // 尺寸
@@ -36,13 +42,18 @@ const buttonClass = computed(() => {
         classes.push('btn-circle')
     }
 
+    // 激活状态
+    if (props.active) {
+        classes.push('btn-active')
+    }
+
     return classes.join(' ')
 })
 </script>
 
 <template>
     <button :class="buttonClass" :title="title">
-        <i :class="[icon, 'text-xl text-primary']"></i>
+        <i :class="[icon, 'mr-1']"></i>
         <slot></slot>
     </button>
 </template>

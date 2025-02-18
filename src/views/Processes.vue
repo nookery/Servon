@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { systemAPI, type Process } from '../api/info'
 import PageContainer from '../layouts/PageContainer.vue'
+import IconButton from '../components/IconButton.vue'
 
 const processes = ref<Process[]>([])
 const filteredProcesses = ref<Process[]>([])
@@ -10,13 +11,16 @@ const sortKey = ref<string>('pid')
 const sortOrder = ref<string>('asc')
 const searchText = ref('')
 
+// 添加当前激活的过滤器状态
+const activeFilter = ref<string | null>(null)
+
 // 预定义的常用软件过滤器
 const commonFilters = [
-    { name: 'Nginx', pattern: /nginx/i },
-    { name: 'MySQL', pattern: /(mysql|mysqld)/i },
-    { name: 'PHP', pattern: /(php|php-fpm)/i },
-    { name: 'Redis', pattern: /redis/i },
-    { name: 'Node.js', pattern: /node/i }
+    { name: 'Nginx', pattern: /nginx/i, icon: 'ri-server-line' },
+    { name: 'MySQL', pattern: /(mysql|mysqld)/i, icon: 'ri-database-2-line' },
+    { name: 'PHP', pattern: /(php|php-fpm)/i, icon: 'ri-code-s-slash-line' },
+    { name: 'Redis', pattern: /redis/i, icon: 'ri-database-line' },
+    { name: 'Node.js', pattern: /node/i, icon: 'ri-nodejs-line' }
 ]
 
 // 加载进程列表
@@ -31,8 +35,10 @@ async function loadProcesses() {
     }
 }
 
-// 过滤进程
-function filterProcesses(pattern: RegExp | null) {
+// 修改过滤进程函数
+function filterProcesses(pattern: RegExp | null, filterName: string | null = null) {
+    activeFilter.value = filterName // 设置当前激活的过滤器
+
     if (!pattern && !searchText.value) {
         filteredProcesses.value = processes.value
         return
@@ -103,17 +109,15 @@ onMounted(() => {
 
                 <!-- 快速过滤按钮组 -->
                 <div class="flex flex-wrap gap-2 flex-1">
-                    <button class="btn btn-sm bg-base-100 hover:bg-base-300"
-                        :class="{ 'btn-primary': !searchText && filteredProcesses.length !== processes.length }"
-                        @click="filterProcesses(null)">
+                    <IconButton icon="ri-list-unordered" size="sm"
+                        :variant="activeFilter === null ? 'primary' : 'default'" @click="filterProcesses(null, null)">
                         全部
-                    </button>
-                    <button v-for="filter in commonFilters" :key="filter.name"
-                        class="btn btn-sm bg-base-100 hover:bg-base-300"
-                        :class="{ 'btn-primary': filteredProcesses.length !== processes.length }"
-                        @click="filterProcesses(filter.pattern)">
+                    </IconButton>
+                    <IconButton v-for="filter in commonFilters" :key="filter.name" :icon="filter.icon" size="sm"
+                        :variant="activeFilter === filter.name ? 'primary' : 'default'"
+                        @click="filterProcesses(filter.pattern, filter.name)">
                         {{ filter.name }}
-                    </button>
+                    </IconButton>
                 </div>
             </div>
         </template>
@@ -131,13 +135,30 @@ onMounted(() => {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="process in filteredProcesses" :key="process.pid">
-                        <td>{{ process.pid }}</td>
-                        <td>{{ process.command }}</td>
-                        <td>{{ process.cpu.toFixed(1) }}%</td>
-                        <td>{{ process.memory.toFixed(1) }}%</td>
-                        <td>
-                            <button class="btn btn-error btn-sm" @click="killProcess(process.pid)">结束</button>
+                    <template v-if="filteredProcesses.length > 0">
+                        <tr v-for="process in filteredProcesses" :key="process.pid">
+                            <td>{{ process.pid }}</td>
+                            <td>{{ process.command }}</td>
+                            <td>{{ process.cpu.toFixed(1) }}%</td>
+                            <td>{{ process.memory.toFixed(1) }}%</td>
+                            <td>
+                                <IconButton icon="ri-close-line" size="sm" variant="error"
+                                    :title="`结束进程 ${process.pid}`" @click="killProcess(process.pid)">
+                                    结束
+                                </IconButton>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr v-else>
+                        <td colspan="5" class="text-center py-8">
+                            <div class="flex flex-col items-center gap-2 text-base-content/60">
+                                <i class="ri-inbox-line text-4xl"></i>
+                                <p>没有找到匹配的进程</p>
+                                <IconButton v-if="activeFilter !== null || searchText" icon="ri-refresh-line"
+                                    variant="ghost" size="sm" @click="filterProcesses(null, null); searchText = ''">
+                                    清除筛选
+                                </IconButton>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
