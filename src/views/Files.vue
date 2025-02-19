@@ -179,7 +179,6 @@ onMounted(() => {
 
             <div class="bg-base-200 border border-base-300 rounded-lg p-3 mb-4">
                 <div class="flex items-center gap-2">
-                    <i class="ri-folder-line text-lg"></i>
                     <div class="breadcrumbs text-sm">
                         <ul>
                             <li>
