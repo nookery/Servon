@@ -20,40 +20,24 @@ import (
 
 var printer = utils.DefaultPrinter
 
+const (
+	WebhookDir = "/data/github/webhook"
+)
+
 // SaveWebhookPayload 保存 webhook 事件数据到指定目录
 // 文件名格式：时间戳_事件ID_事件类型.json
 func SaveWebhookPayload(dataDir string, eventType, eventID string, payload []byte) error {
-	// 添加payload长度检查
-	if len(payload) == 0 {
-		return fmt.Errorf("empty payload received")
-	}
-
-	printer.PrintInfof("SaveWebhookPayload: eventType=%s, eventID=%s, payloadSize=%d",
-		eventType, eventID, len(payload))
-
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %v", err)
 	}
 
-	filename := fmt.Sprintf("%s/%d_%s_%s.json",
-		dataDir,
+	filename := fmt.Sprintf("%d_%s_%s.json",
 		time.Now().Unix(),
 		eventID,
 		eventType,
 	)
 
-	// 写入文件前打印更详细的日志
-	printer.PrintInfof("Writing webhook to file: %s with payload size: %d bytes", filename, len(payload))
-	if err := os.WriteFile(filename, payload, 0644); err != nil {
-		return fmt.Errorf("failed to write file: %v", err)
-	}
-
-	// 验证文件写入是否成功
-	if fileInfo, err := os.Stat(filename); err == nil {
-		printer.PrintInfof("Successfully wrote webhook file: %s, size: %d bytes", filename, fileInfo.Size())
-	}
-
-	return nil
+	return os.WriteFile(filepath.Join(dataDir, filename), payload, 0644)
 }
 
 // GetWebhooks 从指定目录获取所有保存的 webhook 事件数据
@@ -74,16 +58,21 @@ func GetWebhooks(dataDir string) ([]models.WebhookPayload, error) {
 	var webhooks []models.WebhookPayload
 	for _, file := range files {
 		printer.PrintInfof("GetWebhooks: %s", file.Name())
-		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
-			printer.PrintInfof("GetWebhooks: %s", file.Name())
-			webhook, err := readWebhookFile(dataDir, file.Name())
-			if err != nil {
-				continue
-			} else {
-				printer.PrintInfof("GetWebhooks: %s", webhook.ID)
-			}
-			webhooks = append(webhooks, webhook)
+		if filepath.Ext(file.Name()) != ".json" {
+			continue
 		}
+
+		data, err := os.ReadFile(filepath.Join(dataDir, file.Name()))
+		if err != nil {
+			continue
+		}
+
+		var webhook models.WebhookPayload
+		if err := json.Unmarshal(data, &webhook); err != nil {
+			continue
+		}
+
+		webhooks = append(webhooks, webhook)
 	}
 
 	printer.PrintInfof("GetWebhooks: %d", len(webhooks))

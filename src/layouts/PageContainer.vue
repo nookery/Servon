@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-    title: string
+    title?: string
 }>()
 </script>
 
@@ -12,6 +12,8 @@ defineProps<{
                 <!-- <h2 class="card-title mb-4">{{ title }}</h2> -->
                 <!-- 头部内容插槽 -->
                 <slot name="header"></slot>
+                <!-- Tab栏插槽 -->
+                <slot name="tabs"></slot>
             </div>
 
             <!-- 可滚动的内容区域 -->

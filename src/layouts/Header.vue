@@ -7,7 +7,6 @@ import UserInfo from '../modules/UserInfo.vue'
 import TaskManagerButton from '../modules/TaskManagerButton.vue'
 import IPInfoButton from '../modules/IPInfoButton.vue'
 import LogViewerButton from '../modules/LogViewerButton.vue'
-import GitHubButton from '../modules/GitHubButton.vue'
 </script>
 
 <template>
@@ -19,7 +18,6 @@ import GitHubButton from '../modules/GitHubButton.vue'
         <div class="flex-none gap-6">
             <div class="flex items-center gap-6">
                 <IPInfoButton />
-                <GitHubButton />
                 <LogViewerButton />
                 <TaskManagerButton />
                 <ThemeSwitcher />

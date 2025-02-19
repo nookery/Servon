@@ -8,10 +8,6 @@ const props = defineProps<{
     log: DeployLog | null
 }>()
 
-const emit = defineEmits<{
-    'update:show': [value: boolean]
-}>()
-
 const editorContainer = ref<HTMLElement | null>(null)
 let editor: any = null
 

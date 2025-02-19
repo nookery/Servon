@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"servon/core/internal/commands"
 	"servon/core/internal/events"
+	"servon/core/internal/integrations"
 	"servon/core/internal/libs"
 	"servon/core/internal/managers"
 	"servon/core/internal/utils"
@@ -82,8 +83,11 @@ type App struct {
 	*managers.CommandManager
 	*managers.DataManager
 	*managers.ServiceManager
-	*managers.GitHubManager
 	*managers.WebServerManager
+
+	// Integrations
+
+	*integrations.GitHubIntegration
 
 	// Utils
 
@@ -129,11 +133,15 @@ func New() *App {
 		DownloadManager:        managers.NewDownloadManager(),
 		GitManager:             managers.NewGitManager(),
 		TaskManager:            libs.DefaultTaskManager,
-		GitHubManager:          managers.GetGitHubManager(eventBus),
 		DeployManager:          deployManager,
 		WebServerManager:       managers.NewWebServerManager(DefaultHost, DefaultPort),
-		DevUtil:                utils.DefaultDevUtil,
-		StringUtil:             utils.DefaultStringUtil,
+
+		// Integrations
+		GitHubIntegration: integrations.NewGitHubIntegration(eventBus),
+
+		// Utils
+		DevUtil:    utils.DefaultDevUtil,
+		StringUtil: utils.DefaultStringUtil,
 	}
 
 	core.AddCommand(commands.GetDeployCommand())

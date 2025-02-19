@@ -7,36 +7,54 @@ package webhook
 
 import (
 	"fmt"
+	"servon/core/internal/events"
+	"servon/core/internal/libs/github/models"
+	"servon/core/internal/libs/github/storage"
 
 	"github.com/gin-gonic/gin"
 )
 
-// HandleWebhook 处理 GitHub webhook 请求
-// 验证请求签名并根据事件类型调用相应的处理函数
-func HandleWebhook(c *gin.Context, webhookSecret string, payload []byte) error {
-	// 验证webhook签名
+// ProcessWebhookEvent 处理 GitHub webhook 请求
+func ProcessWebhookEvent(c *gin.Context, config *models.GitHubConfig, eventBus *events.EventBus) error {
+	// 首先读取 payload
+	payload, err := c.GetRawData()
+	if err != nil {
+		return fmt.Errorf("failed to read payload: %v", err)
+	}
+
+	// 验证 webhook
+	if err := validateWebhook(c, config.GitHubWebhookSecret, payload); err != nil {
+		return fmt.Errorf("webhook validation failed: %v", err)
+	}
+
+	event := c.GetHeader("X-GitHub-Event")
+	eventID := c.GetHeader("X-GitHub-Delivery")
+
+	// 保存 webhook 数据
+	if err := storage.SaveWebhookPayload(storage.WebhookDir, event, eventID, payload); err != nil {
+		return fmt.Errorf("failed to save webhook payload: %v", err)
+	}
+
+	// 处理特定事件
+	return handleEvent(event, payload, eventBus)
+}
+
+func validateWebhook(c *gin.Context, webhookSecret string, payload []byte) error {
 	signature := c.GetHeader("X-Hub-Signature-256")
 	if signature == "" {
 		return fmt.Errorf("missing signature")
 	}
 
-	// TODO: 使用webhookSecret验证签名
-
-	event := c.GetHeader("X-GitHub-Event")
-	if event == "" {
-		return fmt.Errorf("missing event type")
-	}
-
-	return handleEvent(event, payload)
+	// TODO: 实现签名验证
+	return nil
 }
 
-// handleEvent 根据事件类型分发到具体的处理函数
-func handleEvent(event string, payload []byte) error {
+func handleEvent(event string, payload []byte, eventBus *events.EventBus) error {
 	switch event {
 	case "installation", "installation_repositories":
 		return handleInstallationEvent(payload)
 	case "push":
-		return handlePushEvent(payload)
+		return handlePushEvent(payload, eventBus)
 	case "pull_request":
 		return handlePullRequestEvent(payload)
 	case "check_suite":
@@ -54,9 +72,14 @@ func handleInstallationEvent(payload []byte) error {
 }
 
 // handlePushEvent 处理代码推送事件
-func handlePushEvent(payload []byte) error {
-	// TODO: 实现推送事件处理逻辑
-	return nil
+func handlePushEvent(payload []byte, eventBus *events.EventBus) error {
+	// TODO: 解析 payload 并发布事件
+	return eventBus.Publish(events.Event{
+		Type: events.GitPush,
+		Data: map[string]interface{}{
+			"payload": string(payload),
+		},
+	})
 }
 
 // handlePullRequestEvent 处理拉取请求事件

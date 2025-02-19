@@ -5,10 +5,23 @@ import PageContainer from '../layouts/PageContainer.vue'
 import { fileAPI } from '../api/file_api'
 import RenameFileDialog from '../modules/RenameFileDialog.vue'
 import type { FileInfo } from '../models/FileInfo'
-import IconButton from '../components/IconButton.vue'
+import IconButton from './IconButton.vue'
+
+const props = defineProps<{
+    initialPath: string
+    showToolbar?: boolean
+    showBreadcrumbs?: boolean
+    showPagination?: boolean
+    readOnly?: boolean
+    showShortcuts?: boolean
+}>()
+
+const emit = defineEmits<{
+    'update:path': [path: string]
+}>()
 
 const files = ref<FileInfo[]>([])
-const currentPath = ref('/')
+const currentPath = ref(props.initialPath)
 const error = ref<string | null>(null)
 const itemsPerPage = 10
 const currentPage = ref(1)
@@ -35,6 +48,7 @@ async function loadFiles(path: string) {
         const res = await fileAPI.getFiles(path)
         files.value = res.data
         currentPath.value = path
+        emit('update:path', path)
         error.value = null
         currentPage.value = 1
     } catch (err: any) {
@@ -163,7 +177,7 @@ async function handleRename(oldPath: string, newPath: string) {
 }
 
 onMounted(() => {
-    loadFiles(currentPath.value)
+    loadFiles(props.initialPath)
 })
 </script>
 
@@ -196,42 +210,45 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-2 mb-4">
+            <div v-if="showToolbar" class="flex flex-wrap gap-2 mb-4">
                 <div class="flex gap-2">
-                    <button class="btn btn-primary" @click="showCreateDialog = true">
-                        <i class="ri-add-line mr-1"></i>新建
-                    </button>
-                    <button class="btn" @click="loadFiles(currentPath)">
-                        <i class="ri-refresh-line mr-1"></i>刷新
-                    </button>
+                    <IconButton v-if="!readOnly" icon="ri-add-line" @click="showCreateDialog = true">
+                        新建
+                    </IconButton>
+                    <IconButton icon="ri-refresh-line" @click="loadFiles(currentPath)">
+                        刷新
+                    </IconButton>
                 </div>
 
-                <div class="divider divider-horizontal"></div>
-                <div class="flex flex-wrap gap-2">
-                    <IconButton icon="ri-settings-3-line" variant="ghost" size="sm" title="数据目录"
-                        @click="loadFiles('/data')">
-                        data
-                    </IconButton>
-                    <IconButton icon="ri-settings-3-line" variant="ghost" size="sm" title="系统配置目录"
-                        @click="loadFiles('/etc')">
-                        etc
-                    </IconButton>
-                    <IconButton icon="ri-home-4-line" variant="ghost" size="sm" title="用户目录"
-                        @click="loadFiles('/home')">
-                        home
-                    </IconButton>
-                    <IconButton icon="ri-file-list-3-line" variant="ghost" size="sm" title="系统日志目录"
-                        @click="loadFiles('/var/log')">
-                        logs
-                    </IconButton>
-                    <IconButton icon="ri-apps-2-line" variant="ghost" size="sm" title="本地安装的软件"
-                        @click="loadFiles('/usr/local')">
-                        local
-                    </IconButton>
-                    <IconButton icon="ri-time-line" variant="ghost" size="sm" title="临时文件目录" @click="loadFiles('/tmp')">
-                        tmp
-                    </IconButton>
-                </div>
+                <template v-if="showShortcuts">
+                    <div class="divider divider-horizontal"></div>
+                    <div class="flex flex-wrap gap-2">
+                        <IconButton icon="ri-settings-3-line" variant="ghost" size="sm" title="数据目录"
+                            @click="loadFiles('/data')">
+                            data
+                        </IconButton>
+                        <IconButton icon="ri-settings-3-line" variant="ghost" size="sm" title="系统配置目录"
+                            @click="loadFiles('/etc')">
+                            etc
+                        </IconButton>
+                        <IconButton icon="ri-home-4-line" variant="ghost" size="sm" title="用户目录"
+                            @click="loadFiles('/home')">
+                            home
+                        </IconButton>
+                        <IconButton icon="ri-file-list-3-line" variant="ghost" size="sm" title="系统日志目录"
+                            @click="loadFiles('/var/log')">
+                            logs
+                        </IconButton>
+                        <IconButton icon="ri-apps-2-line" variant="ghost" size="sm" title="本地安装的软件"
+                            @click="loadFiles('/usr/local')">
+                            local
+                        </IconButton>
+                        <IconButton icon="ri-time-line" variant="ghost" size="sm" title="临时文件目录"
+                            @click="loadFiles('/tmp')">
+                            tmp
+                        </IconButton>
+                    </div>
+                </template>
 
                 <div class="flex-1 flex justify-end">
                     <div class="form-control">
@@ -256,7 +273,7 @@ onMounted(() => {
                         <th>所有者</th>
                         <th>大小</th>
                         <th>修改时间</th>
-                        <th>操作</th>
+                        <th v-if="!readOnly">操作</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -271,16 +288,11 @@ onMounted(() => {
                         <td>{{ file.owner }}:{{ file.group }}</td>
                         <td>{{ formatFileSize(file.size) }}</td>
                         <td>{{ new Date(file.modTime).toLocaleString() }}</td>
-                        <td class="space-x-2">
-                            <button class="btn btn-xs" @click="downloadFile(file)" v-if="!file.isDir">
-                                <i class="ri-download-line"></i>
-                            </button>
-                            <button class="btn btn-xs btn-warning" @click="renameFile(file)">
-                                <i class="ri-edit-line"></i>
-                            </button>
-                            <button class="btn btn-xs btn-error" @click="deleteFile(file)">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
+                        <td v-if="!readOnly" class="space-x-2">
+                            <IconButton v-if="!file.isDir" icon="ri-download-line" size="xs"
+                                @click="downloadFile(file)" />
+                            <IconButton icon="ri-edit-line" size="xs" variant="warning" @click="renameFile(file)" />
+                            <IconButton icon="ri-delete-bin-line" size="xs" variant="error" @click="deleteFile(file)" />
                         </td>
                     </tr>
                 </tbody>

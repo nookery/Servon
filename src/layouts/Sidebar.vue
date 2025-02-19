@@ -37,14 +37,14 @@ const menuOptions = [
         icon: 'ri-user-settings-line'
     },
     {
-        label: 'GitHub管理',
-        key: 'github',
-        icon: 'ri-github-fill'
-    },
-    {
         label: '部署日志',
         key: 'deploy-logs',
         icon: 'ri-file-list-line'
+    },
+    {
+        label: '集成管理',
+        key: 'integrations',
+        icon: 'ri-settings-3-line'
     },
     // {
     //     label: '定时任务',

@@ -3,11 +3,11 @@ import CronTasks from '../views/CronTasks.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Software from '../views/Software.vue'
 import Processes from '../views/Processes.vue'
-import Files from '../views/Files.vue'
+import FilesPage from '../views/FilesPage.vue'
 import Ports from '../views/Ports.vue'
 import Users from '../views/Users.vue'
-import GitHub from '../views/GitHub.vue'
 import DeployLogs from '../views/DeployLogs.vue'
+import Integrations from '../views/Integrations.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -30,7 +30,7 @@ const router = createRouter({
         },
         {
             path: '/files',
-            component: Files
+            component: FilesPage
         },
         {
             path: '/ports',
@@ -49,14 +49,14 @@ const router = createRouter({
             }
         },
         {
-            path: '/github',
-            name: 'github',
-            component: GitHub
-        },
-        {
             path: '/deploy-logs',
             name: 'deploy-logs',
             component: DeployLogs
+        },
+        {
+            path: '/integrations',
+            name: 'integrations',
+            component: Integrations
         }
     ]
 })

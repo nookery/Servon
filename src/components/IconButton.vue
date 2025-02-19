@@ -4,8 +4,8 @@ import { computed } from 'vue'
 interface Props {
     icon: string                    // Remix icon 类名
     title?: string                  // 按钮提示文字
-    variant?: 'default' | 'ghost' | 'primary' | 'error'   // 按钮样式变体
-    size?: 'sm' | 'md' | 'lg'      // 按钮大小
+    variant?: 'default' | 'ghost' | 'primary' | 'error' | 'warning'   // 按钮样式变体
+    size?: 'xs' | 'sm' | 'md' | 'lg'      // 按钮大小
     circle?: boolean                // 是否为圆形按钮
     active?: boolean                // 是否激活状态
 }
@@ -28,10 +28,14 @@ const buttonClass = computed(() => {
         classes.push('btn-primary')
     } else if (props.variant === 'error') {
         classes.push('btn-error')
+    } else if (props.variant === 'warning') {
+        classes.push('btn-warning')
     }
 
     // 尺寸
-    if (props.size === 'sm') {
+    if (props.size === 'xs') {
+        classes.push('btn-xs')
+    } else if (props.size === 'sm') {
         classes.push('btn-sm')
     } else if (props.size === 'lg') {
         classes.push('btn-lg')

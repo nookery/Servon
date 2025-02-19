@@ -39,6 +39,7 @@ func (w *WebRouter) setup(isDev bool) {
 	w.SetupUserRouter(api)
 	w.SetupWebApiRouter(api)
 	w.SetupDeployRouter(api)
+	w.SetupIntegrationRouter(api)
 
 	w.PrintSuccess("API Router Setup Success")
 	w.SetupUIRoutes(w.GetRouter(), isDev)
