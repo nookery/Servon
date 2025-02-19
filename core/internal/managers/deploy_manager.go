@@ -18,6 +18,7 @@ type DeployLog struct {
 	Content   string    `json:"content"`
 	Repo      string    `json:"repo"`
 	Status    string    `json:"status"`
+	Message   string    `json:"message"`
 }
 
 type DeployManager struct {
@@ -100,19 +101,21 @@ func (m *DeployManager) GetDeployLog(logID string) (*DeployLog, error) {
 	logPath := filepath.Join(m.logDir, logID+".log")
 	content, err := os.ReadFile(logPath)
 	if err != nil {
+		m.logger.Printf("ERROR: failed to read log file: %v", err)
 		return nil, fmt.Errorf("failed to read log file: %v", err)
 	}
 
-	// 从文件名解析时间戳
-	timestamp, err := time.Parse("2006-01-02-150405", logID)
+	timestamp, err := time.Parse("2006-01-02", logID)
 	if err != nil {
+		m.logger.Printf("ERROR: invalid log ID format: %v", err)
 		return nil, fmt.Errorf("invalid log ID format: %v", err)
 	}
 
 	return &DeployLog{
 		ID:        logID,
 		Timestamp: timestamp,
-		Content:   string(content),
+		Message:   string(content), // 将内容放在 Message 字段
+		Status:    "success",
 	}, nil
 }
 
@@ -120,16 +123,31 @@ func (m *DeployManager) GetDeployLog(logID string) (*DeployLog, error) {
 func (m *DeployManager) ListDeployLogs() ([]DeployLog, error) {
 	files, err := os.ReadDir(m.logDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read log directory: %v", err)
+		return nil, printer.PrintAndReturnErrorf("failed to read log directory: %v", err)
 	}
 
 	logs := make([]DeployLog, 0, len(files))
 	for _, file := range files {
-		if !file.IsDir() && filepath.Ext(file.Name()) == ".log" {
-			logID := strings.TrimSuffix(file.Name(), ".log")
-			if log, err := m.GetDeployLog(logID); err == nil {
-				logs = append(logs, *log)
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".log") {
+			// 解析日期格式的文件名 (2025-02-19.log)
+			dateStr := strings.TrimSuffix(file.Name(), ".log")
+			timestamp, err := time.Parse("2006-01-02", dateStr)
+			if err != nil {
+				continue // 跳过无法解析的文件名
 			}
+
+			// 读取文件内容
+			content, err := os.ReadFile(filepath.Join(m.logDir, file.Name()))
+			if err != nil {
+				continue
+			}
+
+			logs = append(logs, DeployLog{
+				ID:        dateStr,
+				Timestamp: timestamp,
+				Message:   string(content), // 将内容放在 Message 字段
+				Status:    "success",
+			})
 		}
 	}
 

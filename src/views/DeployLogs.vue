@@ -3,12 +3,15 @@ import { ref, onMounted, computed } from 'vue'
 import PageContainer from '../layouts/PageContainer.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import IconButton from '../components/IconButton.vue'
+import DeployLogDetailDialog from '../components/DeployLogDetailDialog.vue'
 import { type DeployLog, getDeployLogs, deleteDeployLog } from '../api/deploy_api'
 
 const logs = ref<DeployLog[]>([])
 const error = ref<string | null>(null)
 const showDeleteConfirm = ref(false)
 const logToDelete = ref<string | null>(null)
+const selectedLog = ref<DeployLog | null>(null)
+const showLogDetailDialog = ref(false)
 
 const isEmpty = computed(() => logs.value.length === 0)
 
@@ -21,6 +24,12 @@ async function loadLogs() {
         error.value = '获取部署日志失败: ' +
             (err.response?.data?.error || err.message || '未知错误')
     }
+}
+
+// 查看日志详情
+function viewLogDetail(log: DeployLog) {
+    selectedLog.value = log
+    showLogDetailDialog.value = true
 }
 
 // 格式化时间
@@ -97,8 +106,12 @@ onMounted(() => {
                         <td class="whitespace-pre-wrap">{{ log.message }}</td>
                         <td>{{ formatDate(log.timestamp) }}</td>
                         <td>
-                            <IconButton icon="ri-delete-bin-line" type="error" size="sm"
-                                @click="confirmDelete(log.id)" />
+                            <div class="flex gap-2">
+                                <IconButton icon="ri-file-text-line" type="primary" size="sm"
+                                    @click="viewLogDetail(log)" />
+                                <IconButton icon="ri-delete-bin-line" type="error" size="sm"
+                                    @click="confirmDelete(log.id)" />
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -108,5 +121,8 @@ onMounted(() => {
         <!-- 确认删除对话框 -->
         <ConfirmDialog v-model:show="showDeleteConfirm" title="确认删除" message="该操作无法撤销，是否确认删除此日志？" type="warning"
             confirm-text="删除" @confirm="handleDelete" />
+
+        <!-- 日志详情对话框 -->
+        <DeployLogDetailDialog v-model:show="showLogDetailDialog" :log="selectedLog" />
     </PageContainer>
 </template>

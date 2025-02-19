@@ -172,9 +172,7 @@ func (p *Printer) print(level LogType, message string, locationType LocationType
 	}
 
 	// 如果是打包后的软件，则不打印位置
-	if os.Args[0] == "main" ||
-		strings.Contains(os.Args[0], "go-build") ||
-		strings.Contains(os.Args[0], "/tmp/") {
+	if DefaultDevUtil.IsDev() {
 		// 在开发环境中运行
 	} else {
 		// 在打包环境中运行
