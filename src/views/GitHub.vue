@@ -14,10 +14,12 @@ const showPayloadDialog = ref(false)
 async function loadWebhooks() {
     try {
         const res = await githubAPI.getWebhooks()
-        webhooks.value = res.data.map(item => ({
-            ...item,
-            timestamp: new Date(item.timestamp * 1000).toISOString()
-        }))
+        webhooks.value = res.data
+            .map(item => ({
+                ...item,
+                timestamp: new Date(item.timestamp * 1000).toISOString()
+            }))
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         error.value = null
     } catch (err: any) {
         error.value = `获取GitHub事件列表失败: ${err.response?.data?.error || err.message || '未知错误'}`
