@@ -23,7 +23,14 @@ var printer = utils.DefaultPrinter
 // SaveWebhookPayload 保存 webhook 事件数据到指定目录
 // 文件名格式：时间戳_事件ID_事件类型.json
 func SaveWebhookPayload(dataDir string, eventType, eventID string, payload []byte) error {
-	printer.PrintInfof("SaveWebhookPayload: %s, %s, %s", eventType, eventID, string(payload))
+	// 添加payload长度检查
+	if len(payload) == 0 {
+		return fmt.Errorf("empty payload received")
+	}
+
+	printer.PrintInfof("SaveWebhookPayload: eventType=%s, eventID=%s, payloadSize=%d",
+		eventType, eventID, len(payload))
+
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %v", err)
 	}
@@ -35,8 +42,15 @@ func SaveWebhookPayload(dataDir string, eventType, eventID string, payload []byt
 		eventType,
 	)
 
+	// 写入文件前打印更详细的日志
+	printer.PrintInfof("Writing webhook to file: %s with payload size: %d bytes", filename, len(payload))
 	if err := os.WriteFile(filename, payload, 0644); err != nil {
 		return fmt.Errorf("failed to write file: %v", err)
+	}
+
+	// 验证文件写入是否成功
+	if fileInfo, err := os.Stat(filename); err == nil {
+		printer.PrintInfof("Successfully wrote webhook file: %s, size: %d bytes", filename, fileInfo.Size())
 	}
 
 	return nil
