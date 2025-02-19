@@ -75,10 +75,9 @@ jobs:
           VERSION: ${{ steps.version.outputs.current-version }}
         run: |
           # 构建二进制文件，注入版本信息
-          make build LDFLAGS=" \
-            -X 'servon/core/internal/managers.Version=$VERSION' \
-            -X 'servon/core/internal/managers.CommitHash=$(git rev-parse HEAD)' \
-            -X 'servon/core/internal/managers.BuildTime=$(date -u "+%Y-%m-%d %H:%M:%S")'"
+          make build LDFLAGS="-X servon/core/internal/managers.Version=$VERSION \
+            -X servon/core/internal/managers.CommitHash=$(git rev-parse HEAD) \
+            -X servon/core/internal/managers.BuildTime=$(date -u '+%Y-%m-%d %H:%M:%S')"
 
           # 移动和重命名构建产物
           mv temp/servon "servon-${{ matrix.os }}-${{ matrix.arch }}"
