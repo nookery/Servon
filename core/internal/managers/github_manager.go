@@ -74,20 +74,23 @@ func (m *GitHubManager) HandleCallback(c *gin.Context) (string, error) {
 // HandleWebhook 处理接收到的 GitHub webhook 事件
 func (m *GitHubManager) HandleWebhook(c *gin.Context) error {
 	printer.PrintInfof("HandleWebhook")
-	if err := webhook.HandleWebhook(c, m.config.GitHubWebhookSecret); err != nil {
-		printer.PrintErrorf("HandleWebhook error: %v", err)
-		return err
-	}
 
+	// 首先读取 payload
 	payload, err := c.GetRawData()
 	if err != nil {
 		return fmt.Errorf("failed to read payload: %v", err)
 	}
 
+	// 验证 webhook
+	if err := webhook.HandleWebhook(c, m.config.GitHubWebhookSecret, payload); err != nil {
+		printer.PrintErrorf("HandleWebhook error: %v", err)
+		return err
+	}
+
 	event := c.GetHeader("X-GitHub-Event")
 	eventID := c.GetHeader("X-GitHub-Delivery")
 
-	// 优先保存 webhook 数据
+	// 保存 webhook 数据
 	if err := storage.SaveWebhookPayload(dataDir, event, eventID, payload); err != nil {
 		printer.PrintErrorf("failed to save webhook payload: %v", err)
 		return fmt.Errorf("failed to save webhook payload: %v", err)

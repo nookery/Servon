@@ -13,17 +13,11 @@ import (
 
 // HandleWebhook 处理 GitHub webhook 请求
 // 验证请求签名并根据事件类型调用相应的处理函数
-func HandleWebhook(c *gin.Context, webhookSecret string) error {
+func HandleWebhook(c *gin.Context, webhookSecret string, payload []byte) error {
 	// 验证webhook签名
 	signature := c.GetHeader("X-Hub-Signature-256")
 	if signature == "" {
 		return fmt.Errorf("missing signature")
-	}
-
-	// 读取请求体
-	payload, err := c.GetRawData()
-	if err != nil {
-		return fmt.Errorf("failed to read payload: %v", err)
 	}
 
 	// TODO: 使用webhookSecret验证签名
