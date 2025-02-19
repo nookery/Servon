@@ -10,7 +10,42 @@ import (
 	"time"
 )
 
-// EventBus 实现事件总线
+// EventBus 实现了一个事件总线，用于在系统中进行事件的发布-订阅和请求-响应通信。
+// 它提供以下主要功能：
+//   - 事件的发布与订阅（Publish/Subscribe）模式
+//   - 同步请求处理（Request/Response）模式
+//   - 自动的事件日志记录和历史查询
+//
+// 使用示例：
+//
+//	// 创建 EventBus 实例
+//	eventBus, err := NewEventBus("/path/to/logs")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	// 订阅事件
+//	eventBus.Subscribe(EventTypeUserCreated, func(e Event) {
+//	    // 处理用户创建事件
+//	})
+//
+//	// 发布事件
+//	err = eventBus.Publish(Event{
+//	    Type: EventTypeUserCreated,
+//	    Data: map[string]interface{}{"userId": "123"},
+//	})
+//
+//	// 注册请求处理器
+//	eventBus.RegisterRequestHandler(RequestTypeGetUser, func(req Request) Response {
+//	    // 处理获取用户请求
+//	    return Response{Data: user}
+//	})
+//
+//	// 发送请求
+//	response := eventBus.Request(Request{
+//	    Type: RequestTypeGetUser,
+//	    Data: map[string]interface{}{"userId": "123"},
+//	})
 type EventBus struct {
 	subscribers     map[EventType][]Handler
 	requestHandlers map[RequestType]RequestHandler
