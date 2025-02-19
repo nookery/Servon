@@ -1,16 +1,11 @@
 <script setup lang="ts">
-interface WebhookData {
-    id: string
-    type: string
-    timestamp: number
-    payload: any
-}
+import type { WebhookData } from '../../models/webhook'
 
 defineProps<{
     webhook: WebhookData | null
 }>()
 
-function formatTimestamp(timestamp: number) {
+function formatTimestamp(timestamp: string) {
     return new Date(timestamp).toLocaleString()
 }
 </script>

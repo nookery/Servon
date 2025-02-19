@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import * as monaco from 'monaco-editor'
-
-interface WebhookData {
-    id: string
-    type: string
-    timestamp: number
-    payload: any
-}
+import type { WebhookData } from '../../models/webhook'
 
 const props = defineProps<{
     webhook: WebhookData | null

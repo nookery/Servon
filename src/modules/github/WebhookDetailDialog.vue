@@ -3,13 +3,7 @@ import { ref } from 'vue'
 import IconButton from '../../components/IconButton.vue'
 import ParsedWebhookView from './ParsedWebhookView.vue'
 import RawWebhookView from './RawWebhookView.vue'
-
-interface WebhookData {
-    id: string
-    type: string
-    timestamp: number
-    payload: any
-}
+import type { WebhookData } from '../../models/webhook'
 
 const props = defineProps<{
     webhook: WebhookData | null

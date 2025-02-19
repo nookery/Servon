@@ -3,13 +3,8 @@ import { ref, onMounted } from 'vue'
 import PageContainer from '../layouts/PageContainer.vue'
 import { githubAPI } from '../api/github'
 import WebhookDetailDialog from '../modules/github/WebhookDetailDialog.vue'
-
-interface WebhookData {
-    id: string
-    type: string
-    timestamp: number
-    payload: any
-}
+import type { WebhookData } from '../models/webhook'
+import { formatTimestamp } from '../utils/date'
 
 const webhooks = ref<WebhookData[]>([])
 const error = ref<string | null>(null)
@@ -19,7 +14,10 @@ const showPayloadDialog = ref(false)
 async function loadWebhooks() {
     try {
         const res = await githubAPI.getWebhooks()
-        webhooks.value = res.data.sort((a, b) => b.timestamp - a.timestamp)
+        webhooks.value = res.data.map(item => ({
+            ...item,
+            timestamp: new Date(item.timestamp * 1000).toISOString()
+        }))
         error.value = null
     } catch (err: any) {
         error.value = `获取GitHub事件列表失败: ${err.response?.data?.error || err.message || '未知错误'}`
@@ -29,10 +27,6 @@ async function loadWebhooks() {
 function viewPayload(webhook: WebhookData) {
     selectedWebhook.value = webhook
     showPayloadDialog.value = true
-}
-
-function formatTimestamp(timestamp: number) {
-    return new Date(timestamp * 1000).toLocaleString()
 }
 
 onMounted(() => {
