@@ -66,6 +66,12 @@ func (g *GitHubIntegration) handleEvent(event string, payload []byte, eventBus *
 
 // handleInstallationEvent 处理 GitHub App 安装相关的事件
 func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
+	// 首先保存原始 webhook payload
+	if err := g.logger.SaveRawInstallationData(payload); err != nil {
+		g.logger.LogErrorf("保存原始安装数据失败: %v", err)
+		return fmt.Errorf("failed to save raw installation data: %v", err)
+	}
+
 	var event struct {
 		Installation struct {
 			ID      int64 `json:"id"`

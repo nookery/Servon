@@ -135,3 +135,20 @@ func (l *GitHubLogger) SaveInstallationData(installationID int64, data []byte) e
 
 	return nil
 }
+
+// SaveRawInstallationData 保存原始安装数据，使用时间戳作为文件名
+func (l *GitHubLogger) SaveRawInstallationData(payload []byte) error {
+	// 确保目录存在
+	if err := os.MkdirAll(installationDir, 0755); err != nil {
+		return fmt.Errorf("创建安装数据目录失败: %v", err)
+	}
+
+	timestamp := time.Now().Format("20060102_150405")
+	filename := filepath.Join(installationDir, fmt.Sprintf("raw_%s.json", timestamp))
+
+	if err := os.WriteFile(filename, payload, 0644); err != nil {
+		return fmt.Errorf("写入原始安装数据失败: %v", err)
+	}
+
+	return nil
+}
