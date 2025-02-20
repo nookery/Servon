@@ -81,6 +81,7 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	}
 
 	if err := json.Unmarshal(payload, &event); err != nil {
+		g.logger.LogErrorf("解析安装事件失败: %v", err)
 		return fmt.Errorf("failed to parse installation event: %v", err)
 	}
 
@@ -97,8 +98,26 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 		installation.Repositories = append(installation.Repositories, repo.Name)
 	}
 
+	// 记录安装事件数据
+	installationData, err := json.MarshalIndent(installation, "", "  ")
+	if err != nil {
+		g.logger.LogErrorf("序列化安装数据失败: %v", err)
+		return fmt.Errorf("failed to marshal installation data: %v", err)
+	}
+
+	// 保存安装数据
+	if err := g.logger.SaveInstallationData(installation.ID, installationData); err != nil {
+		g.logger.LogErrorf("保存安装数据失败: %v", err)
+		return fmt.Errorf("failed to save installation data: %v", err)
+	}
+
+	// 使用 logger 记录安装信息
+	g.logger.LogInfof("新的 GitHub App 安装: ID=%d, Account=%s",
+		installation.ID,
+		installation.AccountLogin,
+	)
+
 	// 更新配置
-	g.logger.LogInfof("handleInstallationEvent: %v", installation)
 	g.config.Installations[event.Installation.ID] = installation
 
 	return nil

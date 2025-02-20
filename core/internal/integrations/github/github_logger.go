@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	githubLogDir = "/data/github/integration" // GitHub集成日志目录
-	timeFormat   = "2006-01-02"               // 日期格式
+	githubLogDir    = "/data/github/integration"   // GitHub集成日志目录
+	installationDir = "/data/github/installations" // GitHub安装数据目录
+	timeFormat      = "2006-01-02"                 // 日期格式
 )
 
 var DefaultGitHubLogger = NewGitHubLogger()
@@ -118,4 +119,19 @@ func (l *GitHubLogger) LogError(message string) {
 
 func (l *GitHubLogger) LogErrorf(format string, args ...interface{}) {
 	l.WriteLog(LogType{Name: "ERROR", Symbol: "❌"}, fmt.Sprintf(format, args...))
+}
+
+// SaveInstallationData 保存安装数据到指定目录
+func (l *GitHubLogger) SaveInstallationData(installationID int64, data []byte) error {
+	// 确保目录存在
+	if err := os.MkdirAll(installationDir, 0755); err != nil {
+		return fmt.Errorf("创建安装数据目录失败: %v", err)
+	}
+
+	filename := filepath.Join(installationDir, fmt.Sprintf("%d.json", installationID))
+	if err := os.WriteFile(filename, data, 0644); err != nil {
+		return fmt.Errorf("写入安装数据失败: %v", err)
+	}
+
+	return nil
 }

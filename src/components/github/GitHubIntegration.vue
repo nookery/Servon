@@ -35,7 +35,7 @@ async function loadGitHubRepos() {
             </a>
             <a class="tab" :class="{ 'tab-active': currentTab === 'logs' }" @click="currentTab = 'logs'">
                 <i class="ri-file-list-line mr-2"></i>
-                集成日志
+                日志
             </a>
             <a class="tab" :class="{ 'tab-active': currentTab === 'webhook' }" @click="currentTab = 'webhook'">
                 <i class="ri-webhook-line mr-2"></i>
