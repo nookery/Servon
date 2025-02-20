@@ -8,7 +8,7 @@ import Ports from '../views/Ports.vue'
 import Users from '../views/Users.vue'
 import DeployLogs from '../views/DeployLogs.vue'
 import Integrations from '../views/Integrations.vue'
-
+import DataPage from '../views/DataPage.vue'
 const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -57,6 +57,11 @@ const router = createRouter({
             path: '/integrations',
             name: 'integrations',
             component: Integrations
+        },
+        {
+            path: '/data',
+            name: 'data',
+            component: DataPage
         }
     ]
 })

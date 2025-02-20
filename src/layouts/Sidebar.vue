@@ -46,6 +46,11 @@ const menuOptions = [
         key: 'integrations',
         icon: 'ri-settings-3-line'
     },
+    {
+        label: '数据中心',
+        key: 'data',
+        icon: 'ri-database-line'
+    },
     // {
     //     label: '定时任务',
     //     key: 'cron',
