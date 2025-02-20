@@ -18,10 +18,10 @@ var (
 	devMode bool
 )
 
-// GetUserRootCommand 获取用户管理命令
-func GetServeCommand(web *utils.WebServer, manager *managers.FullManager) *cobra.Command {
+// GetServerCommand 获取服务器管理命令
+func GetServerCommand(web *utils.WebServer, manager *managers.FullManager) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "serve",
+		Use:   "server",
 		Short: "启动服务器",
 	}
 
