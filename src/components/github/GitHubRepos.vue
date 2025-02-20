@@ -20,6 +20,8 @@ async function loadGitHubRepos() {
         loading.value = false
     }
 }
+
+loadGitHubRepos()
 </script>
 
 <template>

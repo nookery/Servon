@@ -16,7 +16,6 @@ type GitHubIntegration struct {
 	config   *GitHubConfig
 	mu       sync.RWMutex
 	eventBus *events.EventBus
-	repos    []GitHubRepo
 	logger   *GitHubLogger
 }
 
@@ -28,7 +27,6 @@ func NewGitHubIntegration(eventBus *events.EventBus) *GitHubIntegration {
 			Installations: make(map[int64]*Installation),
 		},
 		eventBus: eventBus,
-		repos:    make([]GitHubRepo, 0),
 		logger:   DefaultGitHubLogger,
 	}
 }
