@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import PageContainer from '../layouts/PageContainer.vue'
-import FileManager from '../components/FileManager.vue'
+import FileManager from '../components/files/FileManager.vue'
 
 const currentPath = ref('/data')
 </script>

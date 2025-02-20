@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -30,8 +31,17 @@ type FileInfo struct {
 	Group   string `json:"group"`   // Add group field
 }
 
+// SortBy 定义排序字段
+type SortBy string
+
+const (
+	SortByName    SortBy = "name"
+	SortBySize    SortBy = "size"
+	SortByModTime SortBy = "modTime"
+)
+
 // GetFileList 获取指定目录下的文件列表
-func (p *FileUtil) GetFileList(dirPath string) ([]FileInfo, error) {
+func (p *FileUtil) GetFileList(dirPath string, sortBy SortBy, ascending bool) ([]FileInfo, error) {
 	// 清理和规范化路径
 	dirPath = filepath.Clean(dirPath)
 	if !strings.HasPrefix(dirPath, "/") {
@@ -86,6 +96,28 @@ func (p *FileUtil) GetFileList(dirPath string) ([]FileInfo, error) {
 			Owner:   owner,
 			Group:   group,
 		})
+	}
+
+	// 根据指定字段排序
+	switch sortBy {
+	case SortByName:
+		if ascending {
+			sort.Slice(files, func(i, j int) bool { return files[i].Name < files[j].Name })
+		} else {
+			sort.Slice(files, func(i, j int) bool { return files[i].Name > files[j].Name })
+		}
+	case SortBySize:
+		if ascending {
+			sort.Slice(files, func(i, j int) bool { return files[i].Size < files[j].Size })
+		} else {
+			sort.Slice(files, func(i, j int) bool { return files[i].Size > files[j].Size })
+		}
+	case SortByModTime:
+		if ascending {
+			sort.Slice(files, func(i, j int) bool { return files[i].ModTime < files[j].ModTime })
+		} else {
+			sort.Slice(files, func(i, j int) bool { return files[i].ModTime > files[j].ModTime })
+		}
 	}
 
 	return files, nil

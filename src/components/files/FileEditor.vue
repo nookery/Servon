@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { fileAPI } from '../api/file_api'
-import type { FileInfo } from '../models/FileInfo'
+import { fileAPI } from '../../api/file_api'
+import type { FileInfo } from '../../models/FileInfo'
 import * as monaco from 'monaco-editor'
 import { onMounted, onBeforeUnmount } from 'vue'
 
@@ -91,7 +91,7 @@ const formatJson = () => {
 
 <template>
     <dialog class="modal" :class="{ 'modal-open': show }">
-        <div class="modal-box w-11/12 max-w-5xl h-4/5">
+        <div class="modal-box w-11/12 max-w-5xl h-4/5 flex flex-col">
             <h3 class="font-bold text-lg">编辑文件: {{ file?.name }}</h3>
 
             <!-- Toolbar -->
@@ -114,7 +114,7 @@ const formatJson = () => {
                 </div>
             </div>
 
-            <div ref="editorContainer" class="h-full"></div>
+            <div ref="editorContainer" class="flex-1"></div>
         </div>
     </dialog>
 </template>

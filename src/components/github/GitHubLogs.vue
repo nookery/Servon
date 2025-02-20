@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import FileManager from '../FileManager.vue'
+import FileManager from '../files/FileManager.vue'
 
 const props = defineProps<{
     initialPath?: string

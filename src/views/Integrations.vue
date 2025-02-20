@@ -8,12 +8,6 @@ const currentTab = ref('github')
 
 <template>
     <PageContainer>
-        <template #header>
-            <div class="flex justify-between mb-4">
-                <h2 class="text-2xl font-bold">集成管理</h2>
-            </div>
-        </template>
-
         <template #tabs>
             <div class="tabs">
                 <a class="tab tab-bordered" :class="{ 'tab-active': currentTab === 'github' }"

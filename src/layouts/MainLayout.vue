@@ -31,7 +31,7 @@ const logViewerStore = useLogViewerStore()
             <div class="flex flex-row w-full">
                 <!-- Content -->
                 <div :class="[
-                    'flex-1 p-4 transition-all duration-300 overflow-auto h-[calc(100vh-4rem)]',
+                    'flex-1 p-0 transition-all duration-300 overflow-auto h-[calc(100vh-4rem)]',
                     layoutStore.collapsed ? 'ml-16' : 'ml-40',
                     logViewerStore.isVisible ? 'w-2/3' : 'w-full'
                 ]">

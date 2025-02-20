@@ -8,3 +8,6 @@ export interface FileInfo {
     owner: string
     group: string
 }
+
+export type SortBy = 'name' | 'size' | 'modTime'
+export type SortOrder = 'asc' | 'desc'

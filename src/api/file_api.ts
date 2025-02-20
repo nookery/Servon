@@ -1,10 +1,16 @@
 import axios from 'axios'
-import type { FileInfo } from '../models/FileInfo'
+import type { FileInfo, SortBy, SortOrder } from '../models/FileInfo'
 
 export const fileAPI = {
     // 获取文件列表
-    getFiles: (path: string) =>
-        axios.get<FileInfo[]>(`/web_api/files`, { params: { path } }),
+    getFiles: (path: string, sortBy?: SortBy, order?: SortOrder) =>
+        axios.get<FileInfo[]>(`/web_api/files`, {
+            params: {
+                path,
+                sortBy,
+                order
+            }
+        }),
 
     // 下载文件
     downloadFile: (path: string) =>

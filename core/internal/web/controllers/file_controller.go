@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"servon/core/internal/managers"
+	"servon/core/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -149,7 +150,25 @@ func (h *FileController) HandleFileList(c *gin.Context) {
 		path = "/"
 	}
 
-	files, err := h.GetFileList(path)
+	// 获取排序参数
+	sortBy := c.Query("sortBy")
+	orderStr := c.Query("order")
+	ascending := orderStr != "desc"
+
+	// 转换排序字段
+	var sortField utils.SortBy
+	switch sortBy {
+	case "name":
+		sortField = utils.SortByName
+	case "size":
+		sortField = utils.SortBySize
+	case "modTime":
+		sortField = utils.SortByModTime
+	default:
+		sortField = utils.SortByName // 默认按名称排序
+	}
+
+	files, err := h.GetFileList(path, sortField, ascending)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "获取文件列表失败: " + err.Error(),

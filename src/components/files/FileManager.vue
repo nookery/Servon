@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import FileEditor from '../modules/FileEditor.vue'
-import PageContainer from '../layouts/PageContainer.vue'
-import { fileAPI } from '../api/file_api'
-import RenameFileDialog from '../modules/RenameFileDialog.vue'
-import type { FileInfo } from '../models/FileInfo'
-import IconButton from './IconButton.vue'
+import FileEditor from './FileEditor.vue'
+import PageContainer from '../../layouts/PageContainer.vue'
+import { fileAPI } from '../../api/file_api'
+import RenameFileDialog from './RenameFileDialog.vue'
+import type { FileInfo, SortBy, SortOrder } from '../../models/FileInfo'
+import IconButton from '../IconButton.vue'
 
 const props = defineProps<{
     initialPath: string
@@ -14,10 +14,14 @@ const props = defineProps<{
     showPagination?: boolean
     readOnly?: boolean
     showShortcuts?: boolean
+    sortBy?: SortBy
+    sortOrder?: SortOrder
 }>()
 
 const emit = defineEmits<{
     'update:path': [path: string]
+    'update:sort-by': [sortBy: SortBy]
+    'update:sort-order': [order: SortOrder]
 }>()
 
 const files = ref<FileInfo[]>([])
@@ -35,6 +39,8 @@ const newFileType = ref<'file' | 'directory'>('file')
 const searchQuery = ref('')
 const showRenameDialog = ref(false)
 const renamingFile = ref<FileInfo | null>(null)
+const currentSortBy = ref<SortBy>(props.sortBy || 'name')
+const currentSortOrder = ref<SortOrder>(props.sortOrder || 'asc')
 
 // Pagination
 const totalPages = computed(() => Math.ceil(files.value.length / itemsPerPage))
@@ -45,7 +51,7 @@ const paginatedFiles = computed(() => {
 
 async function loadFiles(path: string) {
     try {
-        const res = await fileAPI.getFiles(path)
+        const res = await fileAPI.getFiles(path, currentSortBy.value, currentSortOrder.value)
         files.value = res.data
         currentPath.value = path
         emit('update:path', path)
@@ -176,6 +182,27 @@ async function handleRename(oldPath: string, newPath: string) {
     }
 }
 
+// 处理排序点击
+function handleSortClick(field: SortBy) {
+    if (currentSortBy.value === field) {
+        // 如果点击相同字段，切换排序顺序
+        currentSortOrder.value = currentSortOrder.value === 'asc' ? 'desc' : 'asc'
+    } else {
+        // 如果点击不同字段，设置新字段并默认升序
+        currentSortBy.value = field
+        currentSortOrder.value = 'asc'
+    }
+    emit('update:sort-by', currentSortBy.value)
+    emit('update:sort-order', currentSortOrder.value)
+    loadFiles(currentPath.value)
+}
+
+// 获取排序图标
+function getSortIcon(field: SortBy) {
+    if (currentSortBy.value !== field) return 'ri-arrow-up-down-line'
+    return currentSortOrder.value === 'asc' ? 'ri-sort-asc' : 'ri-sort-desc'
+}
+
 onMounted(() => {
     loadFiles(props.initialPath)
 })
@@ -191,17 +218,18 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div class="bg-base-200 border border-base-300 rounded-lg p-3 mb-4">
+            <div class="bg-base-200 border border-base-300 rounded-lg p-1 mb-4">
                 <div class="flex items-center gap-2">
                     <div class="breadcrumbs text-sm">
                         <ul>
                             <li>
-                                <a @click="loadFiles('/')" class="hover:bg-base-300 px-2 py-1 rounded">
+                                <a @click="loadFiles('/')" class="hover:bg-base-300 px-2 py-0.5 rounded no-underline">
                                     <i class="ri-home-line mr-1"></i>根目录
                                 </a>
                             </li>
                             <li v-for="(part, index) in currentPath.split('/').filter(Boolean)" :key="index">
-                                <a @click="navigateTo(index)" class="hover:bg-base-300 px-2 py-1 rounded">
+                                <a @click="navigateTo(index)"
+                                    class="hover:bg-base-300 px-2 py-0.5 rounded no-underline">
                                     {{ part }}
                                 </a>
                             </li>
@@ -268,11 +296,26 @@ onMounted(() => {
             <table class="table table-zebra w-full">
                 <thead>
                     <tr>
-                        <th>名称</th>
+                        <th @click="handleSortClick('name')" class="cursor-pointer hover:bg-base-200">
+                            <div class="flex items-center gap-2">
+                                名称
+                                <i :class="getSortIcon('name')"></i>
+                            </div>
+                        </th>
                         <th>权限</th>
                         <th>所有者</th>
-                        <th>大小</th>
-                        <th>修改时间</th>
+                        <th @click="handleSortClick('size')" class="cursor-pointer hover:bg-base-200">
+                            <div class="flex items-center gap-2">
+                                大小
+                                <i :class="getSortIcon('size')"></i>
+                            </div>
+                        </th>
+                        <th @click="handleSortClick('modTime')" class="cursor-pointer hover:bg-base-200">
+                            <div class="flex items-center gap-2">
+                                修改时间
+                                <i :class="getSortIcon('modTime')"></i>
+                            </div>
+                        </th>
                         <th v-if="!readOnly">操作</th>
                     </tr>
                 </thead>
@@ -354,4 +397,12 @@ onMounted(() => {
 
 <style>
 @import 'remixicon/fonts/remixicon.css';
+
+.breadcrumbs a {
+    text-decoration: none !important;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: none !important;
+}
 </style>
