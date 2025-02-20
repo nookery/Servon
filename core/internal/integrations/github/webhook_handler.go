@@ -73,17 +73,9 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	}
 
 	var event struct {
-		Installation struct {
-			ID      int64 `json:"id"`
-			Account struct {
-				Login string `json:"login"`
-				ID    int64  `json:"id"`
-			} `json:"account"`
-			Repositories []struct {
-				Name     string `json:"name"`
-				FullName string `json:"full_name"`
-			} `json:"repositories"`
-		} `json:"installation"`
+		Action       string       `json:"action"`
+		Installation Installation `json:"installation"`
+		Repositories []Repository `json:"repositories"`
 	}
 
 	if err := json.Unmarshal(payload, &event); err != nil {
@@ -92,16 +84,13 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	}
 
 	// 更新安装信息
-	installation := &Installation{
-		ID:           event.Installation.ID,
-		AccountID:    event.Installation.Account.ID,
-		AccountLogin: event.Installation.Account.Login,
-		Repositories: make([]string, 0),
-	}
+	installation := &event.Installation
+	installation.Repositories = event.Repositories
 
-	// 添加仓库
-	for _, repo := range event.Installation.Repositories {
-		installation.Repositories = append(installation.Repositories, repo.Name)
+	// 保存配置信息
+	if err := g.logger.SaveInstallationConfig(installation); err != nil {
+		g.logger.LogErrorf("保存安装配置失败: %v", err)
+		return fmt.Errorf("failed to save installation config: %v", err)
 	}
 
 	// 记录安装事件数据
@@ -124,7 +113,7 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	)
 
 	// 更新配置
-	g.config.Installations[event.Installation.ID] = installation
+	g.config.Installations[installation.ID] = installation
 
 	return nil
 }

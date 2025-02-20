@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import IconButton from '../IconButton.vue'
 import GitHubButton from './GitHubButton.vue'
 import GitHubLogs from './GitHubLogs.vue'
+import GitHubConfig from './GitHubConfig.vue'
 import { type GitHubRepo, getAuthorizedRepos } from '../../api/github_api'
 
 const currentTab = ref('repos')
@@ -40,6 +41,10 @@ async function loadGitHubRepos() {
             <a class="tab" :class="{ 'tab-active': currentTab === 'webhook' }" @click="currentTab = 'webhook'">
                 <i class="ri-webhook-line mr-2"></i>
                 Webhook日志
+            </a>
+            <a class="tab" :class="{ 'tab-active': currentTab === 'config' }" @click="currentTab = 'config'">
+                <i class="ri-settings-line mr-2"></i>
+                安装配置
             </a>
         </div>
 
@@ -94,6 +99,11 @@ async function loadGitHubRepos() {
         <!-- Webhook日志内容 -->
         <div v-else-if="currentTab === 'webhook'">
             <GitHubLogs ref="webhookLogsRef" initial-path="/data/github/webhook" />
+        </div>
+
+        <!-- 配置内容 -->
+        <div v-else-if="currentTab === 'config'">
+            <GitHubConfig ref="githubConfigRef" />
         </div>
     </div>
 </template>

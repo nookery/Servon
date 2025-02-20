@@ -1,6 +1,7 @@
 package github
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 const (
 	githubLogDir    = "/data/github/integration"   // GitHub集成日志目录
 	installationDir = "/data/github/installations" // GitHub安装数据目录
+	configDir       = "/data/github/config"        // GitHub安装配置目录
 	timeFormat      = "2006-01-02"                 // 日期格式
 )
 
@@ -148,6 +150,41 @@ func (l *GitHubLogger) SaveRawInstallationData(payload []byte) error {
 
 	if err := os.WriteFile(filename, payload, 0644); err != nil {
 		return fmt.Errorf("写入原始安装数据失败: %v", err)
+	}
+
+	return nil
+}
+
+// SaveInstallationConfig 保存安装配置到指定目录
+func (l *GitHubLogger) SaveInstallationConfig(installation *Installation) error {
+	config := InstallationConfig{
+		InstallationID: installation.ID,
+		AccountID:      installation.AccountID,
+		AccountLogin:   installation.AccountLogin,
+		AccountType:    installation.AccountType,
+		AppID:          installation.AppID,
+		Permissions:    installation.Permissions,
+		Events:         installation.Events,
+		Repositories:   installation.Repositories,
+		CreatedAt:      installation.CreatedAt,
+	}
+
+	// 确保目录存在
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %v", err)
+	}
+
+	// 生成配置文件路径
+	configPath := filepath.Join(configDir, fmt.Sprintf("installation_%d.json", installation.ID))
+
+	// 序列化并保存配置
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %v", err)
+	}
+
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %v", err)
 	}
 
 	return nil

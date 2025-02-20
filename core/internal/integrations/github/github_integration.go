@@ -108,10 +108,10 @@ func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]GitHubRe
 		// 获取该安装实例下的所有仓库
 		for _, repoName := range installation.Repositories {
 			repo := GitHubRepo{
-				Name:     repoName,
-				FullName: fmt.Sprintf("%s/%s", installation.AccountLogin, repoName),
-				Private:  false, // 这里可以通过 GitHub API 获取详细信息
-				HTMLURL:  fmt.Sprintf("https://github.com/%s/%s", installation.AccountLogin, repoName),
+				Name:     repoName.Name,
+				FullName: fmt.Sprintf("%s/%s", installation.AccountLogin, repoName.Name),
+				Private:  repoName.Private,
+				HTMLURL:  fmt.Sprintf("https://github.com/%s/%s", installation.AccountLogin, repoName.Name),
 			}
 			repos = append(repos, repo)
 		}
