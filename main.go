@@ -17,7 +17,6 @@ import (
 	"servon/plugins/pm2"
 	"servon/plugins/pnpm"
 	"servon/plugins/supervisor"
-	"servon/plugins/web"
 	"servon/plugins/yarn"
 )
 
@@ -33,7 +32,6 @@ func main() {
 	astro.Setup(app)
 	npm.Setup(app)
 	github_runner.Setup(app)
-	web.Setup(app)
 	pm2.Setup(app)
 	supervisor.Setup(app)
 
