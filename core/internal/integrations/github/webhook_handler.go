@@ -67,7 +67,7 @@ func (g *GitHubIntegration) handleEvent(event string, payload []byte, eventBus *
 // handleInstallationEvent 处理 GitHub App 安装相关的事件
 func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	// 首先保存原始 webhook payload
-	if err := g.logger.SaveRawInstallationData(payload); err != nil {
+	if err := SaveRawInstallationData(payload); err != nil {
 		g.logger.LogErrorf("保存原始安装数据失败: %v", err)
 		return fmt.Errorf("failed to save raw installation data: %v", err)
 	}
@@ -88,7 +88,7 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	installation.Repositories = event.Repositories
 
 	// 保存配置信息
-	if err := g.logger.SaveInstallationConfig(installation); err != nil {
+	if err := SaveInstallationConfig(installation); err != nil {
 		g.logger.LogErrorf("保存安装配置失败: %v", err)
 		return fmt.Errorf("failed to save installation config: %v", err)
 	}
@@ -101,7 +101,7 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	}
 
 	// 保存安装数据
-	if err := g.logger.SaveInstallationData(installation.ID, installationData); err != nil {
+	if err := SaveInstallationData(installation.ID, installationData); err != nil {
 		g.logger.LogErrorf("保存安装数据失败: %v", err)
 		return fmt.Errorf("failed to save installation data: %v", err)
 	}

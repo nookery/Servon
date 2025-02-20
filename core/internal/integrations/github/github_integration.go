@@ -96,15 +96,19 @@ func (g *GitHubIntegration) GetConfig() *GitHubConfig {
 //   - []GitHubRepo: 已授权的仓库列表
 //   - error: 获取过程中的错误
 func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]GitHubRepo, error) {
-	g.mu.RLock()
-	defer g.mu.RUnlock()
+	// 从存储中读取安装配置
+	installations, err := GetInstallationConfig()
+	if err != nil {
+		g.logger.LogErrorf("读取安装配置失败: %v", err)
+		return nil, err
+	}
 
 	// 创建结果切片
 	var repos []GitHubRepo
 
 	// 遍历所有安装实例
-	for _, installation := range g.config.Installations {
-		g.logger.LogInfof("installation: %v", installation)
+	for _, installation := range installations {
+		g.logger.LogInfof("正在处理安装实例: %v", installation)
 		// 获取该安装实例下的所有仓库
 		for _, repoName := range installation.Repositories {
 			repo := GitHubRepo{

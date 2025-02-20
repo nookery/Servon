@@ -20,7 +20,9 @@ import (
 var printer = utils.DefaultPrinter
 
 const (
-	WebhookDir = "/data/github/webhook"
+	WebhookDir      = "/data/github/webhook"
+	installationDir = "/data/github/installations" // GitHub安装数据目录
+	configDir       = "/data/github/config"        // GitHub安装配置目录
 )
 
 // SaveWebhookPayload 保存 webhook 事件数据到指定目录
@@ -128,4 +130,87 @@ func parseTimestamp(ts string) int64 {
 		return 0
 	}
 	return timestamp
+}
+
+// GetInstallationConfig 从存储中读取安装配置信息
+func GetInstallationConfig() (map[int64]*Installation, error) {
+	configPath := filepath.Join(configDir, "installation_config.json")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("读取安装配置失败: %w", err)
+	}
+
+	var installations map[int64]*Installation
+	if err := json.Unmarshal(data, &installations); err != nil {
+		return nil, fmt.Errorf("解析安装配置失败: %w", err)
+	}
+
+	return installations, nil
+}
+
+// SaveInstallationData 保存安装数据到指定目录
+func SaveInstallationData(installationID int64, data []byte) error {
+	// 确保目录存在
+	if err := os.MkdirAll(installationDir, 0755); err != nil {
+		return fmt.Errorf("创建安装数据目录失败: %v", err)
+	}
+
+	filename := filepath.Join(installationDir, fmt.Sprintf("%d.json", installationID))
+	if err := os.WriteFile(filename, data, 0644); err != nil {
+		return fmt.Errorf("写入安装数据失败: %v", err)
+	}
+
+	return nil
+}
+
+// SaveRawInstallationData 保存原始安装数据，使用时间戳作为文件名
+func SaveRawInstallationData(payload []byte) error {
+	// 确保目录存在
+	if err := os.MkdirAll(installationDir, 0755); err != nil {
+		return fmt.Errorf("创建安装数据目录失败: %v", err)
+	}
+
+	timestamp := time.Now().Format("20060102_150405")
+	filename := filepath.Join(installationDir, fmt.Sprintf("raw_%s.json", timestamp))
+
+	if err := os.WriteFile(filename, payload, 0644); err != nil {
+		return fmt.Errorf("写入原始安装数据失败: %v", err)
+	}
+
+	return nil
+}
+
+// SaveInstallationConfig 保存安装配置到指定目录
+func SaveInstallationConfig(installation *Installation) error {
+	config := InstallationConfig{
+		InstallationID: installation.ID,
+		AccountID:      installation.AccountID,
+		AccountLogin:   installation.AccountLogin,
+		AccountType:    installation.AccountType,
+		AppID:          installation.AppID,
+		Permissions:    installation.Permissions,
+		Events:         installation.Events,
+		Repositories:   installation.Repositories,
+		CreatedAt:      installation.CreatedAt,
+	}
+
+	// 确保目录存在
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %v", err)
+	}
+
+	// 生成配置文件路径
+	configPath := filepath.Join(configDir, fmt.Sprintf("installation_%d.json", installation.ID))
+
+	// 序列化并保存配置
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %v", err)
+	}
+
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %v", err)
+	}
+
+	return nil
 }

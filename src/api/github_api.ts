@@ -1,14 +1,6 @@
 import axios from 'axios'
 import type { FileInfo } from '../models/FileInfo'
-
-export interface GitHubRepo {
-    id: number
-    name: string
-    fullName: string
-    description: string
-    private: boolean
-    htmlUrl: string
-}
+import type { GitHubRepo, GitHubSetupParams, WebhookData } from '../models/GitHubTypes'
 
 export async function getAuthorizedRepos(): Promise<GitHubRepo[]> {
     const res = await axios.get('/web_api/integrations/github/repos')
@@ -25,19 +17,6 @@ export async function getFileContent(path: string): Promise<string> {
         params: { path }
     })
     return res.data
-}
-
-export interface GitHubSetupParams {
-    base_url: string
-    name: string
-    description?: string
-}
-
-export interface WebhookData {
-    id: string
-    type: string
-    payload: any
-    created_at: string
 }
 
 export const githubAPI = {
