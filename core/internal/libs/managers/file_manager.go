@@ -1,7 +1,7 @@
 package managers
 
 import (
-	"servon/core/internal/libs/utils"
+	"servon/core/internal/utils"
 )
 
 type FileManager struct {

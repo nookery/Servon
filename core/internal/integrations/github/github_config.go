@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"servon/core/internal/libs/github/models"
+	"servon/core/internal/integrations/github/models"
 
 	"github.com/gin-gonic/gin"
 )

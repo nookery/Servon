@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"servon/core/internal/libs/github/models"
-	"servon/core/internal/libs/utils"
+	"servon/core/internal/integrations/github/models"
+	"servon/core/internal/utils"
 )
 
 var printer = utils.DefaultPrinter

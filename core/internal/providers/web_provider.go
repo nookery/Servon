@@ -3,9 +3,9 @@ package providers
 import (
 	"servon/core/internal/integrations"
 	"servon/core/internal/libs/managers"
-	"servon/core/internal/libs/utils"
-	"servon/core/internal/libs/web/routers"
 	"servon/core/internal/models"
+	"servon/core/internal/utils"
+	"servon/core/internal/web/routers"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

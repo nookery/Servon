@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"servon/core/internal/events"
-	"servon/core/internal/libs/github/models"
+	"servon/core/internal/integrations/github/models"
 
 	"github.com/gin-gonic/gin"
 )

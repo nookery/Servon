@@ -2,7 +2,7 @@ package managers
 
 import (
 	"fmt"
-	"servon/core/internal/libs/utils"
+	"servon/core/internal/utils"
 	"time"
 
 	"github.com/go-git/go-git/v5"

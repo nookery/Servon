@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"servon/core/internal/libs/utils"
+	"servon/core/internal/utils"
 )
 
 type UtilProvider struct {

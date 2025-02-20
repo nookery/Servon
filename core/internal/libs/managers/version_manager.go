@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"servon/core/internal/libs/utils"
+	"servon/core/internal/utils"
 	"strings"
 )
 

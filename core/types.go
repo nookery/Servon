@@ -2,10 +2,10 @@ package core
 
 import (
 	"servon/core/internal/contract"
-	githubModels "servon/core/internal/libs/github/models"
+	githubModels "servon/core/internal/integrations/github/models"
 	"servon/core/internal/libs/managers"
-	"servon/core/internal/libs/utils"
 	"servon/core/internal/models"
+	"servon/core/internal/utils"
 )
 
 type CommandOptions = utils.CommandOptions

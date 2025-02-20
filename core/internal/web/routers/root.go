@@ -3,7 +3,7 @@ package routers
 import (
 	"servon/core/internal/integrations"
 	"servon/core/internal/libs/managers"
-	"servon/core/internal/libs/utils"
+	"servon/core/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )

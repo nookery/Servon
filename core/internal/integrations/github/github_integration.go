@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"servon/core/internal/events"
-	githubModels "servon/core/internal/libs/github/models"
+	githubModels "servon/core/internal/integrations/github/models"
 	"servon/core/internal/models"
 	"sync"
 

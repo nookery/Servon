@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"servon/core/internal/libs/web/static"
+	"servon/core/internal/web/static"
 
 	"github.com/gin-gonic/gin"
 )

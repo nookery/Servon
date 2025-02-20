@@ -2,7 +2,7 @@ package integrations
 
 import (
 	"servon/core/internal/events"
-	"servon/core/internal/libs/github"
+	"servon/core/internal/integrations/github"
 )
 
 type FullIntegration struct {

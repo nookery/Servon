@@ -4,7 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"servon/core/internal/libs/managers"
-	"servon/core/internal/libs/utils"
+	"servon/core/internal/utils"
 	"strconv"
 	"time"
 

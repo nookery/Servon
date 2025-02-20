@@ -1,7 +1,7 @@
 package managers
 
 import (
-	"servon/core/internal/libs/utils"
+	"servon/core/internal/utils"
 )
 
 var printer = utils.DefaultPrinter

@@ -1,9 +1,9 @@
 package providers
 
 import (
-	"servon/core/internal/libs/commands"
+	"servon/core/internal/commands"
 	"servon/core/internal/libs/managers"
-	"servon/core/internal/libs/utils"
+	"servon/core/internal/utils"
 
 	"github.com/spf13/cobra"
 )
