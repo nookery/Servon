@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 	"strings"
 
 	"github.com/spf13/cobra"

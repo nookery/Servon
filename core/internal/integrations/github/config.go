@@ -1,4 +1,4 @@
-package models
+package github
 
 // GitHubConfig 表示 GitHub App 的配置信息
 type GitHubConfig struct {

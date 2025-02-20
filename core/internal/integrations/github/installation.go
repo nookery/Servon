@@ -1,5 +1,5 @@
 // Package models 定义了 GitHub 相关功能使用的数据结构
-package models
+package github
 
 // Installation 表示 GitHub App 的安装信息
 type Installation struct {

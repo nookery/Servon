@@ -26,6 +26,10 @@ func (h *IntegrationController) HandleListGitHubRepos(c *gin.Context) {
 		return
 	}
 
+	if repos == nil {
+		repos = make([]github.GitHubRepo, 0)
+	}
+
 	c.JSON(http.StatusOK, repos)
 }
 

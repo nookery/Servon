@@ -1,4 +1,4 @@
-package models
+package github
 
 // GitHubRepo 表示一个GitHub仓库的基本信息
 type GitHubRepo struct {

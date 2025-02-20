@@ -1,4 +1,4 @@
-package models
+package github
 
 // GitHubManifest 表示 GitHub App 的 manifest 配置
 // 用于创建新的 GitHub App

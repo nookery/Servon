@@ -3,7 +3,7 @@ package commands
 import (
 	"os"
 	"os/exec"
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 	"servon/core/internal/utils"
 	"strconv"
 	"time"

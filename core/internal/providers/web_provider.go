@@ -2,7 +2,7 @@ package providers
 
 import (
 	"servon/core/internal/integrations"
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 	"servon/core/internal/models"
 	"servon/core/internal/utils"
 	"servon/core/internal/web/routers"

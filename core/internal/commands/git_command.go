@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 
 	"github.com/spf13/cobra"
 )

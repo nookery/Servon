@@ -107,7 +107,15 @@ func (l *GitHubLogger) LogInfo(message string) {
 	l.WriteLog(LogType{Name: "INFO", Symbol: "ℹ"}, message)
 }
 
+func (l *GitHubLogger) LogInfof(format string, args ...interface{}) {
+	l.WriteLog(LogType{Name: "INFO", Symbol: "ℹ"}, fmt.Sprintf(format, args...))
+}
+
 // LogError 记录错误级别的日志
 func (l *GitHubLogger) LogError(message string) {
 	l.WriteLog(LogType{Name: "ERROR", Symbol: "❌"}, message)
+}
+
+func (l *GitHubLogger) LogErrorf(format string, args ...interface{}) {
+	l.WriteLog(LogType{Name: "ERROR", Symbol: "❌"}, fmt.Sprintf(format, args...))
 }

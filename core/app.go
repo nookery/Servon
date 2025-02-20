@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"servon/core/internal/events"
 	"servon/core/internal/integrations"
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 	"servon/core/internal/providers"
 )
 

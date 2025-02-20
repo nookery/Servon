@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 
 	"github.com/gin-gonic/gin"
 )

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"servon/core/internal/integrations/github"
-	"servon/core/internal/integrations/github/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -78,7 +77,7 @@ func (h *GitHubController) HandleGetWebhooks(c *gin.Context) {
 
 	// 确保返回空数组而不是 null
 	if webhooks == nil {
-		webhooks = make([]models.WebhookPayload, 0)
+		webhooks = make([]github.WebhookPayload, 0)
 	}
 
 	printer.PrintInfof("HandleGetWebhooks: %d", len(webhooks))

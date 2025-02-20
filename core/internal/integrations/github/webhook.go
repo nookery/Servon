@@ -1,4 +1,4 @@
-package models
+package github
 
 // WebhookPayload 表示存储的 webhook 事件数据
 type WebhookPayload struct {

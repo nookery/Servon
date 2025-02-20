@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 	"sort"
 
 	"github.com/gin-gonic/gin"

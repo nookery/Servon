@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"servon/core/internal/events"
-	githubModels "servon/core/internal/integrations/github/models"
 	"servon/core/internal/models"
 	"sync"
 
@@ -14,10 +13,10 @@ import (
 
 // GitHubIntegration 处理所有与GitHub相关的集成功能
 type GitHubIntegration struct {
-	config   *githubModels.GitHubConfig
+	config   *GitHubConfig
 	mu       sync.RWMutex
 	eventBus *events.EventBus
-	repos    []githubModels.GitHubRepo
+	repos    []GitHubRepo
 	logger   *GitHubLogger
 }
 
@@ -25,11 +24,11 @@ type GitHubIntegration struct {
 // eventBus: 用于发布集成相关的事件
 func NewGitHubIntegration(eventBus *events.EventBus) *GitHubIntegration {
 	return &GitHubIntegration{
-		config: &githubModels.GitHubConfig{
-			Installations: make(map[int64]*githubModels.Installation),
+		config: &GitHubConfig{
+			Installations: make(map[int64]*Installation),
 		},
 		eventBus: eventBus,
-		repos:    make([]githubModels.GitHubRepo, 0),
+		repos:    make([]GitHubRepo, 0),
 		logger:   DefaultGitHubLogger,
 	}
 }
@@ -72,21 +71,21 @@ func (g *GitHubIntegration) HandleCallback(c *gin.Context) (string, error) {
 // 返回值:
 //   - error: 处理过程中的错误
 func (g *GitHubIntegration) HandleWebhook(c *gin.Context) error {
-	return ProcessWebhookEvent(c, g.config, g.eventBus)
+	return g.ProcessWebhookEvent(c, g.config, g.eventBus)
 }
 
 // GetStoredWebhooks 获取所有存储的webhook事件数据
 // 返回值:
-//   - []models.WebhookPayload: webhook事件列表
+//   - []WebhookPayload: webhook事件列表
 //   - error: 获取过程中的错误
-func (g *GitHubIntegration) GetStoredWebhooks() ([]githubModels.WebhookPayload, error) {
+func (g *GitHubIntegration) GetStoredWebhooks() ([]WebhookPayload, error) {
 	return GetWebhooks(WebhookDir)
 }
 
 // GetConfig 返回当前的GitHub配置信息
 // 返回值:
-//   - *models.GitHubConfig: GitHub配置信息
-func (g *GitHubIntegration) GetConfig() *githubModels.GitHubConfig {
+//   - *GitHubConfig: GitHub配置信息
+func (g *GitHubIntegration) GetConfig() *GitHubConfig {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
 	return g.config
@@ -96,18 +95,19 @@ func (g *GitHubIntegration) GetConfig() *githubModels.GitHubConfig {
 // 返回值:
 //   - []GitHubRepo: 已授权的仓库列表
 //   - error: 获取过程中的错误
-func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]githubModels.GitHubRepo, error) {
+func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]GitHubRepo, error) {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
 
 	// 创建结果切片
-	var repos []githubModels.GitHubRepo
+	var repos []GitHubRepo
 
 	// 遍历所有安装实例
 	for _, installation := range g.config.Installations {
+		g.logger.LogInfof("installation: %v", installation)
 		// 获取该安装实例下的所有仓库
 		for _, repoName := range installation.Repositories {
-			repo := githubModels.GitHubRepo{
+			repo := GitHubRepo{
 				Name:     repoName,
 				FullName: fmt.Sprintf("%s/%s", installation.AccountLogin, repoName),
 				Private:  false, // 这里可以通过 GitHub API 获取详细信息

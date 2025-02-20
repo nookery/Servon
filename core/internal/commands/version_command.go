@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 
 	"github.com/spf13/cobra"
 )

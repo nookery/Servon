@@ -2,8 +2,8 @@ package core
 
 import (
 	"servon/core/internal/contract"
-	githubModels "servon/core/internal/integrations/github/models"
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/integrations/github"
+	"servon/core/internal/managers"
 	"servon/core/internal/models"
 	"servon/core/internal/utils"
 )
@@ -16,5 +16,5 @@ type Task = models.Task
 type SoftwareInfo = contract.SoftwareInfo
 type SuperSoft = contract.SuperSoft
 type DeployLog = models.DeployLog
-type WebhookPayload = githubModels.WebhookPayload
+type WebhookPayload = github.WebhookPayload
 type OSType = managers.OSType

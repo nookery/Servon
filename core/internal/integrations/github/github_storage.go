@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"servon/core/internal/integrations/github/models"
 	"servon/core/internal/utils"
 )
 
@@ -42,7 +41,7 @@ func SaveWebhookPayload(dataDir string, eventType, eventID string, payload []byt
 
 // GetWebhooks 从指定目录获取所有保存的 webhook 事件数据
 // 返回 WebhookPayload 数组，包含所有成功解析的事件数据
-func GetWebhooks(dataDir string) ([]models.WebhookPayload, error) {
+func GetWebhooks(dataDir string) ([]WebhookPayload, error) {
 	printer.PrintInfof("GetWebhooks: %s", dataDir)
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
 		printer.PrintErrorf("failed to create webhooks directory: %v", err)
@@ -55,7 +54,7 @@ func GetWebhooks(dataDir string) ([]models.WebhookPayload, error) {
 		return nil, fmt.Errorf("failed to read webhooks directory: %v", err)
 	}
 
-	var webhooks []models.WebhookPayload
+	var webhooks []WebhookPayload
 	for _, file := range files {
 		printer.PrintInfof("GetWebhooks: %s", file.Name())
 		if filepath.Ext(file.Name()) != ".json" {
@@ -67,7 +66,7 @@ func GetWebhooks(dataDir string) ([]models.WebhookPayload, error) {
 			continue
 		}
 
-		var webhook models.WebhookPayload
+		var webhook WebhookPayload
 		if err := json.Unmarshal(data, &webhook); err != nil {
 			continue
 		}
@@ -81,8 +80,8 @@ func GetWebhooks(dataDir string) ([]models.WebhookPayload, error) {
 
 // readWebhookFile 读取单个 webhook 数据文件
 // 解析文件名中的元数据和文件内容
-func readWebhookFile(dataDir, filename string) (models.WebhookPayload, error) {
-	var webhook models.WebhookPayload
+func readWebhookFile(dataDir, filename string) (WebhookPayload, error) {
+	var webhook WebhookPayload
 
 	// 移除 .json 后缀
 	basename := strings.TrimSuffix(filename, ".json")

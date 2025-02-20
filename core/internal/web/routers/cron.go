@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 	"servon/core/internal/web/controllers"
 
 	"github.com/gin-gonic/gin"

@@ -12,8 +12,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"servon/core/internal/integrations/github/models"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -67,8 +65,8 @@ func (r *AppCreationResult) GetInstallURL() string {
 
 // createManifest 创建 GitHub App 的 manifest 配置
 // 包含应用的基本信息、权限和事件订阅
-func createManifest(name, description, baseURL string) models.GitHubManifest {
-	manifest := models.GitHubManifest{
+func createManifest(name, description, baseURL string) GitHubManifest {
+	manifest := GitHubManifest{
 		Name:        name,
 		URL:         baseURL,
 		Description: description,

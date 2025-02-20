@@ -2,7 +2,7 @@ package providers
 
 import (
 	"servon/core/internal/events"
-	"servon/core/internal/libs/managers"
+	"servon/core/internal/managers"
 )
 
 type ManagerProvider struct {
