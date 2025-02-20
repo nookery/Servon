@@ -132,17 +132,53 @@ func parseTimestamp(ts string) int64 {
 	return timestamp
 }
 
-// GetInstallationConfig 从存储中读取安装配置信息
+// GetInstallationConfig 从存储中读取所有安装配置信息
 func GetInstallationConfig() (map[int64]*Installation, error) {
-	configPath := filepath.Join(configDir, "installation_config.json")
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("读取安装配置失败: %w", err)
+	// 确保目录存在
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return nil, fmt.Errorf("创建配置目录失败: %w", err)
 	}
 
-	var installations map[int64]*Installation
-	if err := json.Unmarshal(data, &installations); err != nil {
-		return nil, fmt.Errorf("解析安装配置失败: %w", err)
+	// 读取配置目录下的所有文件
+	files, err := os.ReadDir(configDir)
+	if err != nil {
+		return nil, fmt.Errorf("读取配置目录失败: %w", err)
+	}
+
+	installations := make(map[int64]*Installation)
+
+	// 遍历所有配置文件
+	for _, file := range files {
+		if !strings.HasPrefix(file.Name(), "installation_") || !strings.HasSuffix(file.Name(), ".json") {
+			continue
+		}
+
+		data, err := os.ReadFile(filepath.Join(configDir, file.Name()))
+		if err != nil {
+			printer.PrintErrorf("读取配置文件失败 %s: %v", file.Name(), err)
+			continue
+		}
+
+		var config InstallationConfig
+		if err := json.Unmarshal(data, &config); err != nil {
+			printer.PrintErrorf("解析配置文件失败 %s: %v", file.Name(), err)
+			continue
+		}
+
+		// 转换为 Installation 对象
+		installation := &Installation{
+			ID:           config.InstallationID,
+			AccountID:    config.AccountID,
+			AccountLogin: config.AccountLogin,
+			AccountType:  config.AccountType,
+			AppID:        config.AppID,
+			Permissions:  config.Permissions,
+			Events:       config.Events,
+			Repositories: config.Repositories,
+			CreatedAt:    config.CreatedAt,
+		}
+
+		installations[config.InstallationID] = installation
 	}
 
 	return installations, nil
