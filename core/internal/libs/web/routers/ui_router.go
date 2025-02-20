@@ -1,27 +1,21 @@
 package routers
 
 import (
-	"embed"
 	"fmt"
 	"io/fs"
 	"net/http"
 	"path"
 	"strings"
 
+	"servon/core/internal/libs/web/static"
+
 	"github.com/gin-gonic/gin"
 )
 
-//go:embed dist
-var distFS embed.FS
-
 // SetupUIRoutes 设置所有UI相关路由
 func SetupUIRoutes(router *gin.Engine) {
-	setupStaticRoutes(router)
-}
-
-func setupStaticRoutes(router *gin.Engine) {
 	// 获取嵌入的dist子文件系统
-	subFS, err := fs.Sub(distFS, "dist")
+	subFS, err := fs.Sub(static.DistFS, "dist")
 	if err != nil {
 		panic(err)
 	}

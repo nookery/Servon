@@ -23,3 +23,5 @@ pnpm-debug.log*
 main
 
 tmp/
+servon.log
+servon.pid

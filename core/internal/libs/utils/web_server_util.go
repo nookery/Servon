@@ -6,10 +6,14 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sevlyar/go-daemon"
 )
 
 // WebServerConfig 服务器配置
@@ -117,6 +121,7 @@ func (ws *WebServer) waitForServerReady(addr string) error {
 			conn, err := net.DialTimeout("tcp", addr, time.Second)
 			if err == nil {
 				conn.Close()
+				printer.PrintSuccess("服务器启动成功")
 				return nil
 			}
 		}
@@ -156,4 +161,101 @@ func (ws *WebServer) GetRouter() *gin.Engine {
 // StartWebServer 启动 Web 服务器
 func (ws *WebServer) StartWebServer() error {
 	return ws.Start()
+}
+
+// RunUntilSignal 运行服务器直到收到终止信号
+func (ws *WebServer) RunUntilSignal() error {
+	if err := ws.Start(); err != nil {
+		return err
+	}
+
+	// 创建信号通道
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// 等待信号
+	sig := <-quit
+	printer.PrintInfof("收到信号 %v, 正在关闭服务器...", sig)
+
+	// 优雅关闭
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := ws.Stop(ctx); err != nil {
+		printer.PrintErrorf("服务器关闭错误: %v", err)
+		return err
+	}
+
+	printer.PrintSuccess("服务器已关闭")
+	return nil
+}
+
+// RunInBackground 在后台运行服务器（作为独立进程）
+func (ws *WebServer) RunInBackground() error {
+	printer.PrintInfof("在后台运行服务器: http://%s:%d", ws.config.Host, ws.config.Port)
+
+	// 检查服务器是否已经在运行
+	if pid, err := DefaultProcessUtil.FindProcessByPort(ws.config.Port); err == nil && pid > 0 {
+		return fmt.Errorf("服务器已在运行中 (PID: %d)\n提示：如需重启，请使用 'servon serve restart' 命令", pid)
+	}
+
+	// 设置守护进程的上下文
+	cntxt := &daemon.Context{
+		PidFileName: "servon.pid",
+		PidFilePerm: 0644,
+		LogFileName: "servon.log",
+		LogFilePerm: 0640,
+		WorkDir:     "./",
+		Umask:       027,
+	}
+
+	// 启动守护进程
+	d, err := cntxt.Reborn()
+	if err != nil {
+		return fmt.Errorf("创建守护进程失败: %v", err)
+	}
+	if d != nil {
+		return nil // 父进程退出
+	}
+
+	// 子进程继续执行
+	defer cntxt.Release()
+
+	// 启动服务器
+	if err := ws.Start(); err != nil {
+		return err
+	}
+
+	// 等待信号
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	// 优雅关闭
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return ws.Stop(ctx)
+}
+
+// StopBackground 停止后台运行的服务器
+func (ws *WebServer) StopBackground() error {
+	// 先通过端口检查进程
+	if pid, err := DefaultProcessUtil.FindProcessByPort(ws.config.Port); err == nil && pid > 0 {
+		// 发送终止信号
+		process, err := os.FindProcess(int(pid))
+		if err == nil {
+			process.Signal(syscall.SIGTERM)
+		}
+	}
+
+	// 清理 PID 文件
+	pidFile := "servon.pid"
+	if err := os.Remove(pidFile); err == nil {
+		printer.PrintSuccess("服务器已关闭")
+	} else {
+		printer.PrintSuccess("服务器未在运行")
+	}
+
+	return nil
 }

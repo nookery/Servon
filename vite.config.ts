@@ -21,7 +21,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'plugins/web/routers/dist',
+    outDir: 'core/internal/libs/web/static/dist',
     assetsDir: 'assets',
     emptyOutDir: false,
     rollupOptions: {

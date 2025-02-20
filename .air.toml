@@ -4,7 +4,7 @@ tmp_dir = "temp"
 
 [build]
   args_bin = []
-  bin = "./temp/servon serve"
+  bin = "./temp/servon serve start --dev"
   cmd = "make air"
   delay = 1000
   exclude_dir = ["assets", "temp", "vendor", "testdata"]

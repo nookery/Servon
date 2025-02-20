@@ -55,3 +55,19 @@ func (p *ProcessUtil) AutoStopPortProcess(port int) error {
 
 	return nil // 没有进程占用该端口
 }
+
+// FindProcessByPort 查找使用指定端口的进程ID
+func (p *ProcessUtil) FindProcessByPort(port int) (int32, error) {
+	connections, err := net.Connections("tcp")
+	if err != nil {
+		return 0, fmt.Errorf("failed to get network connections: %v", err)
+	}
+
+	for _, conn := range connections {
+		if conn.Laddr.Port == uint32(port) {
+			return conn.Pid, nil
+		}
+	}
+
+	return 0, nil // 没有找到进程
+}

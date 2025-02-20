@@ -15,7 +15,3 @@ build: generate
 # 供 air 使用
 air: 
 	SKIP_GENERATE=1 make build
-
-# 启动 Web 服务
-serve: 
-	go run main.go serve

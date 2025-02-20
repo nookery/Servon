@@ -475,3 +475,8 @@ func (p *Printer) PrintEmojiForBool(value bool) {
 		p.PrintError(fmt.Errorf("❌"))
 	}
 }
+
+// PrintWarningf 打印警告信息
+func (p *Printer) PrintWarningf(format string, args ...interface{}) {
+	p.print(LogTypeWarn, fmt.Sprintf(format, args...), LocationTypeNone, true)
+}
