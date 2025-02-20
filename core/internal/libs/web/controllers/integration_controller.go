@@ -3,17 +3,17 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"servon/core/internal/libs/integrations"
+	"servon/core/internal/libs/github"
 
 	"github.com/gin-gonic/gin"
 )
 
 type IntegrationController struct {
-	*integrations.FullIntegration
+	*github.GitHubIntegration
 }
 
-func NewIntegrationController(fullIntegration *integrations.FullIntegration) *IntegrationController {
-	return &IntegrationController{FullIntegration: fullIntegration}
+func NewIntegrationController(fullIntegration *github.GitHubIntegration) *IntegrationController {
+	return &IntegrationController{GitHubIntegration: fullIntegration}
 }
 
 // HandleListGitHubRepos 获取GitHub授权仓库列表

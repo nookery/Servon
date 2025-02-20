@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"servon/core/internal/libs/integrations"
+	"servon/core/internal/integrations"
 	"servon/core/internal/libs/managers"
 	"servon/core/internal/libs/utils"
 
@@ -16,7 +16,7 @@ func Setup(manager *managers.FullManager, fullIntegration *integrations.FullInte
 	SetupSoftRouter(api, manager)
 	SetupProcessRouter(api, manager)
 	SetupInfoRouter(api, manager)
-	SetupGitHubRouter(api, fullIntegration)
+	SetupGitHubRouter(api, fullIntegration.GitHubIntegration)
 	SetupTaskRouter(api, manager)
 	SetupCronRouter(api, manager)
 	SetupFileRouter(api, manager)
@@ -24,6 +24,6 @@ func Setup(manager *managers.FullManager, fullIntegration *integrations.FullInte
 	SetupLogsRouter(api, manager)
 	SetupUserRouter(api, manager)
 	SetupDeployRouter(api, manager)
-	SetupIntegrationRouter(api, fullIntegration)
+	SetupIntegrationRouter(api, fullIntegration.GitHubIntegration)
 	SetupUIRoutes(r)
 }

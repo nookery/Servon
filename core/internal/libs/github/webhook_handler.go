@@ -3,13 +3,13 @@
 // 1. 验证 webhook 请求的签名
 // 2. 解析不同类型的 webhook 事件
 // 3. 处理各种 GitHub 事件（安装、推送、PR等）
-package webhook
+package github
 
 import (
+	"encoding/json"
 	"fmt"
 	"servon/core/internal/events"
 	"servon/core/internal/libs/github/models"
-	"servon/core/internal/libs/github/storage"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,7 +31,7 @@ func ProcessWebhookEvent(c *gin.Context, config *models.GitHubConfig, eventBus *
 	eventID := c.GetHeader("X-GitHub-Delivery")
 
 	// 保存 webhook 数据
-	if err := storage.SaveWebhookPayload(storage.WebhookDir, event, eventID, payload); err != nil {
+	if err := SaveWebhookPayload(WebhookDir, event, eventID, payload); err != nil {
 		return fmt.Errorf("failed to save webhook payload: %v", err)
 	}
 
@@ -67,7 +67,40 @@ func handleEvent(event string, payload []byte, eventBus *events.EventBus) error 
 
 // handleInstallationEvent 处理 GitHub App 安装相关的事件
 func handleInstallationEvent(payload []byte) error {
-	// TODO: 实现安装事件处理逻辑
+	var event struct {
+		Installation struct {
+			ID      int64 `json:"id"`
+			Account struct {
+				Login string `json:"login"`
+				ID    int64  `json:"id"`
+			} `json:"account"`
+			Repositories []struct {
+				Name     string `json:"name"`
+				FullName string `json:"full_name"`
+			} `json:"repositories"`
+		} `json:"installation"`
+	}
+
+	if err := json.Unmarshal(payload, &event); err != nil {
+		return fmt.Errorf("failed to parse installation event: %v", err)
+	}
+
+	// 更新安装信息
+	installation := &models.Installation{
+		ID:           event.Installation.ID,
+		AccountID:    event.Installation.Account.ID,
+		AccountLogin: event.Installation.Account.Login,
+		Repositories: make([]string, 0),
+	}
+
+	// 添加仓库
+	for _, repo := range event.Installation.Repositories {
+		installation.Repositories = append(installation.Repositories, repo.Name)
+	}
+
+	// 更新配置
+	// 注意：这里需要获取 GitHubIntegration 实例来更新
+
 	return nil
 }
 

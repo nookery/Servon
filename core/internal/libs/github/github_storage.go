@@ -3,7 +3,7 @@
 // 1. 保存 webhook 事件数据
 // 2. 读取历史 webhook 数据
 // 3. 管理数据文件的组织结构
-package storage
+package github
 
 import (
 	"encoding/json"

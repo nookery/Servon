@@ -3,7 +3,7 @@
 // 1. 生成 GitHub App Manifest
 // 2. 处理 GitHub App 的回调
 // 3. 管理 GitHub App 的配置信息
-package config
+package github
 
 import (
 	"crypto/rand"
@@ -20,25 +20,19 @@ import (
 // GenerateManifest 生成 GitHub App 的 manifest
 // 接收 gin.Context 作为参数，从中获取应用名称、描述和基础URL
 // 返回包含 manifest 的 HTML 表单，用于自动提交到 GitHub
-func GenerateManifest(c *gin.Context) (string, error) {
-	var req struct {
-		Name        string `json:"name" binding:"required"`
-		Description string `json:"description"`
-		BaseURL     string `json:"base_url" binding:"required"`
-	}
+func GenerateManifest(name, description, baseURL string) (string, error) {
+	githubLogger.LogInfo("GenerateManifest")
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		return "", fmt.Errorf("invalid request: %v", err)
-	}
-
-	manifest := createManifest(req.Name, req.Description, req.BaseURL)
+	manifest := createManifest(name, description, baseURL)
 	manifestJSON, err := json.Marshal(manifest)
 	if err != nil {
+		githubLogger.LogError(fmt.Sprintf("failed to generate manifest: %v", err))
 		return "", fmt.Errorf("failed to generate manifest: %v", err)
 	}
 
 	state, err := generateState()
 	if err != nil {
+		githubLogger.LogError(fmt.Sprintf("failed to generate state: %v", err))
 		return "", fmt.Errorf("failed to generate state: %v", err)
 	}
 

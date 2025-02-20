@@ -1,4 +1,4 @@
-package logger
+package github
 
 import (
 	"fmt"
@@ -12,6 +12,8 @@ const (
 	githubLogDir = "/data/github/integration" // GitHub集成日志目录
 	timeFormat   = "2006-01-02"               // 日期格式
 )
+
+var DefaultGitHubLogger = NewGitHubLogger()
 
 // GitHubLogger 处理GitHub集成的日志记录
 type GitHubLogger struct {

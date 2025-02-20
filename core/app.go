@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"servon/core/internal/events"
-	"servon/core/internal/libs/integrations"
+	"servon/core/internal/integrations"
 	"servon/core/internal/libs/managers"
 	"servon/core/internal/providers"
 )
@@ -14,7 +14,6 @@ type App struct {
 
 	*providers.WebProvider
 	*providers.ManagerProvider
-	*providers.IntegrationProvider
 	*providers.CommandProvider
 	*providers.UtilProvider
 }
@@ -31,12 +30,11 @@ func New() *App {
 	webProvider := providers.NewWebProvider(manager, integrations, DefaultHost, DefaultPort)
 
 	core := &App{
-		eventBus:            eventBus,
-		WebProvider:         webProvider,
-		ManagerProvider:     providers.NewManagerProvider(eventBus),
-		IntegrationProvider: providers.NewIntegrationProvider(eventBus),
-		CommandProvider:     providers.NewCommandProvider(manager, webProvider.Server),
-		UtilProvider:        providers.NewUtilProvider(),
+		eventBus:        eventBus,
+		WebProvider:     webProvider,
+		ManagerProvider: providers.NewManagerProvider(eventBus),
+		CommandProvider: providers.NewCommandProvider(manager, webProvider.Server),
+		UtilProvider:    providers.NewUtilProvider(),
 	}
 
 	return core

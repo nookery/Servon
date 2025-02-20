@@ -1,26 +1,42 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"servon/core/internal/libs/github"
 	"servon/core/internal/libs/github/models"
-	"servon/core/internal/libs/integrations"
 
 	"github.com/gin-gonic/gin"
 )
 
 type GitHubController struct {
-	*integrations.FullIntegration
+	*github.GitHubIntegration
 }
 
-func NewGitHubController(integrations *integrations.FullIntegration) *GitHubController {
-	return &GitHubController{FullIntegration: integrations}
+func NewGitHubController(integrations *github.GitHubIntegration) *GitHubController {
+	return &GitHubController{GitHubIntegration: integrations}
 }
 
 // HandleGitHubSetup handles GitHub App Manifest flow setup request
 func (h *GitHubController) HandleGitHubSetup(c *gin.Context) {
-	manifest, err := h.GitHubIntegration.HandleSetup(c)
+	var req struct {
+		BaseURL     string `json:"base_url" binding:"required"`
+		Name        string `json:"name" binding:"required"`
+		Description string `json:"description"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("invalid request: %v", err),
+		})
+		return
+	}
+
+	manifest, err := h.GitHubIntegration.HandleSetup(req.Name, req.Description, req.BaseURL)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("failed to setup GitHub App: %v", err),
+		})
 		return
 	}
 

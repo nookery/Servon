@@ -1,4 +1,4 @@
-package logger
+package github
 
 import "github.com/fatih/color"
 

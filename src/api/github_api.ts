@@ -25,4 +25,29 @@ export async function getFileContent(path: string): Promise<string> {
         params: { path }
     })
     return res.data
+}
+
+export interface GitHubSetupParams {
+    base_url: string
+    name: string
+    description?: string
+}
+
+export interface WebhookData {
+    id: string
+    type: string
+    payload: any
+    created_at: string
+}
+
+export const githubAPI = {
+    setup: (params: GitHubSetupParams) =>
+        axios.post<string>('/web_api/github/setup', params, {
+            responseType: 'text',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }),
+    getWebhooks: () =>
+        axios.get<WebhookData[]>('/web_api/github/webhooks'),
 } 
