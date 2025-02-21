@@ -180,56 +180,45 @@ func (m *DeployManager) DeployProject(fullName string) error {
 
 	// 创建临时工作目录
 	workDir := filepath.Join(os.TempDir(), fmt.Sprintf("deploy_%s_%s", fullName, logID))
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "创建临时工作目录: %s", workDir)
+
 	if err := os.MkdirAll(workDir, 0755); err != nil {
 		m.logUtil.LogToFile(utils.LogLevelError, logFile, "创建工作目录失败: %v", err)
 		return fmt.Errorf("创建工作目录失败: %v", err)
 	}
-	defer os.RemoveAll(workDir)
+	defer func() {
+		m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "清理临时工作目录: %s", workDir)
+		os.RemoveAll(workDir)
+	}()
 
 	// 1. 拉取代码
-	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "正在从仓库拉取代码: %s", fullName)
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "开始从仓库拉取代码: %s", fullName)
 	if err := m.gitClone(fullName, workDir); err != nil {
 		m.logUtil.LogToFile(utils.LogLevelError, logFile, "拉取代码失败: %v", err)
 		return fmt.Errorf("拉取代码失败: %v", err)
 	}
 
 	// 检测项目类型
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "开始检测项目类型...")
 	projectType := utils.DefaultProjectUtil.DetectProjectType(workDir)
 	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "检测到项目类型: %s", projectType)
 
 	// 2. 构建项目
-	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "正在构建 %s 项目: %s", projectType, fullName)
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "开始构建 %s 项目: %s", projectType, fullName)
 	if err := m.buildProject(workDir); err != nil {
 		m.logUtil.LogToFile(utils.LogLevelError, logFile, "构建项目失败: %v", err)
 		return fmt.Errorf("构建项目失败: %v", err)
 	}
 
 	// 3. 部署服务
-	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "正在部署 %s 服务: %s", projectType, fullName)
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "开始部署 %s 服务: %s", projectType, fullName)
 	if err := m.deployService(workDir); err != nil {
 		m.logUtil.LogToFile(utils.LogLevelError, logFile, "部署服务失败: %v", err)
 		return fmt.Errorf("部署服务失败: %v", err)
 	}
 
-	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "仓库 %s (%s) 部署成功", fullName, projectType)
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "仓库 %s (%s) 部署成功完成", fullName, projectType)
 	return nil
-}
-
-// getGitHubAuth 获取GitHub认证信息
-func (m *DeployManager) getGitHubAuth(repo string) (*githttp.BasicAuth, error) {
-	if m.github == nil {
-		return nil, fmt.Errorf("GitHub集成未初始化")
-	}
-
-	token, err := m.github.GetInstallationToken(repo)
-	if err != nil {
-		return nil, fmt.Errorf("获取GitHub认证令牌失败: %v", err)
-	}
-
-	return &githttp.BasicAuth{
-		Username: "x-access-token",
-		Password: token,
-	}, nil
 }
 
 // gitClone 从仓库拉取代码（带重试机制）
@@ -244,13 +233,17 @@ func (m *DeployManager) gitClone(repo, workDir string) error {
 		}
 
 		// 获取认证信息
+		m.logUtil.Log(utils.LogLevelInfo, "正在获取 GitHub 认证信息...")
 		auth, err := m.getGitHubAuth(repo)
 		if err != nil {
 			lastErr = fmt.Errorf("获取GitHub认证信息失败: %v", err)
+			m.logUtil.Log(utils.LogLevelError, "获取GitHub认证信息失败: %v", err)
 			continue
 		}
+		m.logUtil.Log(utils.LogLevelInfo, "成功获取 GitHub 认证信息")
 
 		// 尝试克隆
+		m.logUtil.Log(utils.LogLevelInfo, "开始克隆仓库 %s 到 %s", repo, workDir)
 		err = m.gitUtil.CloneRepo(repo, "main", workDir, auth)
 		if err == nil {
 			m.logUtil.Log(utils.LogLevelInfo, "仓库克隆成功: %s", repo)
@@ -262,6 +255,27 @@ func (m *DeployManager) gitClone(repo, workDir string) error {
 	}
 
 	return fmt.Errorf("克隆仓库失败（已重试%d次）: %v", maxRetries, lastErr)
+}
+
+// getGitHubAuth 获取GitHub认证信息
+func (m *DeployManager) getGitHubAuth(repo string) (*githttp.BasicAuth, error) {
+	if m.github == nil {
+		m.logUtil.Log(utils.LogLevelError, "GitHub集成未初始化")
+		return nil, fmt.Errorf("GitHub集成未初始化")
+	}
+
+	m.logUtil.Log(utils.LogLevelInfo, "正在获取仓库 %s 的安装令牌", repo)
+	token, err := m.github.GetInstallationToken(repo)
+	if err != nil {
+		m.logUtil.Log(utils.LogLevelError, "获取GitHub认证令牌失败: %v", err)
+		return nil, fmt.Errorf("获取GitHub认证令牌失败: %v", err)
+	}
+	m.logUtil.Log(utils.LogLevelInfo, "成功获取安装令牌")
+
+	return &githttp.BasicAuth{
+		Username: "x-access-token",
+		Password: token,
+	}, nil
 }
 
 // buildProject 构建项目
