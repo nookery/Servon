@@ -168,18 +168,18 @@ func (m *DeployManager) DeleteDeployLog(logID string) error {
 }
 
 // DeployProject 执行实际的部署操作
-func (m *DeployManager) DeployProject(repo string) error {
+func (m *DeployManager) DeployProject(fullName string) error {
 	// 创建部署日志文件
 	header := fmt.Sprintf("部署开始时间: %s\n仓库: %s\n",
-		time.Now().Format(time.RFC3339), repo)
-	logID, logFile, err := m.logUtil.CreateLogFile(repo, header)
+		time.Now().Format(time.RFC3339), fullName)
+	logID, logFile, err := m.logUtil.CreateLogFile(fullName, header)
 	if err != nil {
 		return fmt.Errorf("创建部署日志失败: %v", err)
 	}
 	defer logFile.Close()
 
 	// 创建临时工作目录
-	workDir := filepath.Join(os.TempDir(), fmt.Sprintf("deploy_%s_%s", repo, logID))
+	workDir := filepath.Join(os.TempDir(), fmt.Sprintf("deploy_%s_%s", fullName, logID))
 	if err := os.MkdirAll(workDir, 0755); err != nil {
 		m.logUtil.LogToFile(utils.LogLevelError, logFile, "创建工作目录失败: %v", err)
 		return fmt.Errorf("创建工作目录失败: %v", err)
@@ -187,8 +187,8 @@ func (m *DeployManager) DeployProject(repo string) error {
 	defer os.RemoveAll(workDir)
 
 	// 1. 拉取代码
-	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "正在从仓库拉取代码: %s", repo)
-	if err := m.gitClone(repo, workDir); err != nil {
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "正在从仓库拉取代码: %s", fullName)
+	if err := m.gitClone(fullName, workDir); err != nil {
 		m.logUtil.LogToFile(utils.LogLevelError, logFile, "拉取代码失败: %v", err)
 		return fmt.Errorf("拉取代码失败: %v", err)
 	}
@@ -198,20 +198,20 @@ func (m *DeployManager) DeployProject(repo string) error {
 	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "检测到项目类型: %s", projectType)
 
 	// 2. 构建项目
-	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "正在构建 %s 项目: %s", projectType, repo)
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "正在构建 %s 项目: %s", projectType, fullName)
 	if err := m.buildProject(workDir); err != nil {
 		m.logUtil.LogToFile(utils.LogLevelError, logFile, "构建项目失败: %v", err)
 		return fmt.Errorf("构建项目失败: %v", err)
 	}
 
 	// 3. 部署服务
-	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "正在部署 %s 服务: %s", projectType, repo)
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "正在部署 %s 服务: %s", projectType, fullName)
 	if err := m.deployService(workDir); err != nil {
 		m.logUtil.LogToFile(utils.LogLevelError, logFile, "部署服务失败: %v", err)
 		return fmt.Errorf("部署服务失败: %v", err)
 	}
 
-	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "仓库 %s (%s) 部署成功", repo, projectType)
+	m.logUtil.LogToFile(utils.LogLevelInfo, logFile, "仓库 %s (%s) 部署成功", fullName, projectType)
 	return nil
 }
 
