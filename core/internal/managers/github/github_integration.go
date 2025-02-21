@@ -79,6 +79,7 @@ import (
 	"net/http"
 	"servon/core/internal/events"
 	"servon/core/internal/models"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -205,6 +206,21 @@ func (g *GitHubIntegration) GetLogs() ([]models.FileInfo, error) {
 func (g *GitHubIntegration) GetInstallationToken(repo string) (string, error) {
 	g.logger.LogInfof("开始获取仓库 %s 的安装令牌", repo)
 
+	// 处理仓库地址格式
+	repoFullName := repo
+	if strings.HasPrefix(repo, "https://github.com/") {
+		// 从 https://github.com/owner/repo 转换为 owner/repo
+		repoFullName = strings.TrimPrefix(repo, "https://github.com/")
+		g.logger.LogInfof("转换仓库地址格式: %s -> %s", repo, repoFullName)
+	}
+
+	// 验证仓库名称格式
+	parts := strings.Split(repoFullName, "/")
+	if len(parts) != 2 {
+		g.logger.LogErrorf("无效的仓库名称格式: %s，应为 'owner/repo' 格式", repoFullName)
+		return "", fmt.Errorf("无效的仓库名称格式: %s，应为 'owner/repo' 格式", repoFullName)
+	}
+
 	// 获取所有安装配置
 	installations, err := GetInstallationConfig()
 	if err != nil {
@@ -231,8 +247,8 @@ func (g *GitHubIntegration) GetInstallationToken(repo string) (string, error) {
 	for _, inst := range installations {
 		g.logger.LogInfof("检查安装 ID %d (账户: %s)", inst.ID, inst.AccountLogin)
 		for _, r := range inst.Repositories {
-			g.logger.LogInfof("  比较仓库: %s 与目标: %s", r.FullName, repo)
-			if r.FullName == repo {
+			g.logger.LogInfof("  比较仓库: %s 与目标: %s", r.FullName, repoFullName)
+			if r.FullName == repoFullName {
 				installation = inst
 				g.logger.LogInfof("找到匹配的安装: ID=%d, 账户=%s", inst.ID, inst.AccountLogin)
 				break

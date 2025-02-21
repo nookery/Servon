@@ -51,7 +51,7 @@ async function handleDeploy(repo: GitHubRepo) {
 
     deployingRepo.value = repo.name
     try {
-        const res = await deployRepository(repo.full_name)
+        const res = await deployRepository(repo.html_url)
         toast.success(res.message)
     } catch (err: any) {
         error.value = err.response?.data?.error || err.message || '部署失败'
