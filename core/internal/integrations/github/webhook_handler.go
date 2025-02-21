@@ -76,6 +76,12 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 		Action       string       `json:"action"`
 		Installation Installation `json:"installation"`
 		Repositories []Repository `json:"repositories"`
+		Sender       struct {
+			Login     string `json:"login"`
+			ID        int64  `json:"id"`
+			AvatarURL string `json:"avatar_url"`
+			Type      string `json:"type"`
+		} `json:"sender"`
 	}
 
 	if err := json.Unmarshal(payload, &event); err != nil {
@@ -85,6 +91,10 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 
 	// 更新安装信息
 	installation := &event.Installation
+	installation.AccountLogin = installation.Account.Login
+	installation.AccountID = installation.Account.ID
+	installation.AccountType = installation.Account.Type
+	installation.AccountAvatarURL = installation.Account.AvatarURL
 	installation.Repositories = event.Repositories
 
 	// 保存配置信息

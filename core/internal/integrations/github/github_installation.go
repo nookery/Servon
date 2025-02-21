@@ -27,6 +27,13 @@ type Installation struct {
 	UpdatedAt           string       `json:"updated_at"`                // 更新时间
 	SuspendedBy         *string      `json:"suspended_by"`              // 暂停者(如果被暂停)
 	SuspendedAt         *string      `json:"suspended_at"`              // 暂停时间(如果被暂停)
+	Account             struct {
+		Login     string `json:"login"`      // 账户登录名
+		ID        int64  `json:"id"`         // 账户ID
+		NodeID    string `json:"node_id"`    // GraphQL节点ID
+		AvatarURL string `json:"avatar_url"` // 头像URL
+		Type      string `json:"type"`       // 账户类型
+	} `json:"account"`
 }
 
 // Repository 表示仓库信息
