@@ -4,6 +4,8 @@ import (
 	"servon/core/internal/utils"
 )
 
+const deployLogDir = "/data/deploy"
+
 var printer = utils.DefaultPrinter
 
 var PrintInfo = printer.PrintInfo

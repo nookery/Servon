@@ -4,72 +4,88 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
+
+	"github.com/rs/zerolog"
 )
 
-// LogLevel 定义日志级别
-type LogLevel string
-
-const (
-	LogLevelInfo    LogLevel = "信息"
-	LogLevelError   LogLevel = "错误"
-	LogLevelWarning LogLevel = "警告"
-	LogLevelDebug   LogLevel = "调试"
-)
-
-// LogUtil 提供日志记录功能
 type LogUtil struct {
 	logDir string
+	logger zerolog.Logger
 }
 
-// NewLogUtil 创建新的日志工具实例
-func NewLogUtil(logDir string) (*LogUtil, error) {
+func NewLogUtil(logDir string) *LogUtil {
 	if err := os.MkdirAll(logDir, 0755); err != nil {
-		return nil, fmt.Errorf("创建日志目录失败: %v", err)
+		panic(err)
 	}
-	return &LogUtil{logDir: logDir}, nil
-}
 
-// Close 关闭日志文件
-func (l *LogUtil) Close() error {
-	return nil
-}
-
-// Log 记录日志到主日志文件
-func (l *LogUtil) Log(level LogLevel, format string, args ...interface{}) {
-	// This method is now empty as the LogUtil struct no longer has a logger or file
-}
-
-// LogToFile 同时记录到主日志和指定的日志文件
-func (l *LogUtil) LogToFile(level LogLevel, logFile *os.File, format string, args ...interface{}) {
-	if logFile == nil {
-		return
-	}
-	message := fmt.Sprintf(format, args...)
-	timestamp := time.Now().In(time.Local).Format("2006-01-02 15:04:05.000")
-	fmt.Fprintf(logFile, "[%s][%s] %s\n", timestamp, level, message)
-}
-
-// CreateLogFile 创建新的日志文件
-func (l *LogUtil) CreateLogFile(name, header string) (string, *os.File, error) {
-	timestamp := time.Now().In(time.Local)
-	logID := timestamp.Format("2006-01-02-150405")
-	logPath := filepath.Join(l.logDir, logID+".log")
-
-	file, err := os.Create(logPath)
+	// 创建日志文件
+	logFile := filepath.Join(logDir, "app.log")
+	file, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		return "", nil, fmt.Errorf("创建日志文件失败: %v", err)
+		panic(err)
 	}
 
-	// 写入日志头部信息，包含时间戳
-	headerWithTime := fmt.Sprintf("[%s] === 日志开始 ===\n%s\n",
-		timestamp.Format("2006-01-02 15:04:05.000"),
-		header)
+	// 同时输出到控制台和文件
+	multi := zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stdout}, file)
 
-	if _, err = file.WriteString(headerWithTime); err != nil {
-		file.Close()
-		return "", nil, fmt.Errorf("写入日志头部信息失败: %v", err)
+	// 配置 zerolog
+	zerolog.TimeFieldFormat = "2006-01-02 15:04:05.000"
+	logger := zerolog.New(multi).With().Timestamp().Caller().Logger()
+
+	return &LogUtil{
+		logDir: logDir,
+		logger: logger,
 	}
+}
 
-	return logID, file, nil
+func (lu *LogUtil) Info(message string) {
+	lu.logger.Info().Msg(message)
+}
+
+func (lu *LogUtil) Infof(format string, args ...interface{}) {
+	lu.logger.Info().Msgf(format, args...)
+}
+
+func (lu *LogUtil) Trace(message string) {
+	lu.logger.Trace().Msg(message)
+}
+
+func (lu *LogUtil) Error(message string) {
+	lu.logger.Error().Msg(message)
+}
+
+func (lu *LogUtil) Errorf(format string, args ...interface{}) {
+	lu.logger.Error().Msgf(format, args...)
+}
+
+// LogAndReturnError 记录错误日志并返回错误
+func (lu *LogUtil) LogAndReturnError(message string) error {
+	lu.Error(message)
+	return fmt.Errorf("%s", message)
+}
+
+// LogAndReturnErrorf 记录错误日志并返回错误
+func (lu *LogUtil) LogAndReturnErrorf(format string, args ...interface{}) error {
+	lu.Errorf(format, args...)
+	return fmt.Errorf(format, args...)
+}
+
+func (lu *LogUtil) Debug(message string) {
+	lu.logger.Debug().Msg(message)
+}
+
+func (lu *LogUtil) Debugf(format string, args ...interface{}) {
+	lu.logger.Debug().Msgf(format, args...)
+}
+
+func (lu *LogUtil) Warn(message string) {
+	lu.logger.Warn().Msg(message)
+}
+
+func (lu *LogUtil) Warnf(format string, args ...interface{}) {
+	lu.logger.Warn().Msgf(format, args...)
+}
+
+func (lu *LogUtil) Fatal(message string) {
+	lu.logger.Fatal().Msg(message)
 }
