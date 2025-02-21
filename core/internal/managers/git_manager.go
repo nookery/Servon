@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"servon/core/internal/utils"
 	"time"
-
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 )
 
 const (
@@ -14,10 +11,13 @@ const (
 )
 
 type GitManager struct {
+	gitUtil *utils.GitUtil
 }
 
 func NewGitManager() *GitManager {
-	return &GitManager{}
+	return &GitManager{
+		gitUtil: utils.NewGitUtil(),
+	}
 }
 
 // GitClone 克隆一个git仓库到指定目录
@@ -39,7 +39,7 @@ func (g *GitManager) GitClone(url string, branch string, targetDir string) error
 			time.Sleep(time.Second * 2) // 重试前等待一段时间
 		}
 
-		err := g.cloneRepo(url, branch, targetDir)
+		err := g.gitUtil.CloneRepo(url, branch, targetDir, nil)
 		if err == nil {
 			return nil
 		}
@@ -63,7 +63,7 @@ func (g *GitManager) GitClone(url string, branch string, targetDir string) error
 				time.Sleep(time.Second * 2)
 			}
 
-			err := g.cloneRepo(url, branch, targetDir)
+			err := g.gitUtil.CloneRepo(url, branch, targetDir, nil)
 			if err == nil {
 				return nil
 			}
@@ -72,20 +72,6 @@ func (g *GitManager) GitClone(url string, branch string, targetDir string) error
 	}
 
 	return fmt.Errorf("克隆失败（已尝试使用代理）: %v", lastErr)
-}
-
-// cloneRepo 执行实际的克隆操作
-func (g *GitManager) cloneRepo(url string, branch string, targetDir string) error {
-	PrintInfo("克隆仓库: " + url + " 的分支 " + branch + " 到 " + targetDir)
-
-	options := &git.CloneOptions{
-		URL:           url,
-		Progress:      &progressWriter{}, // 使用自定义的进度写入器
-		ReferenceName: plumbing.ReferenceName(branch),
-	}
-
-	_, err := git.PlainClone(targetDir, false, options)
-	return err
 }
 
 // progressWriter 实现了io.Writer接口，用于处理git操作的进度输出
