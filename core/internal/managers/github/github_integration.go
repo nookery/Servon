@@ -487,16 +487,40 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	installation.AccountAvatarURL = installation.Account.AvatarURL
 	installation.Repositories = event.Repositories
 
-	// 保存安装数据
+	// 保存安装配置到独立文件
 	if err := SaveInstallationConfig(installation); err != nil {
 		g.logger.LogErrorf("保存安装配置失败: %v", err)
 		return fmt.Errorf("failed to save installation config: %v", err)
 	}
 
-	// 使用 logger 记录安装信息
-	g.logger.LogInfof("新的 GitHub App 安装: ID=%d, Account=%s",
+	// 更新 app_config.json 中的 installations 字段
+	appConfig, err := LoadAppConfig()
+	if err != nil {
+		g.logger.LogErrorf("加载 App 配置失败: %v", err)
+		return fmt.Errorf("failed to load app config: %v", err)
+	}
+	if appConfig == nil {
+		g.logger.LogError("App 配置不存在")
+		return fmt.Errorf("app config does not exist")
+	}
+
+	// 更新或添加安装信息
+	g.logger.LogInfof("更新 App 配置中的安装信息: ID=%d", installation.ID)
+	if appConfig.Installations == nil {
+		appConfig.Installations = make(map[int64]*Installation)
+	}
+	appConfig.Installations[installation.ID] = installation
+
+	// 保存更新后的 App 配置
+	if err := SaveAppConfig(appConfig); err != nil {
+		g.logger.LogErrorf("保存更新后的 App 配置失败: %v", err)
+		return fmt.Errorf("failed to save updated app config: %v", err)
+	}
+
+	g.logger.LogInfof("成功更新 GitHub App 安装信息: ID=%d, Account=%s, 仓库数=%d",
 		installation.ID,
 		installation.AccountLogin,
+		len(installation.Repositories),
 	)
 
 	return nil
