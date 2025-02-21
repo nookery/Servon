@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import FileEditor from './FileEditor.vue'
 import PageContainer from '../../layouts/PageContainer.vue'
 import { fileAPI } from '../../api/file_api'
@@ -45,6 +45,11 @@ const currentSortOrder = ref<SortOrder>(props.sortOrder || 'asc')
 
 // 添加选择相关的状态
 const selectedFiles = ref<Set<string>>(new Set())
+
+// 添加自动刷新相关的状态
+const autoRefresh = ref(false)
+const refreshInterval = ref(5) // 默认5秒
+let refreshTimer: ReturnType<typeof setInterval> | null = null
 
 // Pagination
 const totalPages = computed(() => Math.ceil(files.value.length / itemsPerPage))
@@ -262,6 +267,35 @@ async function loadFilesWithClear(path: string) {
     await loadFiles(path)
 }
 
+// 处理自动刷新
+function toggleAutoRefresh() {
+    autoRefresh.value = !autoRefresh.value
+    if (autoRefresh.value) {
+        startAutoRefresh()
+    } else {
+        stopAutoRefresh()
+    }
+}
+
+function startAutoRefresh() {
+    if (refreshTimer) clearInterval(refreshTimer)
+    refreshTimer = setInterval(() => {
+        loadFiles(currentPath.value)
+    }, refreshInterval.value * 1000)
+}
+
+function stopAutoRefresh() {
+    if (refreshTimer) {
+        clearInterval(refreshTimer)
+        refreshTimer = null
+    }
+}
+
+// 在组件卸载时清理定时器
+onBeforeUnmount(() => {
+    stopAutoRefresh()
+})
+
 onMounted(() => {
     loadFilesWithClear(props.initialPath)
 })
@@ -309,6 +343,20 @@ onMounted(() => {
                         @click="handleBatchDelete">
                         删除选中 ({{ selectedFiles.size }})
                     </IconButton>
+                    <IconButton :icon="autoRefresh ? 'ri-time-fill' : 'ri-time-line'"
+                        :variant="autoRefresh ? 'primary' : 'default'" @click="toggleAutoRefresh"
+                        :title="`自动刷新 (${refreshInterval}秒)`">
+                        {{ autoRefresh ? '停止刷新' : '自动刷新' }}
+                    </IconButton>
+                    <div v-if="autoRefresh" class="flex items-center gap-2">
+                        <select v-model="refreshInterval" class="select select-bordered select-sm"
+                            @change="startAutoRefresh">
+                            <option value="3">3秒</option>
+                            <option value="5">5秒</option>
+                            <option value="10">10秒</option>
+                            <option value="30">30秒</option>
+                        </select>
+                    </div>
                 </div>
 
                 <template v-if="showShortcuts">

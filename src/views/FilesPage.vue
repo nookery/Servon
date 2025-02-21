@@ -1,12 +1,30 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import PageContainer from '../layouts/PageContainer.vue'
 import FileManager from '../components/files/FileManager.vue'
 import type { SortBy, SortOrder } from '../models/FileInfo'
 
-const currentPath = ref('/')
+const route = useRoute()
+const router = useRouter()
+
+const currentPath = ref(route.query.path as string || '/')
 const currentSort = ref<SortBy>('name')
 const sortOrder = ref<SortOrder>('asc')
+
+// 监听路径变化，更新 URL
+watch(() => currentPath.value, (newPath) => {
+    router.replace({
+        query: { ...route.query, path: newPath }
+    })
+})
+
+// 初始化时从 URL 读取路径
+onMounted(() => {
+    if (route.query.path) {
+        currentPath.value = route.query.path as string
+    }
+})
 </script>
 
 <template>

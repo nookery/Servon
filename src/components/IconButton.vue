@@ -2,9 +2,9 @@
 import { computed } from 'vue'
 
 interface Props {
-    icon: string                    // Remix icon 类名
+    icon?: string                    // Remix icon 类名
     title?: string                  // 按钮提示文字
-    variant?: 'default' | 'ghost' | 'primary' | 'error' | 'warning'   // 按钮样式变体
+    variant?: 'default' | 'ghost' | 'primary' | 'secondary' | 'accent' | 'info' | 'success' | 'error' | 'warning' | 'link'   // 按钮样式变体
     size?: 'xs' | 'sm' | 'md' | 'lg'      // 按钮大小
     circle?: boolean                // 是否为圆形按钮
     active?: boolean                // 是否激活状态
@@ -56,7 +56,18 @@ const buttonClass = computed(() => {
 </script>
 
 <template>
-    <button :class="buttonClass" :title="title">
+    <button class="btn btn-sm gap-1 transition-all duration-200 hover:scale-105 hover:shadow-md" :class="{
+        'btn-primary': variant === 'primary',
+        'btn-secondary': variant === 'secondary',
+        'btn-accent': variant === 'accent',
+        'btn-info': variant === 'info',
+        'btn-success': variant === 'success',
+        'btn-warning': variant === 'warning',
+        'btn-error': variant === 'error',
+        'btn-ghost': variant === 'ghost',
+        'btn-link': variant === 'link',
+        [`btn-${size}`]: size
+    }" :title="title" v-bind="$attrs">
         <i :class="[icon, 'mr-1']"></i>
         <slot></slot>
     </button>

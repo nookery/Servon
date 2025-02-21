@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { fileAPI } from '../../api/file_api'
 import type { FileInfo } from '../../models/FileInfo'
 import * as monaco from 'monaco-editor'
+import IconButton from '../IconButton.vue'
 import { onMounted, onBeforeUnmount } from 'vue'
 import { useToast } from '../../composables/useToast'
 import { useConfirm } from '../../composables/useConfirm'
@@ -13,7 +14,9 @@ import {
     RiRestartLine,
     RiSaveLine,
     RiCloseLine,
-    RiAlertLine
+    RiAlertLine,
+    RiMapLine,
+    RiDeleteBinLine,
 } from '@remixicon/vue'
 
 const props = defineProps<{
@@ -34,6 +37,13 @@ let editor: monaco.editor.IStandaloneCodeEditor | null = null
 const toast = useToast()
 const confirm = useConfirm()
 
+const showMinimap = ref(true)
+
+// 添加自动刷新相关的状态
+const autoRefresh = ref(false)
+const refreshInterval = ref(5) // 默认5秒
+let refreshTimer: ReturnType<typeof setInterval> | null = null
+
 onMounted(() => {
     if (editorContainer.value) {
         editor = monaco.editor.create(editorContainer.value, {
@@ -41,7 +51,7 @@ onMounted(() => {
             language: 'json',
             theme: 'vs-dark',
             automaticLayout: true,
-            minimap: { enabled: true },
+            minimap: { enabled: showMinimap.value },
             scrollBeyondLastLine: false,
             formatOnPaste: true,
         })
@@ -58,6 +68,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     editor?.dispose()
+    stopAutoRefresh()
 })
 
 watch(() => props.show, async (newVal) => {
@@ -159,14 +170,90 @@ watch(() => content.value, () => {
 onBeforeUnmount(() => {
     if (autoSaveTimer) clearTimeout(autoSaveTimer)
 })
+
+// 切换小地图
+function toggleMinimap() {
+    if (editor) {
+        showMinimap.value = !showMinimap.value
+        editor.updateOptions({ minimap: { enabled: showMinimap.value } })
+        toast.info(showMinimap.value ? '已显示小地图' : '已隐藏小地图')
+    }
+}
+
+// 处理自动刷新
+function toggleAutoRefresh() {
+    autoRefresh.value = !autoRefresh.value
+    if (autoRefresh.value) {
+        startAutoRefresh()
+    } else {
+        stopAutoRefresh()
+    }
+}
+
+function startAutoRefresh() {
+    if (refreshTimer) clearInterval(refreshTimer)
+    refreshTimer = setInterval(async () => {
+        if (!props.file) return
+        try {
+            const res = await fileAPI.getFileContent(props.file.path)
+            if (res.data.content !== content.value) {
+                if (editor) {
+                    const position = editor.getPosition()
+                    editor.setValue(res.data.content)
+                    editor.setPosition(position || { lineNumber: 1, column: 1 })
+                }
+                toast.info('文件内容已更新')
+            }
+        } catch (err) {
+            console.error('自动刷新失败:', err)
+        }
+    }, refreshInterval.value * 1000)
+}
+
+function stopAutoRefresh() {
+    if (refreshTimer) {
+        clearInterval(refreshTimer)
+        refreshTimer = null
+    }
+}
+
+// 添加清空内容的函数
+async function clearContent() {
+    if (!editor) return
+    if (await confirm.warning('清空内容', '确定要清空所有内容吗？此操作不可撤销。')) {
+        editor.setValue('')
+        toast.info('内容已清空')
+    }
+}
 </script>
 
 <template>
     <dialog class="modal" :class="{ 'modal-open': show }">
         <div class="modal-box w-11/12 max-w-5xl h-4/5 flex flex-col">
-            <h3 class="font-bold text-lg">编辑文件: {{ file?.name }}</h3>
+            <!-- 标题栏和主要操作按钮 -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">编辑文件: {{ file?.name }}</h3>
+                <div class="flex items-center gap-2">
+                    <div class="form-control">
+                        <label class="label cursor-pointer">
+                            <span class="label-text mr-2">自动保存</span>
+                            <input type="checkbox" v-model="autoSave" class="toggle toggle-primary toggle-sm" />
+                        </label>
+                    </div>
+                    <IconButton @click="$emit('update:show', false)">
+                        <RiCloseLine />
+                        取消
+                    </IconButton>
+                    <IconButton variant="primary" @click="saveFile">
+                        <RiSaveLine />
+                        保存
+                    </IconButton>
+                </div>
+            </div>
 
-            <div class="flex justify-between items-center py-2 mb-4 border-b">
+            <!-- 次要工具栏 -->
+            <div
+                class="flex justify-between items-center py-2 mb-4 bg-base-200 rounded-lg px-4 shadow-sm transition-colors">
                 <div class="flex gap-2">
                     <IconButton @click="formatCode" title="格式化 (Shift+Alt+F)">
                         <RiCodeLine />
@@ -184,23 +271,27 @@ onBeforeUnmount(() => {
                         <RiRestartLine />
                         重置
                     </IconButton>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="form-control">
-                        <label class="label cursor-pointer">
-                            <span class="label-text mr-2">自动保存</span>
-                            <input type="checkbox" v-model="autoSave" class="toggle toggle-primary toggle-sm" />
-                        </label>
-                    </div>
-                    <div class="flex gap-2">
-                        <IconButton @click="$emit('update:show', false)">
-                            <RiCloseLine />
-                            取消
-                        </IconButton>
-                        <IconButton variant="primary" @click="saveFile">
-                            <RiSaveLine />
-                            保存
-                        </IconButton>
+                    <IconButton variant="error" @click="clearContent" title="清空内容">
+                        <RiDeleteBinLine />
+                        清空
+                    </IconButton>
+                    <IconButton @click="toggleMinimap" :title="showMinimap ? '隐藏小地图' : '显示小地图'">
+                        <RiMapLine />
+                        {{ showMinimap ? '隐藏地图' : '显示地图' }}
+                    </IconButton>
+                    <IconButton :icon="autoRefresh ? 'ri-time-fill' : 'ri-time-line'"
+                        :variant="autoRefresh ? 'primary' : 'default'" @click="toggleAutoRefresh"
+                        :title="`自动刷新 (${refreshInterval}秒)`">
+                        {{ autoRefresh ? '停止刷新' : '自动刷新' }}
+                    </IconButton>
+                    <div v-if="autoRefresh" class="flex items-center gap-2">
+                        <select v-model="refreshInterval" class="select select-bordered select-sm"
+                            @change="startAutoRefresh">
+                            <option value="3">3秒</option>
+                            <option value="5">5秒</option>
+                            <option value="10">10秒</option>
+                            <option value="30">30秒</option>
+                        </select>
                     </div>
                 </div>
             </div>
