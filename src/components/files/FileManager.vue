@@ -6,6 +6,7 @@ import { fileAPI } from '../../api/file_api'
 import RenameFileDialog from './RenameFileDialog.vue'
 import type { FileInfo, SortBy, SortOrder } from '../../models/FileInfo'
 import IconButton from '../IconButton.vue'
+import { useConfirm } from '../../composables/useConfirm'
 
 const props = defineProps<{
     initialPath: string
@@ -42,12 +43,17 @@ const renamingFile = ref<FileInfo | null>(null)
 const currentSortBy = ref<SortBy>(props.sortBy || 'name')
 const currentSortOrder = ref<SortOrder>(props.sortOrder || 'asc')
 
+// 添加选择相关的状态
+const selectedFiles = ref<Set<string>>(new Set())
+
 // Pagination
 const totalPages = computed(() => Math.ceil(files.value.length / itemsPerPage))
 const paginatedFiles = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage
     return files.value.slice(start, start + itemsPerPage)
 })
+
+const confirm = useConfirm()
 
 async function loadFiles(path: string) {
     try {
@@ -74,16 +80,6 @@ async function downloadFile(file: FileInfo) {
         document.body.removeChild(link)
     } catch (err) {
         error.value = '下载文件失败'
-    }
-}
-
-async function deleteFile(file: FileInfo) {
-    if (!confirm(`确定要删除 ${file.name} 吗？`)) return
-    try {
-        await fileAPI.deleteFile(file.path)
-        loadFiles(currentPath.value)
-    } catch (err) {
-        error.value = '删除文件失败'
     }
 }
 
@@ -203,8 +199,71 @@ function getSortIcon(field: SortBy) {
     return currentSortOrder.value === 'asc' ? 'ri-sort-asc' : 'ri-sort-desc'
 }
 
+// 删除处理函数
+async function handleDelete(file: FileInfo) {
+    if (await confirm.error('删除文件', `确定要删除 ${file.name} 吗？`, {
+        confirmText: '删除'
+    })) {
+        try {
+            await fileAPI.deleteFile(file.path)
+            loadFilesWithClear(currentPath.value)
+        } catch (err: any) {
+            error.value = err.response?.data?.error || err.message || '删除失败'
+        }
+    }
+}
+
+// 批量删除处理函数
+async function handleBatchDelete() {
+    const selectedFilesList = paginatedFiles.value.filter(f =>
+        selectedFiles.value.has(f.path)
+    )
+
+    if (await confirm.error('批量删除',
+        `确定要删除选中的 ${selectedFilesList.length} 个文件吗？`, {
+        confirmText: '删除'
+    })) {
+        try {
+            await fileAPI.batchDeleteFiles(selectedFilesList.map(f => f.path))
+            selectedFiles.value.clear()
+            loadFilesWithClear(currentPath.value)
+        } catch (err: any) {
+            error.value = err.response?.data?.error || err.message || '删除失败'
+        }
+    }
+}
+
+// 选择处理函数
+function toggleSelect(file: FileInfo) {
+    if (selectedFiles.value.has(file.path)) {
+        selectedFiles.value.delete(file.path)
+    } else {
+        selectedFiles.value.add(file.path)
+    }
+}
+
+// 全选/取消全选
+function toggleSelectAll() {
+    if (selectedFiles.value.size === paginatedFiles.value.length) {
+        selectedFiles.value.clear()
+    } else {
+        selectedFiles.value = new Set(paginatedFiles.value.map(f => f.path))
+    }
+}
+
+// 清除选择
+function clearSelection() {
+    selectedFiles.value.clear()
+}
+
+// 替换原来的 loadFiles 重新赋值代码
+async function loadFilesWithClear(path: string) {
+    selectedFiles.value.clear()
+    await loadFiles(path)
+}
+
 onMounted(() => {
-    loadFiles(props.initialPath)
+    loadFilesWithClear(props.initialPath)
 })
 </script>
 
@@ -245,6 +304,10 @@ onMounted(() => {
                     </IconButton>
                     <IconButton icon="ri-refresh-line" @click="loadFiles(currentPath)">
                         刷新
+                    </IconButton>
+                    <IconButton v-if="!readOnly && selectedFiles.size > 0" icon="ri-delete-bin-2-line" variant="error"
+                        @click="handleBatchDelete">
+                        删除选中 ({{ selectedFiles.size }})
                     </IconButton>
                 </div>
 
@@ -296,6 +359,12 @@ onMounted(() => {
             <table class="table table-zebra w-full">
                 <thead>
                     <tr>
+                        <th v-if="!readOnly" class="w-10">
+                            <input type="checkbox" class="checkbox checkbox-sm"
+                                :checked="selectedFiles.size === paginatedFiles.length"
+                                :indeterminate="selectedFiles.size > 0 && selectedFiles.size < paginatedFiles.length"
+                                @change="toggleSelectAll" />
+                        </th>
                         <th @click="handleSortClick('name')" class="cursor-pointer hover:bg-base-200">
                             <div class="flex items-center gap-2">
                                 名称
@@ -321,6 +390,10 @@ onMounted(() => {
                 </thead>
                 <tbody>
                     <tr v-for="file in paginatedFiles" :key="file.path">
+                        <td v-if="!readOnly">
+                            <input type="checkbox" class="checkbox checkbox-sm" :checked="selectedFiles.has(file.path)"
+                                @change="toggleSelect(file)" />
+                        </td>
                         <td class="flex items-center gap-2">
                             <i :class="getFileIcon(file)" class="text-lg"></i>
                             <span class="cursor-pointer" @click="openFile(file)">
@@ -335,7 +408,8 @@ onMounted(() => {
                             <IconButton v-if="!file.isDir" icon="ri-download-line" size="xs"
                                 @click="downloadFile(file)" />
                             <IconButton icon="ri-edit-line" size="xs" variant="warning" @click="renameFile(file)" />
-                            <IconButton icon="ri-delete-bin-line" size="xs" variant="error" @click="deleteFile(file)" />
+                            <IconButton icon="ri-delete-bin-line" size="xs" variant="error"
+                                @click="handleDelete(file)" />
                         </td>
                     </tr>
                 </tbody>

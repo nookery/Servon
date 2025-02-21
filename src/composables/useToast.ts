@@ -32,6 +32,10 @@ export function useToast() {
         /**
          * 显示普通提示
          */
+        info(message: string) {
+            toastState.add(message, 'info')
+        },
+
         show(message: string) {
             toastState.add(message, 'info')
         }

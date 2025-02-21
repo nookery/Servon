@@ -204,3 +204,29 @@ func (h *FileController) HandleRenameFile(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
+
+// HandleBatchDeleteFiles 处理批量删除文件的请求
+func (h *FileController) HandleBatchDeleteFiles(c *gin.Context) {
+	var req struct {
+		Paths []string `json:"paths"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
+		return
+	}
+
+	if len(req.Paths) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "未提供要删除的文件路径"})
+		return
+	}
+
+	// 批量删除文件
+	errors := h.BatchDeleteFiles(req.Paths)
+	if len(errors) > 0 {
+		// 如果有错误，返回第一个错误
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errors[0].Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}

@@ -58,3 +58,16 @@ func (h *DeployController) HandleDeleteDeployLog(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
+
+// DeployRepository 部署仓库
+func (h *DeployController) DeployRepository(c *gin.Context) {
+	repoID := c.Query("id")
+	if repoID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "需要提供仓库ID"})
+		return
+	}
+
+	h.DeployProject(repoID)
+
+	c.JSON(http.StatusOK, gin.H{"message": "部署仓库成功"})
+}

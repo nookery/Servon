@@ -46,4 +46,8 @@ export const fileAPI = {
     // 重命名文件
     renameFile: (oldPath: string, newPath: string) =>
         axios.post('/web_api/files/rename', { oldPath, newPath }),
+
+    // 批量删除文件
+    batchDeleteFiles: (paths: string[]) =>
+        axios.post('/web_api/files/batch-delete', { paths }),
 }

@@ -1,12 +1,5 @@
 import axios from 'axios'
-
-// 部署日志的数据接口定义
-export interface DeployLog {
-    id: string
-    timestamp: string
-    status: string
-    message: string
-}
+import type { DeployLog } from '../models/Deploy'
 
 // 获取所有部署日志
 export async function getDeployLogs() {
@@ -27,4 +20,12 @@ export async function deleteDeployLog(id: string) {
     await axios.delete('/web_api/deploy/log', {
         params: { id }
     })
+}
+
+// 部署仓库
+export async function deployRepository(id: string) {
+    const res = await axios.post('/web_api/deploy/repository', null, {
+        params: { id }
+    })
+    return res.data
 }

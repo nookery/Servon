@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@remixicon/vue": "^4.6.0",
     "@tailwindcss/vite": "^4.0.3",
     "axios": "^1.7.9",
     "monaco-editor": "^0.52.2",

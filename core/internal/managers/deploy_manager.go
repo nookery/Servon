@@ -71,7 +71,7 @@ func (m *DeployManager) handleGitPushEvent(event events.Event) {
 	}
 
 	// 执行部署操作
-	if err := m.deployProject(repo); err != nil {
+	if err := m.DeployProject(repo); err != nil {
 		m.logger.Printf("ERROR: Deploy failed for repository %s: %v", repo, err)
 
 		// 发布部署失败事件
@@ -190,8 +190,8 @@ func (m *DeployManager) createNewLogFile(repo string) (string, error) {
 	return logID, nil
 }
 
-// deployProject 执行实际的部署操作
-func (m *DeployManager) deployProject(repo string) error {
+// DeployProject 执行实际的部署操作
+func (m *DeployManager) DeployProject(repo string) error {
 	// 创建新的日志文件
 	logID, err := m.createNewLogFile(repo)
 	if err != nil {

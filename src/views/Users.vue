@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import ConfirmDialog from '../components/ConfirmDialog.vue'
 import PageContainer from '../layouts/PageContainer.vue'
 import { type User, type NewUser, getUsers, createUser, deleteUser } from '../api/users'
+import { useConfirm } from '../composables/useConfirm'
+import { useToast } from '../composables/useToast'
 
 const users = ref<User[]>([])
 const error = ref<string | null>(null)
@@ -11,8 +12,8 @@ const newUser = ref<NewUser>({
     password: ''
 })
 const showCreateModal = ref(false)
-const showDeleteConfirm = ref(false)
-const userToDelete = ref<string | null>(null)
+const confirm = useConfirm()
+const toast = useToast()
 
 // 加载用户列表
 async function loadUsers() {
@@ -37,28 +38,24 @@ async function handleCreateUser() {
         showCreateModal.value = false
         newUser.value = { username: '', password: '' }
         await loadUsers()
+        toast.success('创建用户成功')
     } catch (err: any) {
         error.value = '创建用户失败: ' + err.message
     }
 }
 
-// 修改删除用户的处理逻辑
-const confirmDelete = (username: string) => {
-    userToDelete.value = username
-    showDeleteConfirm.value = true
-}
-
-const handleDelete = async () => {
-    if (!userToDelete.value) return
-
-    try {
-        await deleteUser(userToDelete.value)
-        await loadUsers()
-    } catch (err: any) {
-        error.value = '删除用户失败: ' + err.message
-    } finally {
-        showDeleteConfirm.value = false
-        userToDelete.value = null
+// 删除用户
+async function handleDelete(username: string) {
+    if (await confirm.error('删除用户', `确定要删除用户 ${username} 吗？此操作不可撤销。`, {
+        confirmText: '删除'
+    })) {
+        try {
+            await deleteUser(username)
+            await loadUsers()
+            toast.success('删除用户成功')
+        } catch (err: any) {
+            error.value = '删除用户失败: ' + err.message
+        }
     }
 }
 
@@ -115,7 +112,7 @@ onMounted(() => {
                             </span>
                         </td>
                         <td>
-                            <button class="btn btn-error btn-sm" @click="confirmDelete(user.username)"
+                            <button class="btn btn-error btn-sm" @click="handleDelete(user.username)"
                                 :disabled="user.sudo">
                                 <i class="ri-delete-bin-line"></i>
                             </button>
@@ -151,9 +148,5 @@ onMounted(() => {
                 </form>
             </div>
         </dialog>
-
-        <!-- 确认删除对话框 -->
-        <ConfirmDialog v-model:show="showDeleteConfirm" title="确认删除" message="该操作无法撤销，是否确认删除此用户？" type="warning"
-            confirm-text="删除" @confirm="handleDelete" />
     </PageContainer>
 </template>

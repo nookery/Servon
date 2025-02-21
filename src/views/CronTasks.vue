@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import ConfirmDialog from '../components/ConfirmDialog.vue'
 import Alert from '../components/Alert.vue'
 import CronTaskForm from '../modules/CronTaskForm.vue'
 import PageContainer from '../layouts/PageContainer.vue'
 import { type CronTask, getTasks, createTask, updateTask, deleteTask, toggleTask } from '../api/cronTasks'
+import { useConfirm } from '../composables/useConfirm'
+import { useToast } from '../composables/useToast'
 
 const tasks = ref<CronTask[]>([])
 const showModal = ref(false)
@@ -20,9 +21,9 @@ const newTask = ref<CronTask>({
 
 const formError = ref('')
 const fieldErrors = ref<Record<string, string>>({})
-const showDeleteConfirm = ref(false)
-const taskToDelete = ref<number | null>(null)
 const error = ref<string | null>(null)
+const confirm = useConfirm()
+const toast = useToast()
 
 // 获取所有定时任务
 const fetchTasks = async () => {
@@ -45,8 +46,10 @@ const saveTask = async (task: CronTask) => {
     try {
         if (editingTask.value) {
             await updateTask(task)
+            toast.success('更新任务成功')
         } else {
             await createTask(task)
+            toast.success('创建任务成功')
         }
         showModal.value = false
         await fetchTasks()
@@ -56,23 +59,18 @@ const saveTask = async (task: CronTask) => {
     }
 }
 
-// 修改删除任务的处理逻辑
-const confirmDelete = (id: number) => {
-    taskToDelete.value = id
-    showDeleteConfirm.value = true
-}
-
-const handleDelete = async () => {
-    if (!taskToDelete.value) return
-
-    try {
-        await deleteTask(taskToDelete.value)
-        await fetchTasks()
-    } catch (err: any) {
-        error.value = '删除任务失败: ' + (err.response?.data?.error || err.message || '未知错误')
-    } finally {
-        showDeleteConfirm.value = false
-        taskToDelete.value = null
+// 删除任务
+const handleDelete = async (task: CronTask) => {
+    if (await confirm.error('删除任务', `确定要删除任务 "${task.name}" 吗？此操作不可撤销。`, {
+        confirmText: '删除'
+    })) {
+        try {
+            await deleteTask(task.id)
+            await fetchTasks()
+            toast.success('删除任务成功')
+        } catch (err: any) {
+            error.value = '删除任务失败: ' + (err.response?.data?.error || err.message || '未知错误')
+        }
     }
 }
 
@@ -81,6 +79,7 @@ const handleToggleTask = async (id: number) => {
     try {
         await toggleTask(id)
         await fetchTasks()
+        toast.success('切换任务状态成功')
     } catch (err: any) {
         error.value = '切换任务状态失败: ' + (err.response?.data?.error || err.message || '未知错误')
     }
@@ -119,7 +118,7 @@ onMounted(fetchTasks)
     <PageContainer title="定时任务管理">
         <template #header>
             <div class="flex justify-between items-center mb-6">
-                <button class="btn btn-primary btn-md">
+                <button class="btn btn-primary btn-md" @click="showModal = true">
                     <i class="ri-add-line"></i>新建任务
                 </button>
             </div>
@@ -169,7 +168,7 @@ onMounted(fetchTasks)
                                 <button class="btn btn-ghost btn-sm" @click="editTask(task)">
                                     <i class="ri-edit-line text-primary"></i>
                                 </button>
-                                <button class="btn btn-ghost btn-sm" @click="confirmDelete(task.id)">
+                                <button class="btn btn-ghost btn-sm" @click="handleDelete(task)">
                                     <i class="ri-delete-bin-line text-error"></i>
                                 </button>
                             </div>
@@ -192,9 +191,5 @@ onMounted(fetchTasks)
                 <button @click="showModal = false">关闭</button>
             </form>
         </dialog>
-
-        <!-- 使用确认对话框组件 -->
-        <ConfirmDialog v-model:show="showDeleteConfirm" title="确认删除" message="该操作无法撤销，是否确认删除此任务？" type="warning"
-            confirm-text="删除" @confirm="handleDelete" />
     </PageContainer>
 </template>
