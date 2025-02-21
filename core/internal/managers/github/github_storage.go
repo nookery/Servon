@@ -242,7 +242,7 @@ func SaveInstallationConfig(installation *Installation) error {
 }
 
 // SaveAppConfig 保存 GitHub App 配置到磁盘
-func SaveAppConfig(config *AppConfig) error {
+func SaveAppConfig(config *GitHubConfig) error {
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return fmt.Errorf("创建配置目录失败: %v", err)
 	}
@@ -262,7 +262,7 @@ func SaveAppConfig(config *AppConfig) error {
 }
 
 // LoadAppConfig 从磁盘加载 GitHub App 配置
-func LoadAppConfig() (*AppConfig, error) {
+func LoadAppConfig() (*GitHubConfig, error) {
 	configPath := filepath.Join(configDir, "app_config.json")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
@@ -272,7 +272,7 @@ func LoadAppConfig() (*AppConfig, error) {
 		return nil, fmt.Errorf("读取配置文件失败: %v", err)
 	}
 
-	var config AppConfig
+	var config GitHubConfig
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("解析配置文件失败: %v", err)
 	}

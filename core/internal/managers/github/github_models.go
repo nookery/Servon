@@ -52,14 +52,7 @@ type GitHubConfig struct {
 	GitHubAppPrivateKey string                  `json:"github_app_private_key"` // GitHub App 的私钥
 	GitHubWebhookSecret string                  `json:"github_webhook_secret"`  // Webhook 的密钥
 	Installations       map[int64]*Installation `json:"installations"`          // 所有安装实例的映射表
-}
-
-// AppConfig 存储 GitHub App 的基本配置
-type AppConfig struct {
-	AppID      int64  `json:"app_id"`      // GitHub App 的ID
-	PrivateKey string `json:"private_key"` // GitHub App 的私钥
-	WebhookKey string `json:"webhook_key"` // Webhook 密钥
-	UpdatedAt  string `json:"updated_at"`  // 最后更新时间
+	UpdatedAt           string                  `json:"updated_at"`             // 最后更新时间
 }
 
 // Installation 表示 GitHub App 的安装信息
