@@ -14,15 +14,24 @@ import (
 )
 
 // ProcessWebhookEvent 处理 GitHub webhook 请求
-func (g *GitHubIntegration) ProcessWebhookEvent(c *gin.Context, config *GitHubConfig, eventBus *events.EventBus) error {
+func (g *GitHubIntegration) ProcessWebhookEvent(c *gin.Context) error {
 	// 首先读取 payload
 	payload, err := c.GetRawData()
 	if err != nil {
 		return fmt.Errorf("failed to read payload: %v", err)
 	}
 
+	// 从磁盘获取 App 配置
+	appConfig, err := LoadAppConfig()
+	if err != nil {
+		return fmt.Errorf("加载 GitHub App 配置失败: %v", err)
+	}
+	if appConfig == nil {
+		return fmt.Errorf("GitHub App 配置不存在")
+	}
+
 	// 验证 webhook
-	if err := validateWebhook(c, config.GitHubWebhookSecret, payload); err != nil {
+	if err := validateWebhook(c, appConfig.WebhookKey, payload); err != nil {
 		return fmt.Errorf("webhook validation failed: %v", err)
 	}
 
@@ -35,7 +44,7 @@ func (g *GitHubIntegration) ProcessWebhookEvent(c *gin.Context, config *GitHubCo
 	}
 
 	// 处理特定事件
-	return g.handleEvent(event, payload, eventBus)
+	return g.handleEvent(event, payload, g.eventBus)
 }
 
 func validateWebhook(c *gin.Context, webhookSecret string, payload []byte) error {
@@ -60,6 +69,7 @@ func (g *GitHubIntegration) handleEvent(event string, payload []byte, eventBus *
 		return g.handleCheckSuiteEvent(payload)
 	default:
 		// 记录未处理的事件类型
+		g.logger.LogInfof("未处理的事件类型: %s", event)
 		return nil
 	}
 }
@@ -97,23 +107,10 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	installation.AccountAvatarURL = installation.Account.AvatarURL
 	installation.Repositories = event.Repositories
 
-	// 保存配置信息
+	// 保存安装数据
 	if err := SaveInstallationConfig(installation); err != nil {
 		g.logger.LogErrorf("保存安装配置失败: %v", err)
 		return fmt.Errorf("failed to save installation config: %v", err)
-	}
-
-	// 记录安装事件数据
-	installationData, err := json.MarshalIndent(installation, "", "  ")
-	if err != nil {
-		g.logger.LogErrorf("序列化安装数据失败: %v", err)
-		return fmt.Errorf("failed to marshal installation data: %v", err)
-	}
-
-	// 保存安装数据
-	if err := SaveInstallationData(installation.ID, installationData); err != nil {
-		g.logger.LogErrorf("保存安装数据失败: %v", err)
-		return fmt.Errorf("failed to save installation data: %v", err)
 	}
 
 	// 使用 logger 记录安装信息
@@ -121,9 +118,6 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 		installation.ID,
 		installation.AccountLogin,
 	)
-
-	// 更新配置
-	g.config.Installations[installation.ID] = installation
 
 	return nil
 }

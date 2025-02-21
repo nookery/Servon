@@ -215,24 +215,53 @@ func (m *DeployManager) DeployProject(repo string) error {
 	return nil
 }
 
-// gitClone 从仓库拉取代码
-func (m *DeployManager) gitClone(repo, workDir string) error {
-	m.logUtil.Log(utils.LogLevelInfo, "开始克隆仓库: %s 到 %s", repo, workDir)
-
-	// 这里可以根据需要添加认证信息
-	auth := &githttp.BasicAuth{
-		Username: "username", // 可以从配置中读取
-		Password: "password",
+// getGitHubAuth 获取GitHub认证信息
+func (m *DeployManager) getGitHubAuth(repo string) (*githttp.BasicAuth, error) {
+	if m.github == nil {
+		return nil, fmt.Errorf("GitHub集成未初始化")
 	}
 
-	err := m.gitUtil.CloneRepo(repo, "main", workDir, auth)
+	token, err := m.github.GetInstallationToken(repo)
 	if err != nil {
-		m.logUtil.Log(utils.LogLevelError, "克隆仓库失败: %v", err)
-		return err
+		return nil, fmt.Errorf("获取GitHub认证令牌失败: %v", err)
 	}
 
-	m.logUtil.Log(utils.LogLevelInfo, "仓库克隆成功: %s", repo)
-	return nil
+	return &githttp.BasicAuth{
+		Username: "x-access-token",
+		Password: token,
+	}, nil
+}
+
+// gitClone 从仓库拉取代码（带重试机制）
+func (m *DeployManager) gitClone(repo, workDir string) error {
+	const maxRetries = 3
+	var lastErr error
+
+	for i := 0; i < maxRetries; i++ {
+		if i > 0 {
+			m.logUtil.Log(utils.LogLevelInfo, "第 %d 次重试克隆仓库...", i+1)
+			time.Sleep(time.Second * time.Duration(i+1)) // 递增重试延迟
+		}
+
+		// 获取认证信息
+		auth, err := m.getGitHubAuth(repo)
+		if err != nil {
+			lastErr = fmt.Errorf("获取GitHub认证信息失败: %v", err)
+			continue
+		}
+
+		// 尝试克隆
+		err = m.gitUtil.CloneRepo(repo, "main", workDir, auth)
+		if err == nil {
+			m.logUtil.Log(utils.LogLevelInfo, "仓库克隆成功: %s", repo)
+			return nil
+		}
+
+		lastErr = err
+		m.logUtil.Log(utils.LogLevelError, "克隆失败: %v", err)
+	}
+
+	return fmt.Errorf("克隆仓库失败（已重试%d次）: %v", maxRetries, lastErr)
 }
 
 // buildProject 构建项目

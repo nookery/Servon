@@ -13,16 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"servon/core/internal/utils"
-)
-
-var printer = utils.DefaultPrinter
-
-const (
-	WebhookDir      = "/data/github/webhook"
-	installationDir = "/data/github/installations" // GitHub安装数据目录
-	configDir       = "/data/github/config"        // GitHub安装配置目录
 )
 
 // SaveWebhookPayload 保存 webhook 事件数据到指定目录
@@ -249,4 +239,43 @@ func SaveInstallationConfig(installation *Installation) error {
 	}
 
 	return nil
+}
+
+// SaveAppConfig 保存 GitHub App 配置到磁盘
+func SaveAppConfig(config *AppConfig) error {
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("创建配置目录失败: %v", err)
+	}
+
+	config.UpdatedAt = time.Now().Format(time.RFC3339)
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("序列化配置失败: %v", err)
+	}
+
+	configPath := filepath.Join(configDir, "app_config.json")
+	if err := os.WriteFile(configPath, data, 0600); err != nil { // 使用更严格的权限
+		return fmt.Errorf("写入配置文件失败: %v", err)
+	}
+
+	return nil
+}
+
+// LoadAppConfig 从磁盘加载 GitHub App 配置
+func LoadAppConfig() (*AppConfig, error) {
+	configPath := filepath.Join(configDir, "app_config.json")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil // 配置文件不存在返回 nil
+		}
+		return nil, fmt.Errorf("读取配置文件失败: %v", err)
+	}
+
+	var config AppConfig
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil, fmt.Errorf("解析配置文件失败: %v", err)
+	}
+
+	return &config, nil
 }
