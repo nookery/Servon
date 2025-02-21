@@ -256,11 +256,6 @@ function toggleSelectAll() {
     }
 }
 
-// 清除选择
-function clearSelection() {
-    selectedFiles.value.clear()
-}
-
 // 替换原来的 loadFiles 重新赋值代码
 async function loadFilesWithClear(path: string) {
     selectedFiles.value.clear()

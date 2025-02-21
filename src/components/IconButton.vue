@@ -2,53 +2,54 @@
 import { computed } from 'vue'
 
 interface Props {
-    icon?: string                    // Remix icon 类名
-    title?: string                  // 按钮提示文字
-    variant?: 'default' | 'ghost' | 'primary' | 'secondary' | 'accent' | 'info' | 'success' | 'error' | 'warning' | 'link'   // 按钮样式变体
-    size?: 'xs' | 'sm' | 'md' | 'lg'      // 按钮大小
-    circle?: boolean                // 是否为圆形按钮
-    active?: boolean                // 是否激活状态
+    icon?: string                    // Remix icon class name
+    title?: string                   // Button tooltip text
+    variant?: 'default' | 'ghost' | 'primary' | 'secondary' | 'accent' | 'info' | 'success' | 'error' | 'warning' | 'link'   // Button style variant
+    size?: 'xs' | 'sm' | 'md' | 'lg' // Button size
+    circle?: boolean                 // Whether it's a circular button
+    active?: boolean                 // Whether in active state
+    disabled?: boolean              // Whether button is disabled
+    loading?: boolean               // Loading state
+    customClass?: string           // Additional custom classes
 }
 
 const props = withDefaults(defineProps<Props>(), {
     variant: 'default',
     size: 'md',
     circle: false,
-    active: false
+    active: false,
+    disabled: false,
+    loading: false
 })
 
-// 计算按钮的 class
+// Compute button classes
 const buttonClass = computed(() => {
-    const classes = ['btn']
+    const classes = ['btn', 'transition-all', 'duration-200']
 
-    // 变体样式
-    if (props.variant === 'ghost') {
-        classes.push('btn-ghost')
-    } else if (props.variant === 'primary') {
-        classes.push('btn-primary')
-    } else if (props.variant === 'error') {
-        classes.push('btn-error')
-    } else if (props.variant === 'warning') {
-        classes.push('btn-warning')
+    // Add variant classes
+    if (props.variant !== 'default') {
+        classes.push(`btn-${props.variant}`)
     }
 
-    // 尺寸
-    if (props.size === 'xs') {
-        classes.push('btn-xs')
-    } else if (props.size === 'sm') {
-        classes.push('btn-sm')
-    } else if (props.size === 'lg') {
-        classes.push('btn-lg')
+    // Add size class
+    if (props.size !== 'md') {
+        classes.push(`btn-${props.size}`)
     }
 
-    // 圆形
-    if (props.circle) {
-        classes.push('btn-circle')
+    // Add states
+    if (props.circle) classes.push('btn-circle')
+    if (props.active) classes.push('btn-active')
+    if (props.disabled) classes.push('btn-disabled')
+    if (props.loading) classes.push('loading')
+
+    // Add hover effects (only when not disabled or loading)
+    if (!props.disabled && !props.loading) {
+        classes.push('hover:scale-105', 'hover:shadow-md')
     }
 
-    // 激活状态
-    if (props.active) {
-        classes.push('btn-active')
+    // Add custom classes
+    if (props.customClass) {
+        classes.push(props.customClass)
     }
 
     return classes.join(' ')
@@ -56,19 +57,8 @@ const buttonClass = computed(() => {
 </script>
 
 <template>
-    <button class="btn btn-sm gap-1 transition-all duration-200 hover:scale-105 hover:shadow-md" :class="{
-        'btn-primary': variant === 'primary',
-        'btn-secondary': variant === 'secondary',
-        'btn-accent': variant === 'accent',
-        'btn-info': variant === 'info',
-        'btn-success': variant === 'success',
-        'btn-warning': variant === 'warning',
-        'btn-error': variant === 'error',
-        'btn-ghost': variant === 'ghost',
-        'btn-link': variant === 'link',
-        [`btn-${size}`]: size
-    }" :title="title" v-bind="$attrs">
-        <i :class="[icon, 'mr-1']"></i>
+    <button :class="buttonClass" :title="title" :disabled="disabled" v-bind="$attrs">
+        <i v-if="icon" :class="[icon, loading ? 'hidden' : 'mr-1']"></i>
         <slot></slot>
     </button>
 </template>
