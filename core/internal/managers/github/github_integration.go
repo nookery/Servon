@@ -188,7 +188,7 @@ func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]GitHubRe
 				Name:     repoName.Name,
 				FullName: fmt.Sprintf("%s/%s", installation.AccountLogin, repoName.Name),
 				Private:  repoName.Private,
-				HTMLURL:  fmt.Sprintf("https://github.com/%s/%s", installation.AccountLogin, repoName.FullName),
+				HTMLURL:  fmt.Sprintf("https://github.com/%s", repoName.FullName),
 			}
 			repos = append(repos, repo)
 		}
