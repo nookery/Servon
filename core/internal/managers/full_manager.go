@@ -3,6 +3,7 @@ package managers
 import (
 	"fmt"
 	"servon/core/internal/events"
+	"servon/core/internal/managers/github"
 )
 
 type FullManager struct {
@@ -25,10 +26,12 @@ type FullManager struct {
 	*TaskManager
 	*ProcessManager
 	*DpkgManager
+	*github.GitHubIntegration
 }
 
 func NewManager(eventBus *events.EventBus) *FullManager {
-	deployManager, err := NewDeployManager(eventBus)
+	githubIntegration := github.NewGitHubIntegration(eventBus)
+	deployManager, err := NewDeployManager(eventBus, githubIntegration)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create deploy manager: %v", err))
 	}
@@ -52,6 +55,7 @@ func NewManager(eventBus *events.EventBus) *FullManager {
 		TaskManager:            DefaultTaskManager,
 		UserManager:            NewUserManager(),
 		ProcessManager:         DefaultProcessManager,
+		GitHubIntegration:      githubIntegration,
 	}
 
 	return core

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"servon/core/internal/events"
-	"servon/core/internal/integrations"
 	"servon/core/internal/managers"
 	"servon/core/internal/providers"
 )
@@ -26,8 +25,7 @@ func New() *App {
 	}
 
 	manager := managers.NewManager(eventBus)
-	integrations := integrations.NewFullIntegration(eventBus)
-	webProvider := providers.NewWebProvider(manager, integrations, DefaultHost, DefaultPort)
+	webProvider := providers.NewWebProvider(manager, DefaultHost, DefaultPort)
 
 	core := &App{
 		eventBus:        eventBus,

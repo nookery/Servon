@@ -1,13 +1,13 @@
 package routers
 
 import (
-	"servon/core/internal/integrations/github"
+	"servon/core/internal/managers"
 	"servon/core/internal/web/controllers"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupGitHubRouter(r *gin.RouterGroup, fullIntegration *github.GitHubIntegration) {
+func SetupGitHubRouter(r *gin.RouterGroup, fullIntegration *managers.FullManager) {
 	controller := controllers.NewGitHubController(fullIntegration)
 
 	group := r.Group("/github")

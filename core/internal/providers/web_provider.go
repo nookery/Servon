@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"servon/core/internal/integrations"
 	"servon/core/internal/managers"
 	"servon/core/internal/models"
 	"servon/core/internal/utils"
@@ -16,7 +15,7 @@ type WebProvider struct {
 	config *models.WebConfig
 }
 
-func NewWebProvider(manager *managers.FullManager, fullIntegration *integrations.FullIntegration, host string, port int) *WebProvider {
+func NewWebProvider(manager *managers.FullManager, host string, port int) *WebProvider {
 	server := utils.NewWebServer()
 	config := &models.WebConfig{
 		Host: host,
@@ -28,7 +27,7 @@ func NewWebProvider(manager *managers.FullManager, fullIntegration *integrations
 		config: config,
 	}
 
-	routers.Setup(manager, fullIntegration, server.Engine, true)
+	routers.Setup(manager, server.Engine, true)
 
 	return webProvider
 }

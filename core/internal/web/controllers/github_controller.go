@@ -2,18 +2,18 @@ package controllers
 
 import (
 	"fmt"
-	"net/http"
-	"servon/core/internal/integrations/github"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"servon/core/internal/managers"
+	"servon/core/internal/managers/github"
 )
 
 type GitHubController struct {
-	*github.GitHubIntegration
+	*managers.FullManager
 }
 
-func NewGitHubController(integrations *github.GitHubIntegration) *GitHubController {
-	return &GitHubController{GitHubIntegration: integrations}
+func NewGitHubController(integrations *managers.FullManager) *GitHubController {
+	return &GitHubController{FullManager: integrations}
 }
 
 // HandleGitHubSetup handles GitHub App Manifest flow setup request

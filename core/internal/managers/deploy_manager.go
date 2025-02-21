@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"servon/core/internal/events"
+	"servon/core/internal/managers/github"
 	"servon/core/internal/models"
 	"servon/core/internal/utils"
 
@@ -30,9 +31,10 @@ type DeployManager struct {
 	gitUtil *utils.GitUtil
 	// logDir 指定部署日志文件的存储目录
 	logDir string
+	github *github.GitHubIntegration
 }
 
-func NewDeployManager(eventBus *events.EventBus) (*DeployManager, error) {
+func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegration) (*DeployManager, error) {
 	logDir := "/data/deploy"
 	logUtil, err := utils.NewLogUtil(logDir)
 	if err != nil {
@@ -44,6 +46,7 @@ func NewDeployManager(eventBus *events.EventBus) (*DeployManager, error) {
 		logUtil:  logUtil,
 		gitUtil:  utils.NewGitUtil(),
 		logDir:   logDir,
+		github:   github,
 	}
 
 	// 订阅Git Push事件

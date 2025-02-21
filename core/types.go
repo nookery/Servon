@@ -2,8 +2,8 @@ package core
 
 import (
 	"servon/core/internal/contract"
-	"servon/core/internal/integrations/github"
 	"servon/core/internal/managers"
+	"servon/core/internal/managers/github"
 	"servon/core/internal/models"
 	"servon/core/internal/utils"
 )

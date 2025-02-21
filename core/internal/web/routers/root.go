@@ -1,7 +1,6 @@
 package routers
 
 import (
-	"servon/core/internal/integrations"
 	"servon/core/internal/managers"
 	"servon/core/internal/utils"
 
@@ -10,13 +9,13 @@ import (
 
 var printer = utils.DefaultPrinter
 
-func Setup(manager *managers.FullManager, fullIntegration *integrations.FullIntegration, r *gin.Engine, isDev bool) {
+func Setup(manager *managers.FullManager, r *gin.Engine, isDev bool) {
 	api := r.Group("/web_api")
 
 	SetupSoftRouter(api, manager)
 	SetupProcessRouter(api, manager)
 	SetupInfoRouter(api, manager)
-	SetupGitHubRouter(api, fullIntegration.GitHubIntegration)
+	SetupGitHubRouter(api, manager)
 	SetupTaskRouter(api, manager)
 	SetupCronRouter(api, manager)
 	SetupFileRouter(api, manager)
@@ -24,6 +23,6 @@ func Setup(manager *managers.FullManager, fullIntegration *integrations.FullInte
 	SetupLogsRouter(api, manager)
 	SetupUserRouter(api, manager)
 	SetupDeployRouter(api, manager)
-	SetupIntegrationRouter(api, fullIntegration.GitHubIntegration)
+	SetupIntegrationRouter(api, manager)
 	SetupUIRoutes(r)
 }
