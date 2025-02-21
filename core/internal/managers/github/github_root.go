@@ -10,6 +10,4 @@ const (
 	timeFormat      = "2006-01-02"                 // 日期格式
 )
 
-var githubLogger = DefaultGitHubLogger
-var printer = utils.DefaultPrinter
-var DefaultGitHubLogger = NewGitHubLogger()
+var logger = utils.NewLogUtil(githubLogDir)

@@ -1,7 +1,11 @@
 FROM ubuntu:24.04
 
 RUN apt-get update && apt-get install -y \
-    nodejs npm zsh curl git golang
+    nodejs npm zsh curl git golang tzdata
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 设置 Go 的工作目录
 ENV GOPATH /go

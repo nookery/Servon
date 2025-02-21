@@ -47,13 +47,13 @@ func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegratio
 func (m *DeployManager) handleGitPushEvent(event events.Event) {
 	deployData, ok := event.Data.(map[string]interface{})
 	if !ok {
-		m.logger.Error("无效的部署数据格式")
+		m.logger.ErrorMessage("无效的部署数据格式")
 		return
 	}
 
 	repo, ok := deployData["repository"].(string)
 	if !ok {
-		m.logger.Error("缺少仓库信息")
+		m.logger.ErrorMessage("缺少仓库信息")
 		return
 	}
 

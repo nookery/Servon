@@ -6,21 +6,25 @@ import (
 
 const deployLogDir = "/data/deploy"
 
-var printer = utils.DefaultPrinter
+var logger = utils.DefaultLogUtil
+var shell = utils.DefaultShellUtil
 
-var PrintInfo = printer.PrintInfo
-var PrintErrorf = printer.PrintErrorf
-var PrintInfof = printer.PrintInfof
-var PrintSuccessf = printer.PrintSuccessf
-var PrintSuccess = printer.PrintSuccess
-var PrintError = printer.PrintError
-var PrintList = printer.PrintList
-var PrintTitle = printer.PrintTitle
-var PrintCommandOutput = printer.PrintCommandOutput
-var PrintAndReturnError = printer.PrintAndReturnError
-var PrintAlert = printer.PrintAlert
-var PrintLn = printer.PrintLn
-var PrintErrorMessage = printer.PrintErrorMessage
-var RunShell = printer.RunShell
-var RunShellWithSudo = printer.RunShellWithSudo
-var RunShellWithOutput = printer.RunShellWithOutput
+var PrintInfo = logger.Infof
+var PrintErrorf = logger.Errorf
+var PrintInfof = logger.Infof
+var PrintSuccessf = logger.Successf
+var PrintSuccess = logger.Success
+var PrintError = logger.Error
+var PrintList = logger.List
+var PrintTitle = logger.Title
+var PrintListWithTitle = logger.ListWithTitle
+var PrintCommandOutput = shell.ExecuteWithOutput
+var PrintAndReturnError = logger.LogAndReturnError
+var PrintAndReturnErrorf = logger.LogAndReturnErrorf
+var PrintAlert = logger.Alert
+var PrintLn = logger.EmptyLine
+var PrintErrorMessage = logger.ErrorMessage
+
+var RunShell = shell.Execute
+var RunShellWithSudo = shell.ExecuteWithSudo
+var RunShellWithOutput = shell.RunShellWithOutput

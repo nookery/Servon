@@ -32,8 +32,8 @@ func (n *NodeJSPlugin) Install() error {
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		n.PrintInfo("使用 APT 包管理器安装...")
-		n.PrintInfo("添加 NodeJS 官方源...")
+		n.Infof("使用 APT 包管理器安装...")
+		n.Infof("添加 NodeJS 官方源...")
 
 		// 下载并安装 NodeSource 设置脚本
 		if err := n.RunShell("sh", "-c", "curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -"); err != nil {
@@ -47,23 +47,20 @@ func (n *NodeJSPlugin) Install() error {
 
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 NodeJS"
-		n.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return n.LogAndReturnErrorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		n.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return n.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	// 验证安装结果
 	if !n.IsInstalled("nodejs") {
 		errMsg := "NodeJS 安装验证失败，未检测到已安装的包"
-		n.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return n.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	n.PrintSuccess("NodeJS 安装完成")
+	n.Success("NodeJS 安装完成")
 	return nil
 }
 
@@ -91,7 +88,7 @@ func (n *NodeJSPlugin) Uninstall() error {
 		return fmt.Errorf("清理依赖失败:\n%s", err)
 	}
 
-	n.PrintSuccess("NodeJS 卸载完成")
+	n.Success("NodeJS 卸载完成")
 	return nil
 }
 
@@ -121,11 +118,11 @@ func (n *NodeJSPlugin) GetInfo() core.SoftwareInfo {
 }
 
 func (n *NodeJSPlugin) Start() error {
-	n.PrintInfof("NodeJS 是运行时环境，无需启动服务")
+	n.Infof("NodeJS 是运行时环境，无需启动服务")
 	return nil
 }
 
 func (n *NodeJSPlugin) Stop() error {
-	n.PrintInfof("NodeJS 是运行时环境，无需停止服务")
+	n.Infof("NodeJS 是运行时环境，无需停止服务")
 	return nil
 }

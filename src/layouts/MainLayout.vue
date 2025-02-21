@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import Header from './Header.vue'
 import Sidebar from './Sidebar.vue'
-import LogViewer from '../modules/LogViewer.vue'
-import { useLogViewerStore } from '../stores/logViewer'
 import { useLayoutStore } from '../stores/layout'
 
 const layoutStore = useLayoutStore()
-const logViewerStore = useLogViewerStore()
 </script>
 
 <template>
@@ -33,14 +30,8 @@ const logViewerStore = useLogViewerStore()
                 <div :class="[
                     'flex-1 p-0 transition-all duration-300 overflow-auto h-[calc(100vh-4rem)]',
                     layoutStore.collapsed ? 'ml-16' : 'ml-40',
-                    logViewerStore.isVisible ? 'w-2/3' : 'w-full'
                 ]">
                     <slot></slot>
-                </div>
-
-                <div class="w-1/3 h-[calc(100vh-4rem)] overflow-hidden" v-if="logViewerStore.isVisible">
-                    <!-- Log Viewer -->
-                    <LogViewer :visible="logViewerStore.isVisible" />
                 </div>
             </div>
         </div>

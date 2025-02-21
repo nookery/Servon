@@ -12,7 +12,6 @@ func SetupIntegrationRouter(r *gin.RouterGroup, fullIntegration *managers.FullMa
 
 	api := r.Group("/integrations")
 	api.GET("/github/repos", controller.HandleListGitHubRepos)
-	api.GET("/github/logs", controller.HandleGetGitHubLogs)
 	// api.GET("/", w.Handler.HandleIntegrationList)
 	// api.GET("", w.Handler.HandleIntegrationList)
 }

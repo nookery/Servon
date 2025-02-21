@@ -5,7 +5,7 @@ import (
 )
 
 type UtilProvider struct {
-	*utils.Printer
+	*utils.LogUtil
 	*utils.CommandUtil
 	*utils.FileUtil
 	*utils.DevUtil
@@ -14,7 +14,7 @@ type UtilProvider struct {
 
 func NewUtilProvider() *UtilProvider {
 	return &UtilProvider{
-		Printer:     utils.DefaultPrinter,
+		LogUtil:     utils.DefaultLogUtil,
 		CommandUtil: utils.DefaultCommandUtil,
 		FileUtil:    utils.DefaultFileUtil,
 		DevUtil:     utils.DefaultDevUtil,

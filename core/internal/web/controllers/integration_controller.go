@@ -33,16 +33,3 @@ func (h *IntegrationController) HandleListGitHubRepos(c *gin.Context) {
 
 	c.JSON(http.StatusOK, repos)
 }
-
-// HandleGetGitHubLogs 获取GitHub集成日志
-func (h *IntegrationController) HandleGetGitHubLogs(c *gin.Context) {
-	logs, err := h.GetLogs()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("获取GitHub日志失败: %v", err),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, logs)
-}

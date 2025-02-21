@@ -34,21 +34,21 @@ func SaveWebhookPayload(dataDir string, eventType, eventID string, payload []byt
 // GetWebhooks 从指定目录获取所有保存的 webhook 事件数据
 // 返回 WebhookPayload 数组，包含所有成功解析的事件数据
 func GetWebhooks(dataDir string) ([]WebhookPayload, error) {
-	printer.PrintInfof("GetWebhooks: %s", dataDir)
+	logger.Infof("GetWebhooks: %s", dataDir)
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		printer.PrintErrorf("failed to create webhooks directory: %v", err)
+		logger.Errorf("failed to create webhooks directory: %v", err)
 		return nil, fmt.Errorf("failed to create webhooks directory: %v", err)
 	}
 
 	files, err := os.ReadDir(dataDir)
 	if err != nil {
-		printer.PrintErrorf("failed to read webhooks directory: %v", err)
+		logger.Errorf("failed to read webhooks directory: %v", err)
 		return nil, fmt.Errorf("failed to read webhooks directory: %v", err)
 	}
 
 	var webhooks []WebhookPayload
 	for _, file := range files {
-		printer.PrintInfof("GetWebhooks: %s", file.Name())
+		logger.Infof("GetWebhooks: %s", file.Name())
 		if filepath.Ext(file.Name()) != ".json" {
 			continue
 		}
@@ -66,7 +66,7 @@ func GetWebhooks(dataDir string) ([]WebhookPayload, error) {
 		webhooks = append(webhooks, webhook)
 	}
 
-	printer.PrintInfof("GetWebhooks: %d", len(webhooks))
+	logger.Infof("GetWebhooks: %d", len(webhooks))
 	return webhooks, nil
 }
 
@@ -83,7 +83,7 @@ func readWebhookFile(dataDir, filename string) (WebhookPayload, error) {
 	secondUnderscore := strings.Index(basename[firstUnderscore+1:], "_") + firstUnderscore + 1
 
 	if firstUnderscore == -1 || secondUnderscore == -1 {
-		printer.PrintErrorf("readWebhookFile: invalid filename format: %s", filename)
+		logger.Errorf("readWebhookFile: invalid filename format: %s", filename)
 		return webhook, fmt.Errorf("invalid filename format")
 	}
 
@@ -94,13 +94,13 @@ func readWebhookFile(dataDir, filename string) (WebhookPayload, error) {
 
 	data, err := os.ReadFile(filepath.Join(dataDir, filename))
 	if err != nil {
-		printer.PrintErrorf("readWebhookFile: failed to read file: %v", err)
+		logger.Errorf("readWebhookFile: failed to read file: %v", err)
 		return webhook, err
 	}
 
 	var payload interface{}
 	if err := json.Unmarshal(data, &payload); err != nil {
-		printer.PrintErrorf("readWebhookFile: failed to unmarshal file: %v", err)
+		logger.Errorf("readWebhookFile: failed to unmarshal file: %v", err)
 		return webhook, err
 	}
 
@@ -116,7 +116,7 @@ func readWebhookFile(dataDir, filename string) (WebhookPayload, error) {
 func parseTimestamp(ts string) int64 {
 	timestamp, err := strconv.ParseInt(ts, 10, 64)
 	if err != nil {
-		printer.PrintErrorf("parseTimestamp: failed to parse timestamp: %v", err)
+		logger.Errorf("parseTimestamp: failed to parse timestamp: %v", err)
 		return 0
 	}
 	return timestamp
@@ -145,13 +145,13 @@ func GetInstallationConfig() (map[int64]*Installation, error) {
 
 		data, err := os.ReadFile(filepath.Join(configDir, file.Name()))
 		if err != nil {
-			printer.PrintErrorf("读取配置文件失败 %s: %v", file.Name(), err)
+			logger.Errorf("读取配置文件失败 %s: %v", file.Name(), err)
 			continue
 		}
 
 		var config InstallationConfig
 		if err := json.Unmarshal(data, &config); err != nil {
-			printer.PrintErrorf("解析配置文件失败 %s: %v", file.Name(), err)
+			logger.Errorf("解析配置文件失败 %s: %v", file.Name(), err)
 			continue
 		}
 

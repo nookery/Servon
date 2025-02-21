@@ -138,6 +138,5 @@ func (c *CommandUtil) CheckCommandArgs(cmd *cobra.Command, args []string) error 
 		return fmt.Errorf("参数验证失败: %v", err)
 	}
 
-	printer.PrintInfo("参数验证成功")
 	return nil
 }

@@ -51,7 +51,7 @@ func NewGitHubRunner(app *core.App) core.SuperSoft {
 // Uninstall 卸载 GitHub Runner
 func (g *GitHubRunner) Uninstall() error {
 	// 运行卸载脚本
-	g.PrintInfo("正在卸载 GitHub Runner...")
+	g.Infof("正在卸载 GitHub Runner...")
 	if _, err := os.Stat(g.targetDir + "/config.sh"); !os.IsNotExist(err) {
 		err = g.RunShell(g.targetDir+"/config.sh", "remove", "--unattended")
 		if err != nil {
@@ -64,18 +64,18 @@ func (g *GitHubRunner) Uninstall() error {
 		return fmt.Errorf("删除安装目录失败: %s", err)
 	}
 
-	g.PrintSuccess("GitHub Runner 卸载完成")
+	g.Success("GitHub Runner 卸载完成")
 
 	return nil
 }
 
 func (g *GitHubRunner) GetStatus() (map[string]string, error) {
-	g.PrintInfo("获取 GitHub Runner 状态...")
+	g.Infof("获取 GitHub Runner 状态...")
 	status := "not_installed"
 
 	// 检查安装目录是否存在
 	if _, err := os.Stat(g.targetDir + "/run.sh"); !os.IsNotExist(err) {
-		g.PrintInfo("GitHub Runner 目录存在")
+		g.Infof("GitHub Runner 目录存在")
 		status = "stopped"
 
 		// 检查进程是否运行
@@ -85,7 +85,7 @@ func (g *GitHubRunner) GetStatus() (map[string]string, error) {
 		}
 	}
 
-	g.PrintInfof("GitHub Runner 状态: %s", status)
+	g.Infof("GitHub Runner 状态: %s", status)
 
 	return map[string]string{
 		"status":  status,
@@ -102,7 +102,7 @@ func (g *GitHubRunner) Start() error {
 	// 检查是否为 root 用户
 	if os.Geteuid() != 0 {
 		err := fmt.Errorf("启动 GitHub Runner 需要 root 权限")
-		g.PrintErrorf("%s", err.Error())
+		g.Errorf("%s", err.Error())
 		return err
 	}
 
@@ -117,13 +117,13 @@ func (g *GitHubRunner) Start() error {
 
 	// 检查是否已配置
 	if _, err := os.Stat(g.targetDir + "/.runner"); os.IsNotExist(err) {
-		g.PrintInfo("Runner 未配置，请输入以下信息：")
+		g.Infof("Runner 未配置，请输入以下信息：")
 
 		var url, token string
-		g.PrintInfo("请输入 GitHub 仓库/组织 URL：")
+		g.Infof("请输入 GitHub 仓库/组织 URL：")
 		fmt.Scanln(&url)
 
-		g.PrintInfo("请输入 Runner 注册令牌：")
+		g.Infof("请输入 Runner 注册令牌：")
 		fmt.Scanln(&token)
 
 		if url == "" || token == "" {
@@ -133,7 +133,7 @@ func (g *GitHubRunner) Start() error {
 		// 以 github-runner 用户身份配置 runner
 		err = g.RunShell("su", "-", "github-runner", "-c", fmt.Sprintf("%s/config.sh --url %s --token %s --unattended", g.targetDir, url, token))
 		if err != nil {
-			return g.PrintAndReturnErrorf("配置 runner 失败: %s", err.Error())
+			return g.LogAndReturnErrorf("配置 runner 失败: %s", err.Error())
 		}
 	}
 
@@ -143,7 +143,7 @@ func (g *GitHubRunner) Start() error {
 		return fmt.Errorf("启动失败: %s", err)
 	}
 
-	g.PrintSuccess("GitHub Runner 已启动")
+	g.Success("GitHub Runner 已启动")
 	return nil
 }
 

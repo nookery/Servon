@@ -34,7 +34,7 @@ func (cc *Caddy) GetProjectConfigPath(projectName string) string {
 
 // EnsureConfigDir 确保配置文件的存储目录存在
 func (cc *Caddy) EnsureConfigDir() error {
-	cc.PrintInfo("确保配置文件的存储目录存在: " + cc.GetConfigDir())
+	cc.Info("确保配置文件的存储目录存在: " + cc.GetConfigDir())
 
 	return os.MkdirAll(cc.GetConfigDir(), 0755)
 }

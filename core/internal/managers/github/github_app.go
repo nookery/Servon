@@ -19,19 +19,17 @@ import (
 // 接收 gin.Context 作为参数，从中获取应用名称、描述和基础URL
 // 返回包含 manifest 的 HTML 表单，用于自动提交到 GitHub
 func GenerateManifest(name, description, baseURL string) (string, error) {
-	githubLogger.LogInfo("GenerateManifest")
+	logger.Infof("GenerateManifest")
 
 	manifest := createManifest(name, description, baseURL)
 	manifestJSON, err := json.Marshal(manifest)
 	if err != nil {
-		githubLogger.LogError(fmt.Sprintf("failed to generate manifest: %v", err))
-		return "", fmt.Errorf("failed to generate manifest: %v", err)
+		return "", logger.LogAndReturnErrorf("failed to generate manifest: %v", err)
 	}
 
 	state, err := generateState()
 	if err != nil {
-		githubLogger.LogError(fmt.Sprintf("failed to generate state: %v", err))
-		return "", fmt.Errorf("failed to generate state: %v", err)
+		return "", logger.LogAndReturnErrorf("failed to generate state: %v", err)
 	}
 
 	return generateHTML(state, string(manifestJSON)), nil
@@ -49,19 +47,10 @@ func ProcessCallback(c *gin.Context) (*AppCreationResult, error) {
 	return convertManifest(code)
 }
 
-// AppCreationResult 表示 GitHub App 创建的结果
-type AppCreationResult struct {
-	ID   int64  `json:"id"`   // GitHub App 的唯一标识符
-	Name string `json:"name"` // GitHub App 的名称
-	PEM  string `json:"pem"`  // GitHub App 的私钥
-}
-
 // GetInstallURL 返回 GitHub App 的安装URL
 func (r *AppCreationResult) GetInstallURL() string {
 	return fmt.Sprintf("https://github.com/apps/%s/installations/new", r.Name)
 }
-
-// Private helper functions
 
 // createManifest 创建 GitHub App 的 manifest 配置
 // 包含应用的基本信息、权限和事件订阅

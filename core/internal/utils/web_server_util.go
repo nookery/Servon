@@ -75,7 +75,7 @@ func (ws *WebServer) Configure(host string, port int) {
 func (ws *WebServer) Start() error {
 	addr := fmt.Sprintf("%s:%d", ws.config.Host, ws.config.Port)
 
-	printer.PrintInfof("启动 Web 服务器: http://%s", addr)
+	DefaultLogUtil.Infof("启动 Web 服务器: http://%s", addr)
 
 	// 自动停止占用端口的进程
 	if err := DefaultProcessUtil.AutoStopPortProcess(ws.config.Port); err != nil {
@@ -90,7 +90,7 @@ func (ws *WebServer) Start() error {
 	// 在新的 goroutine 中启动服务器
 	go func() {
 		if err := ws.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			printer.PrintErrorf("服务器运行错误: %v", err)
+			DefaultLogUtil.Errorf("服务器运行错误: %v", err)
 		}
 	}()
 
@@ -121,7 +121,7 @@ func (ws *WebServer) waitForServerReady(addr string) error {
 			conn, err := net.DialTimeout("tcp", addr, time.Second)
 			if err == nil {
 				conn.Close()
-				printer.PrintSuccess("服务器启动成功")
+				DefaultLogUtil.Infof("服务器启动成功")
 				return nil
 			}
 		}
@@ -175,24 +175,24 @@ func (ws *WebServer) RunUntilSignal() error {
 
 	// 等待信号
 	sig := <-quit
-	printer.PrintInfof("收到信号 %v, 正在关闭服务器...", sig)
+	DefaultLogUtil.Infof("收到信号 %v, 正在关闭服务器...", sig)
 
 	// 优雅关闭
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := ws.Stop(ctx); err != nil {
-		printer.PrintErrorf("服务器关闭错误: %v", err)
+		DefaultLogUtil.Errorf("服务器关闭错误: %v", err)
 		return err
 	}
 
-	printer.PrintSuccess("服务器已关闭")
+	DefaultLogUtil.Infof("服务器已关闭")
 	return nil
 }
 
 // RunInBackground 在后台运行服务器（作为独立进程）
 func (ws *WebServer) RunInBackground() error {
-	printer.PrintInfof("在后台运行服务器: http://%s:%d", ws.config.Host, ws.config.Port)
+	DefaultLogUtil.Infof("在后台运行服务器: http://%s:%d", ws.config.Host, ws.config.Port)
 
 	// 检查服务器是否已经在运行
 	if pid, err := DefaultProcessUtil.FindProcessByPort(ws.config.Port); err == nil && pid > 0 {
@@ -252,9 +252,9 @@ func (ws *WebServer) StopBackground() error {
 	// 清理 PID 文件
 	pidFile := "servon.pid"
 	if err := os.Remove(pidFile); err == nil {
-		printer.PrintSuccess("服务器已关闭")
+		DefaultLogUtil.Infof("服务器已关闭")
 	} else {
-		printer.PrintSuccess("服务器未在运行")
+		DefaultLogUtil.Infof("服务器未在运行")
 	}
 
 	return nil

@@ -33,8 +33,7 @@ func (u *UserManager) GetUserList() ([]User, error) {
 	// 使用 os/user 包读取 /etc/passwd
 	file, err := os.Open("/etc/passwd")
 	if err != nil {
-		PrintError(err)
-		return nil, fmt.Errorf("打开 /etc/passwd 失败: %v", err)
+		return nil, PrintAndReturnErrorf("打开 /etc/passwd 失败: %v", err)
 	}
 	defer file.Close()
 
@@ -77,8 +76,7 @@ func (u *UserManager) GetUserList() ([]User, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		PrintError(err)
-		return nil, fmt.Errorf("读取用户列表失败: %v", err)
+		return nil, PrintAndReturnErrorf("读取用户列表失败: %v", err)
 	}
 
 	PrintSuccessf("获取用户列表成功")
@@ -181,9 +179,7 @@ func (u *UserManager) UserExists(username string) (bool, error) {
 			return false, nil
 		}
 
-		PrintError(err)
-
-		return false, err
+		return false, PrintAndReturnErrorf("检查用户是否存在失败: %v", err)
 	}
 
 	return true, nil

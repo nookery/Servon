@@ -27,37 +27,34 @@ func NewYarn(app *core.App) core.SuperSoft {
 }
 
 func (y *Yarn) Install() error {
-	y.PrintInfo("正在安装 Yarn...")
+	y.Infof("正在安装 Yarn...")
 
 	// 检查 nodejs 是否已安装
 	if _, err := y.RunShellWithOutput("node", "--version"); err != nil {
 		errMsg := "请先安装 NodeJS"
-		y.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return y.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	// 使用 StreamCommand 来执行安装并输出详细日志
 	if err := y.RunShell("npm", "install", "-g", "yarn"); err != nil {
 		errMsg := fmt.Sprintf("安装 Yarn 失败: %v", err)
-		y.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return y.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	y.PrintSuccess("Yarn 安装完成")
+	y.Success("Yarn 安装完成")
 	return nil
 }
 
 // Uninstall 卸载 Yarn
 func (y *Yarn) Uninstall() error {
-	y.PrintInfo("正在卸载 Yarn...")
+	y.Infof("正在卸载 Yarn...")
 
 	if err := y.RunShell("npm", "uninstall", "-g", "yarn"); err != nil {
 		errMsg := fmt.Sprintf("卸载 Yarn 失败: %v", err)
-		y.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return y.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	y.PrintSuccess("Yarn 卸载完成")
+	y.Success("Yarn 卸载完成")
 	return nil
 }
 
@@ -91,11 +88,11 @@ func (y *Yarn) GetInfo() core.SoftwareInfo {
 }
 
 func (y *Yarn) Start() error {
-	y.PrintInfo("Yarn 是包管理工具，无需启动服务")
+	y.Infof("Yarn 是包管理工具，无需启动服务")
 	return nil
 }
 
 func (y *Yarn) Stop() error {
-	y.PrintInfo("Yarn 是包管理工具，无需停止服务")
+	y.Infof("Yarn 是包管理工具，无需停止服务")
 	return nil
 }

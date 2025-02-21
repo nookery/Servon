@@ -54,7 +54,7 @@ func (c *SoftManager) Install(name string) error {
 			registeredSoftwares = append(registeredSoftwares, name)
 		}
 
-		PrintList(registeredSoftwares, "可用的软件")
+		PrintListWithTitle("可用的软件", registeredSoftwares)
 		return PrintAndReturnError(fmt.Sprintf("软件 %s 未注册", name))
 	}
 

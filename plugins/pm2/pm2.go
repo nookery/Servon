@@ -29,43 +29,39 @@ func NewPm2(app *core.App) core.SuperSoft {
 
 // Install 安装 pm2
 func (p *Pm2) Install() error {
-	p.PrintInfo("正在安装 pm2...")
+	p.Infof("正在安装 pm2...")
 
 	// 检查 nodejs 是否已安装
 	if err := p.RunShell("node", "--version"); err != nil {
 		errMsg := "请先安装 NodeJS"
-		p.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return p.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	// 检查 npm 是否已安装
 	if err := p.RunShell("npm", "--version"); err != nil {
 		errMsg := "请先安装 npm"
-		p.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return p.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	if err := p.RunShell("npm", "install", "-g", "pm2"); err != nil {
 		errMsg := fmt.Sprintf("安装 pm2 失败: %v", err)
-		p.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return p.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	p.PrintSuccess("pm2 安装完成")
+	p.Success("pm2 安装完成")
 	return nil
 }
 
 // Uninstall 卸载 pm2
 func (p *Pm2) Uninstall() error {
-	p.PrintInfo("正在卸载 pm2...")
+	p.Infof("正在卸载 pm2...")
 
 	if err := p.RunShell("npm", "uninstall", "-g", "pm2"); err != nil {
 		errMsg := fmt.Sprintf("卸载 pm2 失败: %v", err)
-		p.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return p.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	p.PrintSuccess("pm2 卸载完成")
+	p.Success("pm2 卸载完成")
 	return nil
 }
 
@@ -108,11 +104,11 @@ func (p *Pm2) GetInfo() core.SoftwareInfo {
 }
 
 func (p *Pm2) Start() error {
-	p.PrintInfo("pm2 无需启动服务")
+	p.Infof("pm2 无需启动服务")
 	return nil
 }
 
 func (p *Pm2) Stop() error {
-	p.PrintInfo("pm2 无需停止服务")
+	p.Infof("pm2 无需停止服务")
 	return nil
 }

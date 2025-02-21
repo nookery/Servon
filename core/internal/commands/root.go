@@ -4,20 +4,23 @@ import (
 	"servon/core/internal/utils"
 )
 
-var printer = utils.DefaultPrinter
+var logger = utils.DefaultLogUtil
+var shell = utils.DefaultShellUtil
 var stringUtil = utils.DefaultStringUtil
+
 var NewCommand = utils.NewCommand
-var RunShell = printer.RunShell
-var PrintKeyValue = printer.PrintKeyValue
-var PrintKeyValues = printer.PrintKeyValues
-var PrintInfo = printer.PrintInfo
-var PrintErrorf = printer.PrintErrorf
-var PrintInfof = printer.PrintInfof
-var PrintCommandOutput = printer.PrintCommandOutput
-var PrintSuccessf = printer.PrintSuccessf
-var PrintSuccess = printer.PrintSuccess
-var PrintError = printer.PrintError
-var PrintList = printer.PrintList
-var PrintTitle = printer.PrintTitle
+var RunShell = shell.Execute
+var PrintKeyValue = logger.PrintKeyValue
+var PrintKeyValues = logger.PrintKeyValues
+var PrintListWithTitle = logger.ListWithTitle
+var PrintInfo = logger.Info
+var PrintInfof = logger.Infof
+var PrintCommandOutput = shell.ExecuteWithOutput
+var PrintSuccessf = logger.Successf
+var PrintSuccess = logger.Success
+var PrintError = logger.Error
+var PrintErrorf = logger.Errorf
+var PrintList = logger.List
+var PrintTitle = logger.Title
 
 type CommandOptions = utils.CommandOptions

@@ -30,7 +30,7 @@ func GetUserListCommand(u *managers.UserManager) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			users, err := u.GetUserList()
 			if err != nil {
-				printer.PrintError(err)
+				logger.Error(err)
 				return
 			}
 
@@ -40,7 +40,7 @@ func GetUserListCommand(u *managers.UserManager) *cobra.Command {
 				userStrings[i] = fmt.Sprintf("%s (%s)", user.Username, strings.Join(user.Groups, ","))
 			}
 
-			printer.PrintList(userStrings, "用户列表")
+			logger.ListWithTitle("用户列表", userStrings)
 		},
 	})
 }
@@ -52,7 +52,7 @@ func CreateUserCommand(u *managers.UserManager) *cobra.Command {
 		Short: "创建用户",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) < 2 {
-				printer.PrintErrorMessage("请提供用户名和密码，例如：user create username password")
+				logger.ErrorMessage("请提供用户名和密码，例如：user create username password")
 				return
 			}
 			username := args[0]
@@ -73,7 +73,7 @@ func DeleteUserCommand(u *managers.UserManager) *cobra.Command {
 		Aliases: []string{"del", "d"},
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) < 1 {
-				printer.PrintErrorMessage("请提供用户名")
+				logger.ErrorMessage("请提供用户名")
 				return
 			}
 			username := args[0]

@@ -2,10 +2,11 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"servon/core/internal/managers"
 	"servon/core/internal/managers/github"
+
+	"github.com/gin-gonic/gin"
 )
 
 type GitHubController struct {
@@ -45,7 +46,7 @@ func (h *GitHubController) HandleGitHubSetup(c *gin.Context) {
 
 // HandleGitHubCallback handles callback after GitHub App creation
 func (h *GitHubController) HandleGitHubCallback(c *gin.Context) {
-	printer.PrintInfof("HandleGitHubCallback")
+	logger.Infof("HandleGitHubCallback")
 	redirectURL, err := h.GitHubIntegration.HandleCallback(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -57,7 +58,7 @@ func (h *GitHubController) HandleGitHubCallback(c *gin.Context) {
 
 // HandleGitHubWebhook 处理来自 GitHub 的 webhook 请求
 func (h *GitHubController) HandleGitHubWebhook(c *gin.Context) {
-	printer.PrintInfof("HandleGitHubWebhook")
+	logger.Infof("HandleGitHubWebhook")
 	if err := h.GitHubIntegration.HandleWebhook(c); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -68,7 +69,7 @@ func (h *GitHubController) HandleGitHubWebhook(c *gin.Context) {
 
 // HandleGetWebhooks 获取存储的 webhook 数据
 func (h *GitHubController) HandleGetWebhooks(c *gin.Context) {
-	printer.PrintInfof("HandleGetWebhooks")
+	logger.Infof("HandleGetWebhooks")
 	webhooks, err := h.GitHubIntegration.GetStoredWebhooks()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -80,6 +81,6 @@ func (h *GitHubController) HandleGetWebhooks(c *gin.Context) {
 		webhooks = make([]github.WebhookPayload, 0)
 	}
 
-	printer.PrintInfof("HandleGetWebhooks: %d", len(webhooks))
+	logger.Infof("HandleGetWebhooks: %d", len(webhooks))
 	c.JSON(http.StatusOK, webhooks)
 }

@@ -6,6 +6,13 @@ import (
 	"github.com/fatih/color"
 )
 
+// AppCreationResult 表示 GitHub App 创建的结果
+type AppCreationResult struct {
+	ID   int64  `json:"id"`   // GitHub App 的唯一标识符
+	Name string `json:"name"` // GitHub App 的名称
+	PEM  string `json:"pem"`  // GitHub App 的私钥
+}
+
 // GitHubRepo 表示一个GitHub仓库的基本信息
 type GitHubRepo struct {
 	ID          int64  `json:"id"`          // 仓库的唯一标识符

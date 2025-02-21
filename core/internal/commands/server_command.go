@@ -47,26 +47,26 @@ func MakeStartCommand(web *utils.WebServer, manager *managers.FullManager) *cobr
 			web.SetHost(host)
 
 			if devMode {
-				printer.PrintInfof("开发环境，先关闭服务器")
+				logger.Infof("开发环境，先关闭服务器")
 				if err := web.StopBackground(); err != nil {
-					printer.PrintError(err)
+					logger.Error(err)
 					os.Exit(1)
 				}
 			}
 
 			// 使用 RunUntilSignal 来保持服务器运行
 			if err := web.RunInBackground(); err != nil {
-				printer.PrintError(err)
+				logger.Error(err)
 				os.Exit(1)
 			}
 
-			printer.PrintSuccess("服务器启动成功")
+			logger.Success("服务器启动成功")
 
 			// 启动横幅
-			printer.PrintLn()
-			printer.PrintTitle("SERVON")
-			printer.PrintLn()
-			printer.PrintKeyValues(map[string]string{
+			logger.EmptyLine()
+			logger.Title("SERVON")
+			logger.EmptyLine()
+			logger.PrintKeyValues(map[string]string{
 				"Version":   manager.VersionManager.GetVersion(),
 				"API Route": stringUtil.GetEmojiForBool(true),
 				"UI Route":  stringUtil.GetEmojiForBool(!apiOnly),
@@ -76,10 +76,10 @@ func MakeStartCommand(web *utils.WebServer, manager *managers.FullManager) *cobr
 				"Link":      "http://" + web.GetHost() + ":" + web.GetPortString(),
 				"Notice":    "服务器在后台运行，如需要关闭，执行: servon serve stop",
 			})
-			printer.PrintLn()
+			logger.EmptyLine()
 
 			if devMode {
-				printer.PrintInfof("开发环境，启动 npm dev server")
+				logger.Infof("开发环境，启动 npm dev server")
 				runNpmDev(web.GetPort())
 			}
 		},
@@ -100,7 +100,7 @@ func MakeStopCommand(web *utils.WebServer) *cobra.Command {
 		Short: "停止服务器",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := web.StopBackground(); err != nil {
-				printer.PrintError(err)
+				logger.Error(err)
 				os.Exit(1)
 			}
 
@@ -126,7 +126,7 @@ func MakeRestartCommand(web *utils.WebServer) *cobra.Command {
 
 			// 先停止
 			if err := web.StopBackground(); err != nil {
-				printer.PrintWarningf("停止服务器时出错: %v", err)
+				logger.Warnf("停止服务器时出错: %v", err)
 			}
 
 			// 等待一小段时间确保端口释放
@@ -134,11 +134,11 @@ func MakeRestartCommand(web *utils.WebServer) *cobra.Command {
 
 			// 重新启动
 			if err := web.RunInBackground(); err != nil {
-				printer.PrintError(err)
+				logger.Error(err)
 				os.Exit(1)
 			}
 
-			printer.PrintSuccess("服务器已重启")
+			logger.Success("服务器已重启")
 		},
 	}
 
@@ -165,7 +165,7 @@ func MakeDevCommand(web *utils.WebServer) *cobra.Command {
 
 			// 先停止
 			if err := web.StopBackground(); err != nil {
-				printer.PrintWarningf("停止服务器时出错: %v", err)
+				logger.Warnf("停止服务器时出错: %v", err)
 			}
 
 			// 等待一小段时间确保端口释放
@@ -173,11 +173,11 @@ func MakeDevCommand(web *utils.WebServer) *cobra.Command {
 
 			// 重新启动
 			if err := web.RunInBackground(); err != nil {
-				printer.PrintError(err)
+				logger.Error(err)
 				os.Exit(1)
 			}
 
-			printer.PrintSuccess("服务器已重启")
+			logger.Success("服务器已重启")
 		},
 	}
 
@@ -196,6 +196,6 @@ func runNpmDev(backendPort int) {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		printer.PrintErrorf("启动 npm dev server 失败: %v", err)
+		logger.Errorf("启动 npm dev server 失败: %v", err)
 	}
 }

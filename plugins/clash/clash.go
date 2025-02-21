@@ -38,39 +38,39 @@ func NewClash(app *core.App) core.SuperSoft {
 func (c *Clash) Install() error {
 	osType := c.GetOSType()
 
-	c.PrintInfof("安装 Clash，检测到操作系统: %s", osType)
+	c.Infof("安装 Clash，检测到操作系统: %s", osType)
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		c.PrintInfof("清理目标文件夹 - %s", c.targetDir)
+		c.Infof("清理目标文件夹 - %s", c.targetDir)
 		err := os.RemoveAll(c.targetDir)
 		if err != nil {
 			return fmt.Errorf("清理目标文件夹失败: %s", err)
 		}
-		c.PrintInfof("目标文件夹清理完成 - %s", c.targetDir)
+		c.Infof("目标文件夹清理完成 - %s", c.targetDir)
 
 		// 使用 go-git 克隆仓库
-		c.PrintInfof("克隆 clash-for-linux 仓库 -> %s", repoUrl)
+		c.Infof("克隆 clash-for-linux 仓库 -> %s", repoUrl)
 		err = c.GitClone(repoUrl, "master", c.targetDir)
 		if err != nil {
-			c.PrintErrorMessage(err.Error())
+			c.Errorf(err.Error())
 			return fmt.Errorf("克隆仓库失败: %s", err)
 		}
 
-		c.PrintSuccess("克隆仓库成功")
+		c.Success("克隆仓库成功")
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"
-		c.PrintErrorMessage(errMsg)
+		c.Errorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		c.PrintErrorMessage(errMsg)
+		c.Errorf("%s", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 确保在返回前发送完成消息
-	c.PrintInfof("Clash 安装完成")
+	c.Infof("Clash 安装完成")
 	return nil
 }
 
@@ -100,7 +100,7 @@ func (c *Clash) Uninstall() error {
 		return fmt.Errorf("删除配置目录失败: %s", err)
 	}
 
-	c.PrintSuccess("Clash 卸载完成")
+	c.Success("Clash 卸载完成")
 	return nil
 }
 
@@ -142,8 +142,8 @@ func (c *Clash) Start() error {
 		return fmt.Errorf("env文件不存在，请先配置env文件")
 	}
 
-	c.PrintInfo("开始启动 Clash")
-	c.PrintInfof("配置文件 %s", envFile)
+	c.Infof("开始启动 Clash")
+	c.Infof("配置文件 %s", envFile)
 
 	// 读取配置文件
 	envContent, err := os.ReadFile(envFile)
@@ -156,7 +156,7 @@ func (c *Clash) Start() error {
 		strings.Contains(string(envContent), "CLASH_URL=your_subscription_url_here") ||
 		!strings.Contains(string(envContent), "CLASH_URL") {
 
-		c.PrintInfo("请输入你的 Clash 订阅地址：")
+		c.Infof("请输入你的 Clash 订阅地址：")
 		var subscriptionURL string
 		fmt.Scanln(&subscriptionURL)
 
@@ -177,7 +177,7 @@ func (c *Clash) Start() error {
 			return fmt.Errorf("更新配置文件失败: %s", err)
 		}
 
-		c.PrintSuccess("订阅地址已更新")
+		c.Success("订阅地址已更新")
 	}
 
 	// 启动服务

@@ -18,7 +18,7 @@ func (a *AstroPlugin) newAstroCommand() *cobra.Command {
 
 			err := a.deploy(repo, branch, host, port)
 			if err != nil {
-				a.PrintError(err)
+				a.Error(err)
 			}
 		},
 	})

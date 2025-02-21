@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var printer = utils.DefaultPrinter
+var logger = utils.DefaultLogUtil
 
 func Setup(manager *managers.FullManager, r *gin.Engine, isDev bool) {
 	api := r.Group("/web_api")
@@ -20,7 +20,6 @@ func Setup(manager *managers.FullManager, r *gin.Engine, isDev bool) {
 	SetupCronRouter(api, manager)
 	SetupFileRouter(api, manager)
 	SetupPortRouter(api, manager)
-	SetupLogsRouter(api, manager)
 	SetupUserRouter(api, manager)
 	SetupDeployRouter(api, manager)
 	SetupIntegrationRouter(api, manager)

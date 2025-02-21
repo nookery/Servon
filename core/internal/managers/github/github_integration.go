@@ -78,7 +78,6 @@ import (
 	"io"
 	"net/http"
 	"servon/core/internal/events"
-	"servon/core/internal/models"
 	"strings"
 	"time"
 
@@ -94,7 +93,6 @@ import (
 //  4. 提供仓库访问接口
 type GitHubIntegration struct {
 	eventBus   *events.EventBus
-	logger     *GitHubLogger
 	tokenCache *TokenCacheManager
 }
 
@@ -103,7 +101,6 @@ type GitHubIntegration struct {
 func NewGitHubIntegration(eventBus *events.EventBus) *GitHubIntegration {
 	return &GitHubIntegration{
 		eventBus:   eventBus,
-		logger:     DefaultGitHubLogger,
 		tokenCache: NewTokenCacheManager(),
 	}
 }
@@ -114,7 +111,7 @@ func NewGitHubIntegration(eventBus *events.EventBus) *GitHubIntegration {
 //   - string: 重定向URL
 //   - error: 处理过程中的错误
 func (g *GitHubIntegration) HandleSetup(name, description, baseURL string) (string, error) {
-	g.logger.LogInfo("开始处理 GitHub App 安装设置")
+	logger.Info("开始处理 GitHub App 安装设置")
 	return GenerateManifest(name, description, baseURL)
 }
 
@@ -124,7 +121,7 @@ func (g *GitHubIntegration) HandleSetup(name, description, baseURL string) (stri
 //   - string: 安装URL
 //   - error: 处理过程中的错误
 func (g *GitHubIntegration) HandleCallback(c *gin.Context) (string, error) {
-	g.logger.LogInfo("开始处理 GitHub App 安装回调")
+	logger.Info("开始处理 GitHub App 安装回调")
 	result, err := ProcessCallback(c)
 	if err != nil {
 		return "", err
@@ -138,8 +135,7 @@ func (g *GitHubIntegration) HandleCallback(c *gin.Context) (string, error) {
 		UpdatedAt:           time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
-		g.logger.LogErrorf("保存GitHub App配置失败: %v", err)
-		return "", err
+		return "", logger.LogAndReturnErrorf("保存GitHub App配置失败: %v", err)
 	}
 
 	return result.GetInstallURL(), nil
@@ -172,8 +168,7 @@ func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]GitHubRe
 	// 从存储中读取安装配置
 	installations, err := GetInstallationConfig()
 	if err != nil {
-		g.logger.LogErrorf("读取安装配置失败: %v", err)
-		return nil, err
+		return nil, logger.LogAndReturnErrorf("读取安装配置失败: %v", err)
 	}
 
 	// 创建结果切片
@@ -181,7 +176,7 @@ func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]GitHubRe
 
 	// 遍历所有安装实例
 	for _, installation := range installations {
-		g.logger.LogInfof("正在处理安装实例: %v", installation)
+		logger.Infof("正在处理安装实例: %v", installation)
 		// 获取该安装实例下的所有仓库
 		for _, repoName := range installation.Repositories {
 			repo := GitHubRepo{
@@ -197,60 +192,53 @@ func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]GitHubRe
 	return repos, nil
 }
 
-// GetLogs 获取GitHub集成的日志目录内容
-func (g *GitHubIntegration) GetLogs() ([]models.FileInfo, error) {
-	return g.logger.GetLogFiles()
-}
-
 // GetInstallationToken 获取仓库的安装令牌
 func (g *GitHubIntegration) GetInstallationToken(repo string) (string, error) {
-	g.logger.LogInfof("开始获取仓库 %s 的安装令牌", repo)
+	logger.Infof("开始获取仓库 %s 的安装令牌", repo)
 
 	// 处理仓库地址格式
 	repoFullName := repo
 	if strings.HasPrefix(repo, "https://github.com/") {
 		// 从 https://github.com/owner/repo 转换为 owner/repo
 		repoFullName = strings.TrimPrefix(repo, "https://github.com/")
-		g.logger.LogInfof("转换仓库地址格式: %s -> %s", repo, repoFullName)
+		logger.Infof("转换仓库地址格式: %s -> %s", repo, repoFullName)
 	}
 
 	// 验证仓库名称格式
 	parts := strings.Split(repoFullName, "/")
 	if len(parts) != 2 {
-		g.logger.LogErrorf("无效的仓库名称格式: %s，应为 'owner/repo' 格式", repoFullName)
-		return "", fmt.Errorf("无效的仓库名称格式: %s，应为 'owner/repo' 格式", repoFullName)
+		return "", logger.LogAndReturnErrorf("无效的仓库名称格式: %s，应为 'owner/repo' 格式", repoFullName)
 	}
 
 	// 获取所有安装配置
 	installations, err := GetInstallationConfig()
 	if err != nil {
-		g.logger.LogErrorf("读取安装配置失败: %v", err)
-		return "", fmt.Errorf("读取安装配置失败: %v", err)
+		return "", logger.LogAndReturnErrorf("读取安装配置失败: %v", err)
 	}
-	g.logger.LogInfof("成功读取安装配置，共有 %d 个安装", len(installations))
+	logger.Infof("成功读取安装配置，共有 %d 个安装", len(installations))
 
 	// 打印所有安装的详细信息，帮助调试
 	for id, inst := range installations {
-		g.logger.LogInfof("已安装配置 - ID: %d, 账户: %s, 仓库数量: %d",
+		logger.Infof("已安装配置 - ID: %d, 账户: %s, 仓库数量: %d",
 			id,
 			inst.AccountLogin,
 			len(inst.Repositories))
 
 		// 打印该安装下的所有仓库
 		for _, r := range inst.Repositories {
-			g.logger.LogInfof("  - 仓库: %s (private: %v)", r.FullName, r.Private)
+			logger.Infof("  - 仓库: %s (private: %v)", r.FullName, r.Private)
 		}
 	}
 
 	// 查找对应的安装
 	var installation *Installation
 	for _, inst := range installations {
-		g.logger.LogInfof("检查安装 ID %d (账户: %s)", inst.ID, inst.AccountLogin)
+		logger.Infof("检查安装 ID %d (账户: %s)", inst.ID, inst.AccountLogin)
 		for _, r := range inst.Repositories {
-			g.logger.LogInfof("  比较仓库: %s 与目标: %s", r.FullName, repoFullName)
+			logger.Infof("  比较仓库: %s 与目标: %s", r.FullName, repoFullName)
 			if r.FullName == repoFullName {
 				installation = inst
-				g.logger.LogInfof("找到匹配的安装: ID=%d, 账户=%s", inst.ID, inst.AccountLogin)
+				logger.Infof("找到匹配的安装: ID=%d, 账户=%s", inst.ID, inst.AccountLogin)
 				break
 			}
 		}
@@ -260,100 +248,89 @@ func (g *GitHubIntegration) GetInstallationToken(repo string) (string, error) {
 	}
 
 	if installation == nil {
-		g.logger.LogErrorf("未找到仓库 %s 的安装信息，请确认 GitHub App 已正确安装到该仓库", repo)
-		return "", fmt.Errorf("未找到仓库的安装信息")
+		return "", logger.LogAndReturnErrorf("未找到仓库 %s 的安装信息，请确认 GitHub App 已正确安装到该仓库", repo)
 	}
 
 	// 检查 App 配置
 	appConfig, err := LoadAppConfig()
 	if err != nil {
-		g.logger.LogErrorf("加载 GitHub App 配置失败: %v", err)
-		return "", fmt.Errorf("加载 GitHub App 配置失败: %v", err)
+		return "", logger.LogAndReturnErrorf("加载 GitHub App 配置失败: %v", err)
 	}
 	if appConfig == nil {
-		g.logger.LogError("GitHub App 配置不存在")
-		return "", fmt.Errorf("GitHub App 配置不存在")
+		return "", logger.LogAndReturnErrorf("GitHub App 配置不存在")
 	}
-	g.logger.LogInfof("当前 GitHub App 配置 - ID: %d, 安装数量: %d",
+	logger.Infof("当前 GitHub App 配置 - ID: %d, 安装数量: %d",
 		appConfig.GitHubAppID,
 		len(appConfig.Installations))
 
 	// 检查缓存
 	if token, ok := g.tokenCache.Get(installation.ID); ok {
-		g.logger.LogInfof("使用缓存的安装令牌 (installation ID: %d)", installation.ID)
+		logger.Infof("使用缓存的安装令牌 (installation ID: %d)", installation.ID)
 		return token, nil
 	}
 
 	// 创建新令牌
-	g.logger.LogInfof("开始为安装 ID %d 创建新的令牌", installation.ID)
+	logger.Infof("开始为安装 ID %d 创建新的令牌", installation.ID)
 	token, expiresAt, err := g.createInstallationToken(installation.ID)
 	if err != nil {
-		g.logger.LogErrorf("创建安装令牌失败: %v", err)
-		return "", fmt.Errorf("创建安装令牌失败: %v", err)
+		return "", logger.LogAndReturnErrorf("创建安装令牌失败: %v", err)
 	}
 
-	g.logger.LogInfof("成功创建新的安装令牌，过期时间: %v", expiresAt)
+	logger.Infof("成功创建新的安装令牌，过期时间: %v", expiresAt)
 	g.tokenCache.Set(installation.ID, token, expiresAt)
 	return token, nil
 }
 
 func (g *GitHubIntegration) createInstallationToken(installationID int64) (string, time.Time, error) {
-	g.logger.LogInfof("开始为安装 ID %d 创建新的令牌", installationID)
+	logger.Infof("开始为安装 ID %d 创建新的令牌", installationID)
 
 	// 获取 App 配置
 	appConfig, err := LoadAppConfig()
 	if err != nil {
-		g.logger.LogErrorf("加载 GitHub App 配置失败: %v", err)
-		return "", time.Time{}, fmt.Errorf("加载 GitHub App 配置失败: %v", err)
+		return "", time.Time{}, logger.LogAndReturnErrorf("加载 GitHub App 配置失败: %v", err)
 	}
 	if appConfig == nil {
-		g.logger.LogError("GitHub App 配置不存在")
-		return "", time.Time{}, fmt.Errorf("GitHub App 配置不存在")
+		return "", time.Time{}, logger.LogAndReturnErrorf("GitHub App 配置不存在")
 	}
-	g.logger.LogInfof("使用 GitHub App (ID: %d) 创建安装令牌", appConfig.GitHubAppID)
+	logger.Infof("使用 GitHub App (ID: %d) 创建安装令牌", appConfig.GitHubAppID)
 
 	// 验证安装是否存在于配置中
 	if _, exists := appConfig.Installations[installationID]; !exists {
-		g.logger.LogErrorf("安装 ID %d 在 App 配置中不存在", installationID)
-		return "", time.Time{}, fmt.Errorf("安装 ID 在 App 配置中不存在")
+		return "", time.Time{}, logger.LogAndReturnErrorf("安装 ID %d 在 App 配置中不存在", installationID)
 	}
 
 	// 生成 JWT
 	jwt, err := g.generateJWT()
 	if err != nil {
-		g.logger.LogErrorf("生成 JWT 失败: %v", err)
-		return "", time.Time{}, fmt.Errorf("生成 JWT 失败: %v", err)
+		return "", time.Time{}, logger.LogAndReturnErrorf("生成 JWT 失败: %v", err)
 	}
-	g.logger.LogInfo("成功生成 JWT")
+	logger.Infof("成功生成 JWT")
 
 	// 创建请求
 	url := fmt.Sprintf("https://api.github.com/app/installations/%d/access_tokens", installationID)
-	g.logger.LogInfof("准备发送请求到: %s", url)
+	logger.Infof("准备发送请求到: %s", url)
 
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
-		g.logger.LogErrorf("创建 HTTP 请求失败: %v", err)
-		return "", time.Time{}, fmt.Errorf("创建 HTTP 请求失败: %v", err)
+		return "", time.Time{}, logger.LogAndReturnErrorf("创建 HTTP 请求失败: %v", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+jwt)
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
 	// 发送请求
-	g.logger.LogInfo("正在发送请求...")
+	logger.Infof("正在发送请求...")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		g.logger.LogErrorf("发送请求失败: %v", err)
-		return "", time.Time{}, fmt.Errorf("发送请求失败: %v", err)
+		return "", time.Time{}, logger.LogAndReturnErrorf("发送请求失败: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// 检查响应
-	g.logger.LogInfof("收到响应: 状态码=%d", resp.StatusCode)
+	logger.Infof("收到响应: 状态码=%d", resp.StatusCode)
 	if resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
-		g.logger.LogErrorf("GitHub API 返回错误: %s - %s", resp.Status, string(body))
-		return "", time.Time{}, fmt.Errorf("GitHub API 错误: %s - %s", resp.Status, string(body))
+		return "", time.Time{}, logger.LogAndReturnErrorf("GitHub API 返回错误: %s - %s", resp.Status, string(body))
 	}
 
 	// 解析响应
@@ -363,11 +340,10 @@ func (g *GitHubIntegration) createInstallationToken(installationID int64) (strin
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		g.logger.LogErrorf("解析响应失败: %v", err)
-		return "", time.Time{}, fmt.Errorf("解析响应失败: %v", err)
+		return "", time.Time{}, logger.LogAndReturnErrorf("解析响应失败: %v", err)
 	}
 
-	g.logger.LogInfof("成功创建安装令牌，过期时间: %v", result.ExpiresAt)
+	logger.Infof("成功创建安装令牌，过期时间: %v", result.ExpiresAt)
 	return result.Token, result.ExpiresAt, nil
 }
 
@@ -412,12 +388,11 @@ func (g *GitHubIntegration) generateJWT() (string, error) {
 func (g *GitHubIntegration) ProcessWebhookEvent(c *gin.Context) error {
 	event := c.GetHeader("X-GitHub-Event")
 	eventID := c.GetHeader("X-GitHub-Delivery")
-	g.logger.LogInfof("收到 webhook 事件: type=%s, id=%s", event, eventID)
+	logger.Infof("收到 webhook 事件: type=%s, id=%s", event, eventID)
 
 	payload, err := c.GetRawData()
 	if err != nil {
-		g.logger.LogErrorf("读取 payload 失败: %v", err)
-		return fmt.Errorf("failed to read payload: %v", err)
+		return logger.LogAndReturnErrorf("读取 payload 失败: %v", err)
 	}
 
 	// 从磁盘获取 App 配置
@@ -439,7 +414,7 @@ func (g *GitHubIntegration) ProcessWebhookEvent(c *gin.Context) error {
 		return fmt.Errorf("failed to save webhook payload: %v", err)
 	}
 
-	g.logger.LogInfof("成功处理 webhook 事件: %s", event)
+	logger.Infof("成功处理 webhook 事件: %s", event)
 	return g.handleEvent(event, payload, g.eventBus)
 }
 
@@ -465,7 +440,7 @@ func (g *GitHubIntegration) handleEvent(event string, payload []byte, eventBus *
 		return g.handleCheckSuiteEvent(payload)
 	default:
 		// 记录未处理的事件类型
-		g.logger.LogInfof("未处理的事件类型: %s", event)
+		logger.Infof("未处理的事件类型: %s", event)
 		return nil
 	}
 }
@@ -474,8 +449,7 @@ func (g *GitHubIntegration) handleEvent(event string, payload []byte, eventBus *
 func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	// 首先保存原始 webhook payload
 	if err := SaveRawInstallationData(payload); err != nil {
-		g.logger.LogErrorf("保存原始安装数据失败: %v", err)
-		return fmt.Errorf("failed to save raw installation data: %v", err)
+		return logger.LogAndReturnErrorf("保存原始安装数据失败: %v", err)
 	}
 
 	var event struct {
@@ -491,8 +465,7 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	}
 
 	if err := json.Unmarshal(payload, &event); err != nil {
-		g.logger.LogErrorf("解析安装事件失败: %v", err)
-		return fmt.Errorf("failed to parse installation event: %v", err)
+		return logger.LogAndReturnErrorf("解析安装事件失败: %v", err)
 	}
 
 	// 更新安装信息
@@ -505,23 +478,20 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 
 	// 保存安装配置到独立文件
 	if err := SaveInstallationConfig(installation); err != nil {
-		g.logger.LogErrorf("保存安装配置失败: %v", err)
-		return fmt.Errorf("failed to save installation config: %v", err)
+		return logger.LogAndReturnErrorf("保存安装配置失败: %v", err)
 	}
 
 	// 更新 app_config.json 中的 installations 字段
 	appConfig, err := LoadAppConfig()
 	if err != nil {
-		g.logger.LogErrorf("加载 App 配置失败: %v", err)
-		return fmt.Errorf("failed to load app config: %v", err)
+		return logger.LogAndReturnErrorf("加载 App 配置失败: %v", err)
 	}
 	if appConfig == nil {
-		g.logger.LogError("App 配置不存在")
-		return fmt.Errorf("app config does not exist")
+		return logger.LogAndReturnErrorf("App 配置不存在")
 	}
 
 	// 更新或添加安装信息
-	g.logger.LogInfof("更新 App 配置中的安装信息: ID=%d", installation.ID)
+	logger.Infof("更新 App 配置中的安装信息: ID=%d", installation.ID)
 	if appConfig.Installations == nil {
 		appConfig.Installations = make(map[int64]*Installation)
 	}
@@ -529,11 +499,10 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 
 	// 保存更新后的 App 配置
 	if err := SaveAppConfig(appConfig); err != nil {
-		g.logger.LogErrorf("保存更新后的 App 配置失败: %v", err)
-		return fmt.Errorf("failed to save updated app config: %v", err)
+		return logger.LogAndReturnErrorf("保存更新后的 App 配置失败: %v", err)
 	}
 
-	g.logger.LogInfof("成功更新 GitHub App 安装信息: ID=%d, Account=%s, 仓库数=%d",
+	logger.Infof("成功更新 GitHub App 安装信息: ID=%d, Account=%s, 仓库数=%d",
 		installation.ID,
 		installation.AccountLogin,
 		len(installation.Repositories),

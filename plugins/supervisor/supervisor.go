@@ -34,7 +34,7 @@ func (s *SupervisorPlugin) Install() error {
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		s.PrintInfo("使用 APT 包管理器安装...")
+		s.Infof("使用 APT 包管理器安装...")
 
 		// 安装 supervisor
 		if err := s.AptInstall("supervisor"); err != nil {
@@ -43,23 +43,20 @@ func (s *SupervisorPlugin) Install() error {
 
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Supervisor"
-		s.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return s.LogAndReturnErrorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		s.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return s.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	// 验证安装结果
 	if !s.IsInstalled("supervisor") {
 		errMsg := "Supervisor 安装验证失败，未检测到已安装的包"
-		s.PrintErrorf("%s", errMsg)
-		return fmt.Errorf("%s", errMsg)
+		return s.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	s.PrintSuccess("Supervisor 安装完成")
+	s.Success("Supervisor 安装完成")
 
 	s.Start()
 
@@ -79,12 +76,12 @@ func (s *SupervisorPlugin) Uninstall() error {
 	}
 
 	// 清理自动安装的依赖
-	err := s.RunShellWithSudo("apt-get", "autoremove", "-y")
+	err := s.RunShell("apt-get", "autoremove", "-y")
 	if err != nil {
 		return fmt.Errorf("清理依赖失败:\n%s", err)
 	}
 
-	s.PrintSuccess("Supervisor 卸载完成")
+	s.Success("Supervisor 卸载完成")
 	return nil
 }
 
@@ -97,7 +94,7 @@ const (
 )
 
 func (s *SupervisorPlugin) GetStatus() (map[string]string, error) {
-	s.PrintInfof("获取 Supervisor 状态")
+	s.Infof("获取 Supervisor 状态")
 
 	// 1. 检查是否安装
 	if !s.IsInstalled("supervisor") {
@@ -233,23 +230,23 @@ func (s *SupervisorPlugin) GetInfo() core.SoftwareInfo {
 }
 
 func (s *SupervisorPlugin) Start() error {
-	s.PrintInfof("Supervisor 开始启动")
+	s.Infof("Supervisor 开始启动")
 
 	if err := s.RunShellWithSudo("supervisord", "-c", "/etc/supervisor/supervisord.conf"); err != nil {
 		return err
 	}
 
-	s.PrintSuccess("Supervisor 启动成功")
+	s.Success("Supervisor 启动成功")
 	return nil
 }
 
 func (s *SupervisorPlugin) Stop() error {
-	s.PrintInfof("Supervisor 开始停止")
+	s.Infof("Supervisor 开始停止")
 
 	if err := s.RunShellWithSudo("supervisorctl", "shutdown"); err != nil {
 		return err
 	}
 
-	s.PrintSuccess("Supervisor 停止成功")
+	s.Success("Supervisor 停止成功")
 	return nil
 }
