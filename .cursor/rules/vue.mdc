@@ -9,5 +9,6 @@ globs: *.vue
 - 如果你正在更改的vue组件不符合以上规则，修改它使其符合
 - 如果涉及到API请求，API请求应放入 src/api 文件夹
 - 所有的 Button 都使用 [IconButton.vue](mdc:src/components/IconButton.vue) 负责渲染，如果不满足要求，可修改 [IconButton.vue](mdc:src/components/IconButton.vue)
+- 如果需要图标，用这种方式：import { RiCodeLine } from '@remixicon/vue'
 - 如果这个规则被应用，则在输出中说明：🍋 我注意到了项目的vue组件构建规则
 - 如果这个规则被应用，则在输出中的较靠前的位置输出鼓励性的内容，鼓励用户；如果更幽默一些能逗笑用户就更好了！
