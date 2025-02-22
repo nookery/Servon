@@ -70,14 +70,18 @@ func createManifest(name, description, baseURL string) GitHubManifest {
 		RedirectURL:  fmt.Sprintf("%s/web_api/github/callback", baseURL),
 		CallbackURLs: []string{fmt.Sprintf("%s/web_api/github/callback", baseURL)},
 		DefaultPermissions: map[string]string{
-			"issues": "write",
-			"checks": "write",
+			"contents": "read",
+			"issues":   "write",
+			"checks":   "write",
+			"metadata": "read",
 		},
 		DefaultEvents: []string{
 			"issues",
 			"issue_comment",
 			"check_suite",
 			"check_run",
+			"push",
+			"installation",
 		},
 	}
 	return manifest

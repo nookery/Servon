@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -25,13 +26,30 @@ func NewGitUtil(logger *LogUtil) *GitUtil {
 
 // CloneRepo 克隆代码仓库
 func (g *GitUtil) CloneRepo(url, branch, targetDir string, auth *http.BasicAuth) error {
-	// 记录克隆开始
 	if g.logger != nil {
 		g.logger.Infof("开始克隆仓库\n")
 		g.logger.Infof("URL: %s\n", url)
 		g.logger.Infof("分支: %s\n", branch)
 		g.logger.Infof("目标目录: %s\n", targetDir)
 		g.logger.Infof("使用认证: %v\n", auth != nil)
+	}
+
+	if auth != nil {
+		// 确保URL使用HTTPS格式
+		if !strings.HasPrefix(url, "https://") {
+			url = "https://" + strings.TrimPrefix(url, "http://")
+		}
+
+		// 在URL中嵌入认证信息
+		urlParts := strings.Split(url, "//")
+		url = fmt.Sprintf("%s//%s:%s@%s",
+			urlParts[0],
+			auth.Username,
+			auth.Password,
+			urlParts[1])
+		if g.logger != nil {
+			g.logger.Infof("认证URL已配置 (token长度: %d)\n", len(auth.Password))
+		}
 	}
 
 	// 确保目标目录存在

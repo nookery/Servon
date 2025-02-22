@@ -272,14 +272,32 @@ func (g *GitHubIntegration) GetInstallationToken(repo string) (string, error) {
 		return token, nil
 	}
 
-	// 创建新令牌
+	// 创建新令牌时检查权限
 	logger.Infof("开始为安装 ID %d 创建新的令牌", installation.ID)
+
+	// 检查安装的权限
+	logger.Infof("安装的权限列表:")
+	for permission, level := range installation.Permissions {
+		logger.Infof("  - %s: %s", permission, level)
+	}
+
+	// 确保至少有 contents:read 权限
+	if level, ok := installation.Permissions["contents"]; !ok || level != "read" && level != "write" {
+		return "", logger.LogAndReturnErrorf("安装缺少必要的 contents 权限，当前权限: %v", installation.Permissions)
+	}
+
 	token, expiresAt, err := g.createInstallationToken(installation.ID)
 	if err != nil {
 		return "", logger.LogAndReturnErrorf("创建安装令牌失败: %v", err)
 	}
 
-	logger.Infof("成功创建新的安装令牌，过期时间: %v", expiresAt)
+	// 验证令牌
+	logger.Infof("验证令牌有效性...")
+	if err := g.validateToken(token, repo); err != nil {
+		return "", logger.LogAndReturnErrorf("令牌验证失败: %v", err)
+	}
+
+	logger.Infof("成功创建并验证新的安装令牌，过期时间: %v", expiresAt)
 	g.tokenCache.Set(installation.ID, token, expiresAt)
 	return token, nil
 }
@@ -534,5 +552,33 @@ func (g *GitHubIntegration) handlePullRequestEvent(payload []byte) error {
 // handleCheckSuiteEvent 处理检查套件事件
 func (g *GitHubIntegration) handleCheckSuiteEvent(payload []byte) error {
 	// TODO: 实现检查套件事件处理逻辑
+	return nil
+}
+
+// 添加新的验证方法
+func (g *GitHubIntegration) validateToken(token, repo string) error {
+	// 创建一个带认证的请求来测试令牌
+	client := &http.Client{}
+	apiURL := fmt.Sprintf("https://api.github.com/repos/%s", strings.TrimPrefix(repo, "https://github.com/"))
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		return fmt.Errorf("创建验证请求失败: %v", err)
+	}
+
+	req.Header.Set("Authorization", "token "+token)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("执行验证请求失败: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("API请求失败 (状态码: %d): %s", resp.StatusCode, string(body))
+	}
+
 	return nil
 }

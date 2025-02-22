@@ -107,11 +107,7 @@ type Repository struct {
 }
 
 // Permissions 表示安装的权限配置
-type Permissions struct {
-	Checks   string `json:"checks"`   // 检查权限级别
-	Issues   string `json:"issues"`   // Issue权限级别
-	Metadata string `json:"metadata"` // 元数据权限级别
-}
+type Permissions map[string]string
 
 // WebhookPayload 表示存储的 webhook 事件数据
 type WebhookPayload struct {
