@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 export const useLockStore = defineStore('lock', {
     state: () => ({
-        isLocked: false
+        isLocked: true
     }),
     actions: {
         lock() {

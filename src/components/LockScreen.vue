@@ -1,45 +1,45 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useLockStore } from '../stores/lockStore'
+import { RiLock2Line } from '@remixicon/vue'
 
-const password = ref('')
-const isLocked = ref(true)
-const errorMessage = ref('')
+const lockStore = useLockStore()
+const userInput = ref('')
+const PASSWORD = 'admin'
 
-const unlock = () => {
-    // 这里应该与后端 API 进行验证
-    // 临时使用硬编码的密码进行演示
-    if (password.value === 'admin') {
-        isLocked.value = false
-        errorMessage.value = ''
-    } else {
-        errorMessage.value = '密码错误'
-        password.value = ''
+const checkPassword = () => {
+    if (userInput.value.includes(PASSWORD)) {
+        lockStore.unlock()
+        userInput.value = ''
     }
 }
+
+const handleKeyPress = (e: KeyboardEvent) => {
+    userInput.value += e.key
+    // 保持输入字符串在合理长度内
+    if (userInput.value.length > 50) {
+        userInput.value = userInput.value.slice(-50)
+    }
+    checkPassword()
+}
+
+onMounted(() => {
+    window.addEventListener('keypress', handleKeyPress)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('keypress', handleKeyPress)
+})
 </script>
 
 <template>
-    <div v-if="isLocked" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-96">
-            <h2 class="text-2xl font-bold mb-6 text-center dark:text-white">应用已锁定</h2>
-            <form @submit.prevent="unlock" class="space-y-4">
-                <div>
-                    <input
-                        type="password"
-                        v-model="password"
-                        placeholder="请输入密码"
-                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        autocomplete="current-password"
-                    />
-                </div>
-                <p v-if="errorMessage" class="text-red-500 text-sm">{{ errorMessage }}</p>
-                <button
-                    type="submit"
-                    class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                    解锁
-                </button>
-            </form>
+    <div class="fixed inset-0 bg-gray-900/70 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="text-center space-y-6">
+            <div class="text-white space-y-4">
+                <RiLock2Line class="w-20 h-20 mx-auto opacity-80" />
+                <h2 class="text-4xl font-bold tracking-wider">应用已锁定</h2>
+                <p class="text-lg text-gray-300">按任意键输入密码解锁</p>
+            </div>
         </div>
     </div>
 </template>

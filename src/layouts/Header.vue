@@ -6,6 +6,7 @@ import OSInfo from '../modules/OSInfo.vue'
 import UserInfo from '../modules/UserInfo.vue'
 import TaskManagerButton from '../modules/TaskManagerButton.vue'
 import IPInfoButton from '../modules/IPInfoButton.vue'
+import LockButton from '../components/buttons/LockButton.vue'
 </script>
 
 <template>
@@ -22,6 +23,7 @@ import IPInfoButton from '../modules/IPInfoButton.vue'
                 <NetworkStatus />
                 <SystemResources />
                 <UserInfo />
+                <LockButton />
             </div>
         </div>
     </div>
