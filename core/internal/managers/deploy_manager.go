@@ -113,6 +113,10 @@ func (m *DeployManager) DeployProject(repoURL string) error {
 	projectType := utils.DefaultProjectUtil.DetectProjectType(workDir)
 	m.logger.Infof("检测到项目类型: %s", projectType)
 
+	if projectType == "unknown" {
+		return m.logger.LogAndReturnErrorf("未检测到项目类型，部署失败")
+	}
+
 	// 2. 构建项目
 	m.logger.Infof("开始构建 %s 项目: %s", projectType, repoURL)
 	if err := m.buildProject(workDir); err != nil {

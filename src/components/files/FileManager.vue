@@ -7,6 +7,7 @@ import RenameFileDialog from './RenameFileDialog.vue'
 import type { FileInfo, SortBy, SortOrder } from '../../models/FileInfo'
 import IconButton from '../IconButton.vue'
 import { useConfirm } from '../../composables/useConfirm'
+import CreateFileDialog from './CreateFileDialog.vue'
 
 const props = defineProps<{
     initialPath: string
@@ -35,8 +36,6 @@ const currentPage = ref(1)
 const showEditor = ref(false)
 const editingFile = ref<FileInfo | null>(null)
 const showCreateDialog = ref(false)
-const newFileName = ref('')
-const newFileType = ref<'file' | 'directory'>('file')
 const searchQuery = ref('')
 const showRenameDialog = ref(false)
 const renamingFile = ref<FileInfo | null>(null)
@@ -85,23 +84,6 @@ async function downloadFile(file: FileInfo) {
         document.body.removeChild(link)
     } catch (err) {
         error.value = '下载文件失败'
-    }
-}
-
-async function createFile() {
-    if (!newFileName.value) return
-    try {
-        const newPath = `${currentPath.value}/${newFileName.value}`.replace(/\/+/g, '/')
-        await fileAPI.createFile(newPath, newFileType.value)
-        showCreateDialog.value = false
-        newFileName.value = ''
-        loadFiles(currentPath.value)
-    } catch (err: any) {
-        const errorMessage = err.response?.data?.error || err.message || '创建文件失败'
-        error.value = errorMessage
-        setTimeout(() => {
-            error.value = null
-        }, 5000)
     }
 }
 
@@ -356,7 +338,7 @@ onMounted(() => {
 
                 <template v-if="showShortcuts">
                     <div class="divider divider-horizontal"></div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 items-center">
                         <IconButton icon="ri-settings-3-line" variant="ghost" size="sm" title="数据目录"
                             @click="loadFiles('/data')">
                             data
@@ -384,7 +366,7 @@ onMounted(() => {
                     </div>
                 </template>
 
-                <div class="flex-1 flex justify-end">
+                <div class="flex-1 flex justify-end items-center">
                     <div class="form-control">
                         <div class="input-group">
                             <input type="text" placeholder="搜索文件..." class="input input-bordered input-sm w-64"
@@ -448,11 +430,17 @@ onMounted(() => {
                         <td>{{ formatFileSize(file.size) }}</td>
                         <td>{{ new Date(file.modTime).toLocaleString() }}</td>
                         <td v-if="!readOnly" class="space-x-2">
-                            <IconButton v-if="!file.isDir" icon="ri-download-line" size="xs"
-                                @click="downloadFile(file)" />
-                            <IconButton icon="ri-edit-line" size="xs" variant="warning" @click="renameFile(file)" />
-                            <IconButton icon="ri-delete-bin-line" size="xs" variant="error"
-                                @click="handleDelete(file)" />
+                            <div class="join gap-0">
+                                <button class="btn btn-xs btn-error join-item" @click="handleDelete(file)">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                                <button class="btn btn-xs btn-warning join-item" @click="renameFile(file)">
+                                    <i class="ri-edit-line"></i>
+                                </button>
+                                <button v-if="!file.isDir" class="btn btn-xs join-item" @click="downloadFile(file)">
+                                    <i class="ri-download-line"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -471,42 +459,8 @@ onMounted(() => {
 
         <FileEditor v-model:show="showEditor" :file="editingFile" @saved="loadFiles(currentPath)" />
 
-        <dialog class="modal" :class="{ 'modal-open': showCreateDialog }">
-            <div class="modal-box">
-                <h3 class="font-bold text-lg mb-4">新建文件/目录</h3>
-
-                <div v-if="error" class="alert alert-error shadow-lg mb-4">
-                    <div>
-                        <i class="ri-error-warning-line"></i>
-                        <span>{{ error }}</span>
-                    </div>
-                </div>
-
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">类型</span>
-                    </label>
-                    <select v-model="newFileType" class="select select-bordered">
-                        <option value="file">文件</option>
-                        <option value="directory">目录</option>
-                    </select>
-                </div>
-                <div class="form-control mt-4">
-                    <label class="label">
-                        <span class="label-text">名称</span>
-                    </label>
-                    <input type="text" v-model="newFileName" class="input input-bordered" placeholder="输入名称">
-                </div>
-                <div class="modal-action">
-                    <button class="btn" @click="() => {
-                        showCreateDialog = false;
-                        if (error) error = null;
-                        newFileName = '';
-                    }">取消</button>
-                    <button class="btn btn-primary" @click="createFile" :disabled="!newFileName">创建</button>
-                </div>
-            </div>
-        </dialog>
+        <CreateFileDialog v-model:show="showCreateDialog" :current-path="currentPath"
+            @created="loadFiles(currentPath)" />
 
         <RenameFileDialog v-model:show="showRenameDialog" :file="renamingFile" @rename="handleRename" />
     </PageContainer>

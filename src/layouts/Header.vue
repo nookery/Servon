@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ThemeSwitcher from '../modules/ThemeSwitcher.vue'
+import ThemeSwitcher from '../components/buttons/ThemeSwitcher.vue'
 import NetworkStatus from '../modules/NetworkStatus.vue'
 import SystemResources from '../modules/SystemResources.vue'
 import OSInfo from '../modules/OSInfo.vue'
@@ -17,13 +17,13 @@ import LockButton from '../components/buttons/LockButton.vue'
 
         <div class="flex-none gap-6">
             <div class="flex items-center gap-6">
+                <LockButton />
                 <IPInfoButton />
                 <TaskManagerButton />
                 <ThemeSwitcher />
                 <NetworkStatus />
                 <SystemResources />
                 <UserInfo />
-                <LockButton />
             </div>
         </div>
     </div>

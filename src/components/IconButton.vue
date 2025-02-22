@@ -57,8 +57,8 @@ const buttonClass = computed(() => {
 </script>
 
 <template>
-    <button :class="buttonClass" :title="title" :disabled="disabled" v-bind="$attrs">
-        <i v-if="icon" :class="[icon, loading ? 'hidden' : 'mr-1']"></i>
-        <slot></slot>
+    <button :class="buttonClass" :title="title" :disabled="disabled" v-bind="$attrs" class="flex items-center justify-center">
+        <i v-if="icon" :class="[icon, loading ? 'hidden' : '']"></i>
+        <slot v-if="$slots.default" :class="icon ? 'ml-2' : ''"></slot>
     </button>
 </template>

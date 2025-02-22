@@ -9,7 +9,7 @@ const currentTab = ref('github')
 <template>
     <PageContainer>
         <template #tabs>
-            <div class="tabs">
+            <div class="tabs tabs-box">
                 <a class="tab tab-bordered" :class="{ 'tab-active': currentTab === 'github' }"
                     @click="currentTab = 'github'">
                     <i class="ri-github-fill mr-2"></i>
