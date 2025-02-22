@@ -11,6 +11,5 @@ export const useLockStore = defineStore('lock', {
         unlock() {
             this.isLocked = false
         }
-    },
-    persist: true // 持久化存储锁定状态
+    }
 })
