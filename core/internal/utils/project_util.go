@@ -34,6 +34,26 @@ func (p *ProjectUtil) DetectProjectType(projectPath string) string {
 		return "flutter"
 	}
 
+	// Next.js 项目特征
+	if fileExists(filepath.Join(projectPath, "next.config.js")) {
+		return "nextjs"
+	}
+
+	// Nuxt.js 项目特征
+	if fileExists(filepath.Join(projectPath, "nuxt.config.ts")) {
+		return "nuxtjs"
+	}
+
+	// Remix 项目特征
+	if fileExists(filepath.Join(projectPath, "remix.config.js")) {
+		return "remix"
+	}
+
+	// Svelte 项目特征
+	if fileExists(filepath.Join(projectPath, "svelte.config.js")) {
+		return "svelte"
+	}
+
 	return "unknown"
 }
 
@@ -54,5 +74,3 @@ func dirExists(path string) bool {
 	}
 	return info.IsDir()
 }
-
-//

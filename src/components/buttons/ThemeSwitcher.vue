@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import IconButton from '../components/IconButton.vue'
+import IconButton from '../IconButton.vue'
 const themes = [
     'light',
     'dark',
@@ -24,7 +24,7 @@ onMounted(() => {
 
 <template>
     <div class="dropdown dropdown-end m-0 p-0">
-        <label tabindex="0" class="btn btn-ghost gap-2">
+        <label tabindex="0">
             <IconButton icon="ri-palette-line" variant="ghost" circle title="切换主题" />
         </label>
         <ul tabindex="0"

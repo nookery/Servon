@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import IconButton from '../IconButton.vue'
 import GitHubButton from './GitHubButton.vue'
+import RefreshButton from './RefreshButton.vue'
 import { getAuthorizedRepos } from '../../api/github_api'
 import { deployRepository } from '../../api/deploy_api'
 import type { GitHubRepo } from '../../models/GitHubTypes'
@@ -31,15 +31,53 @@ async function loadGitHubRepos() {
     }
 }
 
-// 计算当前页的数据
+// 筛选状态：null 表示全部，true 表示私有，false 表示公开
+const filterPrivate = ref<boolean | null>(null)
+
+// 添加搜索关键词
+const searchQuery = ref('')
+
+// 修改计算属性，增加搜索过滤
 const paginatedRepos = computed(() => {
+    let filtered = repos.value
+
+    // 先按私有状态筛选
+    if (filterPrivate !== null) {
+        filtered = filtered.filter(repo => repo.private === filterPrivate.value)
+    }
+
+    // 再按搜索关键词筛选
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase()
+        filtered = filtered.filter(repo =>
+            repo.name.toLowerCase().includes(query) ||
+            (repo.description?.toLowerCase() || '').includes(query)
+        )
+    }
+
     const start = (currentPage.value - 1) * pageSize.value
     const end = start + pageSize.value
-    return repos.value.slice(start, end)
+    return filtered.slice(start, end)
 })
 
-// 计算总页数
-const totalPages = computed(() => Math.ceil(repos.value.length / pageSize.value))
+// 修改总页数计算，使用相同的筛选逻辑
+const totalPages = computed(() => {
+    let filtered = repos.value
+
+    if (filterPrivate !== null) {
+        filtered = filtered.filter(repo => repo.private === filterPrivate.value)
+    }
+
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase()
+        filtered = filtered.filter(repo =>
+            repo.name.toLowerCase().includes(query) ||
+            (repo.description?.toLowerCase() || '').includes(query)
+        )
+    }
+
+    return Math.ceil(filtered.length / pageSize.value)
+})
 
 // 页面切换
 function changePage(page: number) {
@@ -67,9 +105,31 @@ loadGitHubRepos()
     <div class="mb-8">
         <div class="flex justify-between mb-6">
             <div class="flex items-center gap-4">
-                <IconButton icon="ri-refresh-line" :loading="loading" @click="loadGitHubRepos" />
+                <GitHubButton />
+                <RefreshButton 
+                    :loading="loading"
+                    @refresh="loadGitHubRepos"
+                />
+                <!-- 搜索框 -->
+                <div class="form-control">
+                    <input type="text" v-model="searchQuery" placeholder="搜索仓库..."
+                        class="input input-bordered input-sm w-64">
+                </div>
+                <div class="join">
+                    <button class="join-item btn btn-sm" :class="{ 'btn-active': filterPrivate === null }"
+                        @click="filterPrivate = null">
+                        全部
+                    </button>
+                    <button class="join-item btn btn-sm" :class="{ 'btn-active': filterPrivate === false }"
+                        @click="filterPrivate = false">
+                        公开
+                    </button>
+                    <button class="join-item btn btn-sm" :class="{ 'btn-active': filterPrivate === true }"
+                        @click="filterPrivate = true">
+                        私有
+                    </button>
+                </div>
             </div>
-            <GitHubButton />
         </div>
 
         <div v-if="error" class="alert alert-error mb-4">

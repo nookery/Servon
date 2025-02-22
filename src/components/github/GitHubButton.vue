@@ -21,7 +21,7 @@ const handleGitHubSuccess = () => {
 
 <template>
     <div>
-        <IconButton @click="showModal" icon="ri-github-line" variant="ghost" circle title="GitHub集成" />
+        <IconButton @click="showModal" icon="ri-github-line" size="lg" variant="ghost" circle title="GitHub集成" />
 
         <dialog ref="modalRef" class="modal">
             <div class="modal-box">
