@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"servon/core/internal/events"
@@ -30,10 +31,11 @@ type DeployManager struct {
 }
 
 func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegration) (*DeployManager, error) {
+	logger := utils.NewLogUtil(deployLogDir)
 	dm := &DeployManager{
 		eventBus: eventBus,
-		logger:   utils.NewLogUtil(deployLogDir),
-		gitUtil:  utils.NewGitUtil(),
+		logger:   logger,
+		gitUtil:  utils.NewGitUtil(logger),
 		github:   github,
 	}
 
@@ -132,35 +134,58 @@ func (m *DeployManager) gitClone(repo, workDir string) error {
 	const maxRetries = 3
 	var lastErr error
 
+	// 规范化仓库地址
+	originalRepo := repo
+	if !strings.HasPrefix(repo, "https://") && !strings.HasPrefix(repo, "git@") {
+		repo = "https://github.com/" + repo
+	}
+	m.logger.Infof("规范化仓库地址: %s -> %s", originalRepo, repo)
+
+	// 检查工作目录
+	if _, err := os.Stat(workDir); os.IsNotExist(err) {
+		m.logger.Infof("工作目录不存在，创建: %s", workDir)
+		if err := os.MkdirAll(workDir, 0755); err != nil {
+			return m.logger.LogAndReturnErrorf("创建工作目录失败: %v", err)
+		}
+	}
+
 	for i := 0; i < maxRetries; i++ {
 		if i > 0 {
 			m.logger.Infof("第 %d 次重试克隆仓库...", i+1)
-			time.Sleep(time.Second * time.Duration(i+1)) // 递增重试延迟
+			time.Sleep(time.Second * time.Duration(i+1))
 		}
 
-		// 获取认证信息
-		m.logger.Infof("正在获取 GitHub 认证信息...")
+		m.logger.Infof("开始获取 GitHub 认证信息...")
 		auth, err := m.getGitHubAuth(repo)
 		if err != nil {
 			lastErr = fmt.Errorf("获取GitHub认证信息失败: %v", err)
-			m.logger.Errorf("获取GitHub认证信息失败: %v", err)
+			m.logger.Errorf("认证失败详情: %v", lastErr)
 			continue
 		}
-		m.logger.Infof("成功获取 GitHub 认证信息")
 
-		// 尝试克隆
+		if auth == nil {
+			m.logger.Warnf("获取到的认证信息为空，将尝试无认证克隆")
+		} else {
+			m.logger.Infof("成功获取认证信息 - 用户名: %s, Token长度: %d",
+				auth.Username, len(auth.Password))
+		}
+
 		m.logger.Infof("开始克隆仓库 %s 到 %s", repo, workDir)
 		err = m.gitUtil.CloneRepo(repo, "main", workDir, auth)
 		if err == nil {
 			m.logger.Infof("仓库克隆成功: %s", repo)
+			// 验证克隆结果
+			if files, err := os.ReadDir(workDir); err == nil {
+				m.logger.Infof("克隆目录内容: %d 个文件/目录", len(files))
+			}
 			return nil
 		}
 
 		lastErr = err
-		m.logger.Errorf("克隆失败: %v", err)
+		m.logger.Errorf("克隆失败 (尝试 %d/%d): %v", i+1, maxRetries, err)
 	}
 
-	return m.logger.LogAndReturnErrorf("克隆仓库失败（已重试%d次）: %v", maxRetries, lastErr)
+	return m.logger.LogAndReturnErrorf("克隆仓库失败（已重试%d次）- 最后错误: %v", maxRetries, lastErr)
 }
 
 // getGitHubAuth 获取GitHub认证信息
@@ -169,17 +194,45 @@ func (m *DeployManager) getGitHubAuth(repo string) (*githttp.BasicAuth, error) {
 		return nil, m.logger.LogAndReturnErrorf("GitHub集成未初始化")
 	}
 
-	m.logger.Infof("正在获取仓库 %s 的安装令牌", repo)
-	token, err := m.github.GetInstallationToken(repo)
-	if err != nil {
-		return nil, m.logger.LogAndReturnErrorf("获取GitHub认证令牌失败: %v", err)
-	}
-	m.logger.Infof("成功获取安装令牌")
+	m.logger.Infof("准备获取仓库认证令牌: %s", repo)
 
-	return &githttp.BasicAuth{
+	// 检查仓库格式
+	repoName := repo
+	if strings.HasPrefix(repo, "https://github.com/") {
+		repoName = strings.TrimPrefix(repo, "https://github.com/")
+	}
+	m.logger.Infof("处理后的仓库名称: %s", repoName)
+
+	// 验证仓库名称格式
+	parts := strings.Split(repoName, "/")
+	if len(parts) != 2 {
+		return nil, m.logger.LogAndReturnErrorf("无效的仓库名称格式: %s，应为 'owner/repo' 格式", repoName)
+	}
+	m.logger.Infof("仓库所有者: %s, 仓库名称: %s", parts[0], parts[1])
+
+	token, err := m.github.GetInstallationToken(repoName)
+	if err != nil {
+		return nil, m.logger.LogAndReturnErrorf("获取安装令牌失败: %v", err)
+	}
+
+	if token == "" {
+		return nil, m.logger.LogAndReturnErrorf("获取到的token为空")
+	}
+	m.logger.Infof("成功获取安装令牌 (长度: %d)", len(token))
+
+	auth := &githttp.BasicAuth{
 		Username: "x-access-token",
 		Password: token,
-	}, nil
+	}
+
+	// 验证认证信息完整性
+	if auth.Username == "" || auth.Password == "" {
+		return nil, m.logger.LogAndReturnErrorf("认证信息不完整: username=%v, token_length=%d",
+			auth.Username != "", len(auth.Password))
+	}
+
+	m.logger.Infof("认证信息构建成功")
+	return auth, nil
 }
 
 // buildProject 构建项目

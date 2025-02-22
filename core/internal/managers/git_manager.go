@@ -16,7 +16,7 @@ type GitManager struct {
 
 func NewGitManager() *GitManager {
 	return &GitManager{
-		gitUtil: utils.NewGitUtil(),
+		gitUtil: utils.NewGitUtil(nil),
 	}
 }
 

@@ -209,6 +209,7 @@ func (g *GitHubIntegration) GetInstallationToken(repo string) (string, error) {
 	if len(parts) != 2 {
 		return "", logger.LogAndReturnErrorf("无效的仓库名称格式: %s，应为 'owner/repo' 格式", repoFullName)
 	}
+	logger.Infof("仓库所有者: %s, 仓库名称: %s", parts[0], parts[1])
 
 	// 获取所有安装配置
 	installations, err := GetInstallationConfig()
@@ -217,16 +218,20 @@ func (g *GitHubIntegration) GetInstallationToken(repo string) (string, error) {
 	}
 	logger.Infof("成功读取安装配置，共有 %d 个安装", len(installations))
 
-	// 打印所有安装的详细信息，帮助调试
+	// 打印所有安装的详细信息
 	for id, inst := range installations {
-		logger.Infof("已安装配置 - ID: %d, 账户: %s, 仓库数量: %d",
-			id,
-			inst.AccountLogin,
-			len(inst.Repositories))
+		logger.Infof("安装配置 [ID: %d]:", id)
+		logger.Infof("  账户: %s", inst.AccountLogin)
+		logger.Infof("  类型: %s", inst.AccountType)
+		logger.Infof("  仓库数量: %d", len(inst.Repositories))
 
 		// 打印该安装下的所有仓库
 		for _, r := range inst.Repositories {
 			logger.Infof("  - 仓库: %s (private: %v)", r.FullName, r.Private)
+			// 比较仓库名称
+			if r.FullName == repoFullName {
+				logger.Infof("    >>> 找到目标仓库匹配 <<<")
+			}
 		}
 	}
 
@@ -259,9 +264,7 @@ func (g *GitHubIntegration) GetInstallationToken(repo string) (string, error) {
 	if appConfig == nil {
 		return "", logger.LogAndReturnErrorf("GitHub App 配置不存在")
 	}
-	logger.Infof("当前 GitHub App 配置 - ID: %d, 安装数量: %d",
-		appConfig.GitHubAppID,
-		len(appConfig.Installations))
+	logger.Infof("已加载 GitHub App 配置 - ID: %d", appConfig.GitHubAppID)
 
 	// 检查缓存
 	if token, ok := g.tokenCache.Get(installation.ID); ok {
