@@ -23,7 +23,7 @@ func NewCommandProvider(fullManager *managers.FullManager, webServer *utils.WebS
 		root:        commands.RootCmd,
 	}
 
-	p.AddCommand(commands.GetDeployCommand())
+	p.AddCommand(commands.GetDeployCommand(p.fullManager))
 	p.AddCommand(commands.GetServerCommand(p.webServer, p.fullManager))
 	p.AddCommand(commands.GetVersionCommand(p.fullManager.VersionManager))
 	p.AddCommand(commands.GetUpgradeCommand(p.fullManager.VersionManager))

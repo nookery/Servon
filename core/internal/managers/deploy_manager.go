@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"servon/core/internal/events"
+	"servon/core/internal/managers/deployers"
 	"servon/core/internal/managers/github"
 	"servon/core/internal/utils"
 
@@ -32,6 +33,7 @@ type DeployManager struct {
 	logsDir     string
 	tempDir     string
 	projectsDir string
+	deployers   []deployers.Deployer
 }
 
 func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegration, logsDir string, tempDir string, projectsDir string) (*DeployManager, error) {
@@ -44,6 +46,7 @@ func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegratio
 		logsDir:     logsDir,
 		tempDir:     tempDir,
 		projectsDir: projectsDir,
+		deployers:   []deployers.Deployer{},
 	}
 
 	// 订阅Git Push事件
@@ -124,19 +127,21 @@ func (m *DeployManager) DeployProject(repoURL string) error {
 		return m.logger.LogAndReturnErrorf("未检测到项目类型，部署失败")
 	}
 
-	// 2. 构建项目
-	m.logger.Infof("开始构建 %s 项目: %s", projectType, repoURL)
-	if err := m.buildProject(workDir); err != nil {
-		return m.logger.LogAndReturnErrorf("构建项目失败: %v", err)
+	// 根据项目类型选择合适的部署器
+	deployer := m.getDeployer(projectType)
+	if deployer == nil {
+		return m.logger.LogAndReturnErrorf("未找到合适的部署器")
 	}
 
-	// 3. 部署服务
-	m.logger.Infof("开始部署 %s 服务: %s", projectType, repoURL)
-	if err := m.deployService(workDir); err != nil {
-		return m.logger.LogAndReturnErrorf("部署服务失败: %v", err)
+	m.logger.Infof("使用部署器: %s", deployer.GetName())
+
+	// 执行部署
+	if err := deployer.Deploy(workDir, m.projectsDir, m.logger); err != nil {
+		return m.logger.LogAndReturnErrorf("部署失败: %v", err)
 	}
 
-	m.logger.Infof("仓库 %s (%s) 部署成功完成", repoURL, projectType)
+	m.logger.Infof("部署成功")
+
 	return nil
 }
 
@@ -246,30 +251,41 @@ func (m *DeployManager) getGitHubAuth(repo string) (*githttp.BasicAuth, error) {
 	return auth, nil
 }
 
-// buildProject 构建项目
-func (m *DeployManager) buildProject(workDir string) error {
-	// TODO: 实现具体的项目构建逻辑
-	// 可能需要根据项目类型选择不同的构建方式
-	return nil
+// AddDeployer 添加新的部署器
+func (m *DeployManager) AddDeployer(deployer deployers.Deployer) {
+	m.logger.Infof("添加新的部署器: %T", deployer)
+	m.deployers = append(m.deployers, deployer)
 }
 
-// deployService 部署服务
-func (m *DeployManager) deployService(workDir string) error {
-	// 将源代码复制到项目目录
-	projectName := filepath.Base(workDir)
-	projectDir := filepath.Join(m.projectsDir, projectName)
-	if err := os.MkdirAll(projectDir, 0755); err != nil {
-		return m.logger.LogAndReturnErrorf("创建项目目录失败: %v", err)
+// RemoveDeployer 移除指定类型的部署器
+func (m *DeployManager) RemoveDeployer(deployerType string) {
+	m.logger.Infof("移除部署器: %s", deployerType)
+	newDeployers := make([]deployers.Deployer, 0)
+	for _, d := range m.deployers {
+		if fmt.Sprintf("%T", d) != deployerType {
+			newDeployers = append(newDeployers, d)
+		}
 	}
+	m.deployers = newDeployers
+}
 
-	// 复制源代码到项目目录
-	if err := m.fileUtil.CopyDir(workDir, projectDir); err != nil {
-		return m.logger.LogAndReturnErrorf("复制源代码失败: %v", err)
+// GetDeployers 获取所有部署器
+func (m *DeployManager) GetDeployers() []deployers.Deployer {
+	return m.deployers
+}
+
+// ClearDeployers 清空所有部署器
+func (m *DeployManager) ClearDeployers() {
+	m.logger.Info("清空所有部署器")
+	m.deployers = make([]deployers.Deployer, 0)
+}
+
+// getDeployer 根据项目类型选择合适的部署器
+func (m *DeployManager) getDeployer(projectType string) deployers.Deployer {
+	for _, deployer := range m.deployers {
+		if deployer.GetName() == projectType {
+			return deployer
+		}
 	}
-
-	m.logger.Infof("源代码复制成功: %s -> %s", workDir, projectDir)
-
-	// 执行构建命令
-
 	return nil
 }

@@ -3,6 +3,7 @@ package core
 import (
 	"servon/core/internal/contract"
 	"servon/core/internal/managers"
+	"servon/core/internal/managers/deployers"
 	"servon/core/internal/managers/github"
 	"servon/core/internal/models"
 	"servon/core/internal/utils"
@@ -20,3 +21,7 @@ type DeployLog = models.DeployLog
 type WebhookPayload = github.WebhookPayload
 type OSType = managers.OSType
 type Project = contract.Project
+
+type Deployer = deployers.Deployer
+
+type LogUtil = utils.LogUtil

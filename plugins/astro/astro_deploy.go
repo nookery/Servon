@@ -3,6 +3,7 @@ package astro
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -14,6 +15,8 @@ const DefaultHost = "0.0.0.0"
 
 // deploy 部署 Astro 项目
 func (a *AstroPlugin) deploy(repo string, branch string, host string, port int) error {
+	a.Info("开始部署 Astro 项目")
+
 	projectFolder := a.DataManager.GetProjectsRootFolder() + "/" + getProjectNameFromRepo(repo)
 	targetFolder := projectFolder + "/" + time.Now().Format("20060102150405")
 
@@ -97,5 +100,62 @@ func (a *AstroPlugin) deploy(repo string, branch string, host string, port int) 
 	color.New(color.FgWhite).Print("🌐 快速打开: ")
 	color.New(color.FgHiWhite).Printf("http://%s:%d\n", host, port)
 	fmt.Println()
+	return nil
+}
+
+// isAstroProject 判断是否是 Astro 项目
+func isAstroProject(projectFolder string) bool {
+	if _, err := os.Stat(projectFolder + "/astro.config.mjs"); os.IsNotExist(err) {
+		return false
+	}
+
+	return true
+}
+
+// getProjectNameFromRepo 从仓库地址中获取项目名称
+// 比如：https://github.com/user/project.git 返回 project
+// 比如：git@github.com:user/project.git 返回 project
+// 比如：ssh://git@github.com/user/project.git 返回 project
+// 比如：git+ssh://git@github.com/user/project.git 返回 project
+// 比如：git+https://github.com/user/project.git 返回 project
+// 比如：git+http://github.com/user/project.git 返回 project
+// 如果不能获取到项目名称，则返回随机字符串（根据当前时间生成）
+func getProjectNameFromRepo(repo string) string {
+	repo = strings.TrimSuffix(repo, ".git")
+	repo = strings.TrimPrefix(repo, "https://")
+	repo = strings.TrimPrefix(repo, "http://")
+	repo = strings.TrimPrefix(repo, "git@")
+	repo = strings.TrimPrefix(repo, "ssh://")
+	repo = strings.TrimPrefix(repo, "git+")
+	repo = strings.TrimPrefix(repo, "git+ssh://")
+
+	parts := strings.Split(repo, "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+
+	return time.Now().Format("20060102150405")
+}
+
+func (a *AstroPlugin) build(path string) error {
+	// 确保保存路径存在
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return err
+	}
+
+	// pnpm install
+	if err := a.RunShellInFolder(path, "pnpm", "install"); err != nil {
+		return err
+	}
+
+	a.Info("pnpm install 成功")
+
+	// pnpm build
+	if err := a.RunShellInFolder(path, "pnpm", "build"); err != nil {
+		return err
+	}
+
+	a.Info("pnpm build 成功")
+
 	return nil
 }

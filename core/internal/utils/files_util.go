@@ -147,6 +147,15 @@ func (p *FileUtil) IsDirExists(dirPath string) bool {
 	return info.IsDir()
 }
 
+// IsFileExists 判断文件是否存在
+func (p *FileUtil) IsFileExists(filePath string) bool {
+	info, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return info.IsDir()
+}
+
 // GetDirSize 获取目录大小
 func (p *FileUtil) GetDirSize(dirPath string) int64 {
 	info, err := os.Stat(dirPath)
