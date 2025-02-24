@@ -4,7 +4,7 @@ import GitHubButton from './GitHubButton.vue'
 import RefreshButton from './RefreshButton.vue'
 import { getAuthorizedRepos } from '../../api/github_api'
 import { deployRepository } from '../../api/deploy_api'
-import type { GitHubRepo } from '../../models/GitHubTypes'
+import type { GitHubRepo } from '../../types/GitHubTypes'
 import { useToast } from '../../composables/useToast'
 
 const toast = useToast()
@@ -265,7 +265,7 @@ loadGitHubRepos()
                     <!-- 最后一页 -->
                     <button v-if="totalPages > 1" class="join-item btn btn-sm"
                         :class="{ 'btn-active': currentPage === totalPages }" @click="changePage(totalPages)">{{
-                        totalPages }}</button>
+                            totalPages }}</button>
 
                     <!-- 下一页 -->
                     <button class="join-item btn btn-sm" :disabled="currentPage === totalPages"

@@ -21,5 +21,7 @@ func Setup(manager *managers.FullManager, r *gin.Engine, isDev bool) {
 	SetupDeployRouter(api, manager)
 	SetupIntegrationRouter(api, manager)
 	SetupLogRouter(api, manager.LogManager)
+	SetupTopologyRoutes(api, manager.TopologyManager)
+
 	SetupUIRoutes(r)
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { fileAPI } from '../../api/file_api'
-import type { FileInfo } from '../../models/FileInfo'
+import type { FileInfo } from '../../types/FileInfo'
 import * as monaco from 'monaco-editor'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
@@ -27,6 +27,7 @@ import { getLanguageFromFileName, getSupportedLanguages } from '../../utils/lang
 const props = defineProps<{
     show: boolean
     file: FileInfo | null
+    initialContent?: string  // 添加可选的初始内容属性
 }>()
 
 const emit = defineEmits<{
@@ -150,6 +151,12 @@ watch(() => props.file?.name, (newName) => {
 async function loadFileContent() {
     if (!props.file) return
     try {
+        // 如果提供了初始内容，直接使用
+        if (props.initialContent !== undefined) {
+            content.value = props.initialContent
+            return
+        }
+        // 否则从文件系统读取
         const res = await fileAPI.getFileContent(props.file.path)
         content.value = res.data.content
         error.value = null

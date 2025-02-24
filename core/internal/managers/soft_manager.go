@@ -9,22 +9,29 @@ import (
 	"strconv"
 )
 
+// SoftManager 基础软件管理功能
 type SoftManager struct {
-	Softwares map[string]contract.SuperSoft
+	Softwares map[string]contract.Software
+	Gateways  map[string]contract.SuperGateway
 	LogDir    string
 	LogUtil   *utils.LogUtil
+	*ProxySoftManager
+	*GatewaySoftManager
 }
 
 func NewSoftManager(logDir string) *SoftManager {
-	logUtil := utils.NewTopicLogUtil(logDir, "soft")
-
-	logUtil.Info("初始化软件管理器")
-
-	return &SoftManager{
-		Softwares: make(map[string]contract.SuperSoft),
+	sm := &SoftManager{
+		Softwares: make(map[string]contract.Software),
+		Gateways:  make(map[string]contract.SuperGateway),
 		LogDir:    logDir,
-		LogUtil:   logUtil,
+		LogUtil:   utils.NewTopicLogUtil(logDir, "soft"),
 	}
+
+	sm.ProxySoftManager = &ProxySoftManager{SoftManager: sm}
+	sm.GatewaySoftManager = &GatewaySoftManager{SoftManager: sm}
+
+	sm.LogUtil.Info("初始化软件管理器")
+	return sm
 }
 
 // GetProxySoftwares 获取所有的代理软件
@@ -106,14 +113,60 @@ func (c *SoftManager) GetSoftwareStatus(name string) (map[string]string, error) 
 	return software.GetStatus()
 }
 
-// RegisterSoftware 注册软件
-func (c *SoftManager) RegisterSoftware(name string, software contract.SuperSoft) error {
-	c.LogUtil.Info("注册软件: " + name)
-	if _, exists := c.Softwares[name]; exists {
+// RegisterSoftware 注册普通软件
+func (s *SoftManager) RegisterSoftware(name string, software contract.Software) error {
+	s.LogUtil.Info("注册软件: " + name)
+	if _, exists := s.Softwares[name]; exists {
 		return PrintAndReturnError(fmt.Sprintf("软件 %s 已注册", name))
 	}
-	c.Softwares[name] = software
+	s.Softwares[name] = software
 	return nil
+}
+
+// RegisterGateway 注册网关软件
+func (c *SoftManager) RegisterGateway(name string, gateway contract.SuperGateway) error {
+	c.LogUtil.Info("注册网关软件: " + name)
+
+	// 检查是否已注册为普通软件或网关
+	if _, exists := c.Softwares[name]; exists {
+		return PrintAndReturnError(fmt.Sprintf("软件 %s 已注册为普通软件", name))
+	}
+	if _, exists := c.Gateways[name]; exists {
+		return PrintAndReturnError(fmt.Sprintf("软件 %s 已注册为网关软件", name))
+	}
+
+	// 注册为网关软件
+	c.Gateways[name] = gateway
+	// 同时注册为普通软件（因为网关也是软件）
+	c.Softwares[name] = gateway
+	return nil
+}
+
+// GetGateway 获取网关软件
+func (c *SoftManager) GetGateway(name string) (contract.SuperGateway, error) {
+	c.LogUtil.Info("获取网关软件: " + name)
+	gateway, ok := c.Gateways[name]
+	if !ok {
+		return nil, PrintAndReturnError(fmt.Sprintf("网关软件 %s 未注册", name))
+	}
+	c.LogUtil.Success("获取网关软件成功: " + name)
+	return gateway, nil
+}
+
+// GetAllGateways 获取所有网关软件
+func (c *SoftManager) GetAllGateways() []string {
+	c.LogUtil.Info("获取所有网关软件...")
+	gatewayNames := make([]string, 0, len(c.Gateways))
+	for name := range c.Gateways {
+		gatewayNames = append(gatewayNames, name)
+	}
+	return gatewayNames
+}
+
+// IsGateway 判断软件是否为网关软件
+func (c *SoftManager) IsGateway(name string) bool {
+	_, ok := c.Gateways[name]
+	return ok
 }
 
 // GetAllSoftware 获取所有软件

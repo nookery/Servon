@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { IPInfo } from '../models/IpInfo'
+import type { IPInfo } from '../types/IpInfo'
 
 export interface SystemResources {
     cpu_usage: number

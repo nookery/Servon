@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { FileInfo } from '../../models/FileInfo'
+import type { FileInfo } from '../../types/FileInfo'
 
 const props = defineProps<{
     show: boolean

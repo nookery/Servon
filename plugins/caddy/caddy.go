@@ -2,6 +2,7 @@ package caddy
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"servon/core"
 	"strings"
@@ -12,6 +13,18 @@ type Caddy struct {
 	CaddyTemplate
 	*core.App
 	info core.SoftwareInfo
+}
+
+func NewCaddy(app *core.App) *Caddy {
+	return &Caddy{
+		App: app,
+		info: core.SoftwareInfo{
+			Name:            "caddy",
+			Description:     "Modern web server with automatic HTTPS",
+			IsProxySoftware: true,
+			IsGateway:       true,
+		},
+	}
 }
 
 // GetInfo 获取软件信息
@@ -226,4 +239,55 @@ func (c *Caddy) Start() error {
 
 	c.Infof("Caddy 服务已成功启动")
 	return nil
+}
+
+// Gateway 接口实现
+func (c *Caddy) GetConfig() (map[string]interface{}, error) {
+	// 确保配置目录和文件存在
+	if err := c.EnsureConfigDir(); err != nil {
+		return nil, fmt.Errorf("确保配置目录存在失败: %v", err)
+	}
+
+	if err := c.EnsureCaddyfile(); err != nil {
+		return nil, fmt.Errorf("确保配置文件存在失败: %v", err)
+	}
+
+	content, err := os.ReadFile(c.GetCaddyfilePath())
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		"config": string(content),
+	}, nil
+}
+
+func (c *Caddy) SetConfig(config map[string]interface{}) error {
+	if configStr, ok := config["config"].(string); ok {
+		err := os.WriteFile(c.GetCaddyfilePath(), []byte(configStr), 0644)
+		if err != nil {
+			return err
+		}
+		return c.Reload()
+	}
+	return fmt.Errorf("invalid config format")
+}
+
+func (c *Caddy) GetProjects() ([]core.Project, error) {
+	// TODO: 解析 Caddyfile 获取项目列表
+	return []core.Project{}, nil
+}
+
+func (c *Caddy) AddProject(project core.Project) error {
+	// TODO: 将项目配置添加到 Caddyfile
+	return c.Reload()
+}
+
+func (c *Caddy) RemoveProject(projectName string) error {
+	// TODO: 从 Caddyfile 中移除项目配置
+	return c.Reload()
+}
+
+func (c *Caddy) ReloadConfig() error {
+	return c.Reload()
 }

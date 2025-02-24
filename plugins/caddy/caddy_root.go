@@ -14,7 +14,7 @@ func Setup(app *core.App) {
 		BaseDir: app.GetSoftwareRootFolder("caddy"),
 	}
 
-	app.RegisterSoftware("caddy", &caddy)
+	app.RegisterGateway("caddy", &caddy)
 	app.AddCommand(caddy.NewCaddyCommand(app))
 }
 

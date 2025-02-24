@@ -17,6 +17,7 @@ export const languageConfigs: LanguageConfig[] = [
     { id: 'yaml', name: 'YAML', extensions: ['yaml', 'yml'], filenames: ['docker-compose.yml', '.travis.yml'] },
     { id: 'toml', name: 'TOML', extensions: ['toml'] },
     { id: 'ini', name: 'INI', extensions: ['ini', 'conf', 'cfg', 'prefs'] },
+    { id: 'caddyfile', name: 'Caddyfile', extensions: [], filenames: ['Caddyfile', 'caddyfile'] },
 
     // Web 开发
     { id: 'javascript', name: 'JavaScript', extensions: ['js', 'jsx', 'mjs', 'cjs'] },

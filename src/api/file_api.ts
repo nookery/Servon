@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { FileInfo, SortBy, SortOrder } from '../models/FileInfo'
+import type { FileInfo, SortBy, SortOrder } from '../types/FileInfo'
 
 export const fileAPI = {
     // 获取文件列表
