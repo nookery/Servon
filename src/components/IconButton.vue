@@ -11,6 +11,7 @@ interface Props {
     disabled?: boolean              // Whether button is disabled
     loading?: boolean               // Loading state
     customClass?: string           // Additional custom classes
+    tooltipPosition?: 'top' | 'bottom' | 'left' | 'right'  // 新增 tooltip 位置配置
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -19,12 +20,18 @@ const props = withDefaults(defineProps<Props>(), {
     circle: false,
     active: false,
     disabled: false,
-    loading: false
+    loading: false,
+    tooltipPosition: 'top'  // 默认显示在上方
 })
 
 // Compute button classes
 const buttonClass = computed(() => {
-    const classes = ['btn', 'transition-all', 'duration-200']
+    const classes = ['btn', 'transition-all', 'duration-200', 'tooltip']
+
+    // Add tooltip position class
+    if (props.tooltipPosition !== 'top') {
+        classes.push(`tooltip-${props.tooltipPosition}`)
+    }
 
     // Add variant classes
     if (props.variant !== 'default') {
@@ -57,7 +64,8 @@ const buttonClass = computed(() => {
 </script>
 
 <template>
-    <button :class="buttonClass" :title="title" :disabled="disabled" v-bind="$attrs" class="flex items-center justify-center">
+    <button :class="buttonClass" :data-tip="title" :title="title" :disabled="disabled" v-bind="$attrs"
+        class="flex items-center justify-center">
         <i v-if="icon" :class="[icon, loading ? 'hidden' : '']"></i>
         <slot v-if="$slots.default" :class="icon ? 'ml-2' : ''"></slot>
     </button>

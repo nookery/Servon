@@ -42,7 +42,7 @@ func (c *Caddy) Install() error {
 
 		// 下载和安装 GPG 密钥
 		c.Info("下载和安装 GPG 密钥...")
-		err := c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg")
+		err, _ := c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg")
 		if err != nil {
 			c.Errorf("下载 GPG 密钥失败: %v", err)
 			return err
@@ -50,7 +50,7 @@ func (c *Caddy) Install() error {
 
 		// 添加 Caddy 软件源
 		c.Info("添加 Caddy 软件源...")
-		err = c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list")
+		err, _ = c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list")
 		if err != nil {
 			c.Errorf("添加 Caddy 软件源失败: %v", err)
 			return err
@@ -99,7 +99,7 @@ func (c *Caddy) Uninstall() error {
 	// 停止服务
 	c.Info("停止 Caddy 服务...")
 	stopCmd := exec.Command("sudo", "systemctl", "stop", "caddy")
-	if err := c.StreamCommand(stopCmd); err != nil {
+	if err, _ := c.RunShell(stopCmd.String()); err != nil {
 		return fmt.Errorf("停止服务失败:\n%s", err)
 	}
 
@@ -115,7 +115,7 @@ func (c *Caddy) Uninstall() error {
 	}
 
 	// 删除源文件
-	err := c.RunShell("sudo", "rm", "/etc/apt/sources.list.d/caddy-stable.list")
+	err, _ := c.RunShell("sudo", "rm", "/etc/apt/sources.list.d/caddy-stable.list")
 	if err != nil {
 		return fmt.Errorf("删除源文件失败:\n%s", err)
 	}
@@ -159,7 +159,8 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 
 func (c *Caddy) Stop() error {
 	cmd := exec.Command("caddy", "stop")
-	return c.StreamCommand(cmd)
+	err, _ := c.RunShell(cmd.String())
+	return err
 }
 
 // Reload reloads the Caddy configuration
@@ -178,7 +179,8 @@ func (c *Caddy) Reload() error {
 	}
 
 	cmd := exec.Command("caddy", "reload", "--config", c.GetCaddyfilePath())
-	return c.StreamCommand(cmd)
+	err, _ = c.RunShell(cmd.String())
+	return err
 }
 
 // isRunning 检查 caddy 是否在运行
@@ -232,7 +234,8 @@ func (c *Caddy) Start() error {
 
 	// 使用 StreamCommand 来启动 Caddy
 	cmd := exec.Command("caddy", "start", "--config", c.GetCaddyfilePath())
-	if err := c.StreamCommand(cmd); err != nil {
+	err, _ = c.RunShell(cmd.String())
+	if err != nil {
 		errMsg := fmt.Sprintf("启动 Caddy 失败: %v", err)
 		return c.LogAndReturnErrorf("%s", errMsg)
 	}

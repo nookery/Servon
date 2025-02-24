@@ -39,11 +39,13 @@ func (n *Npm) Install() error {
 	}
 
 	// 检查 npm 是否已安装
-	if _, err := n.RunShellWithOutput("npm", "--version"); err != nil {
+	err, _ := n.RunShellWithOutput("npm", "--version")
+	if err != nil {
 		n.Infof("npm 未安装，正在通过 apt 安装...")
 
 		// 使用 apt 安装 npm
-		if err := n.RunShell("apt", "install", "-y", "npm"); err != nil {
+		err, _ := n.RunShell("apt", "install", "-y", "npm")
+		if err != nil {
 			errMsg := "npm 安装失败"
 			return n.LogAndReturnErrorf("%s: %v", errMsg, err)
 		}

@@ -70,7 +70,7 @@ func GetUpgradeCommand(c *managers.VersionManager) *cobra.Command {
 			}
 
 			logger.Info("下载完成，正在执行升级脚本...")
-			err = RunShell("bash", "install.sh")
+			err, _ = RunShell("bash", "install.sh")
 			if err != nil {
 				logger.Errorf("执行升级脚本失败: %v", err)
 				return

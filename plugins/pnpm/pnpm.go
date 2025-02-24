@@ -3,7 +3,6 @@ package pnpm
 import (
 	"fmt"
 	"servon/core"
-	"strings"
 )
 
 func Setup(app *core.App) {
@@ -32,19 +31,22 @@ func (p *Pnpm) Install() error {
 	p.Infof("正在安装 pnpm...")
 
 	// 检查 nodejs 是否已安装
-	if err := p.RunShell("node", "--version"); err != nil {
+	err, _ := p.RunShell("node", "--version")
+	if err != nil {
 		errMsg := "请先安装 NodeJS"
 		return p.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	// 检查 npm 是否已安装
-	if err := p.RunShell("npm", "--version"); err != nil {
+	err, _ = p.RunShell("npm", "--version")
+	if err != nil {
 		errMsg := "请先安装 npm"
 		return p.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	// 使用 StreamCommand 来执行安装并输出详细日志
-	if err := p.RunShell("npm", "install", "-g", "pnpm"); err != nil {
+	err, _ = p.RunShell("npm", "install", "-g", "pnpm")
+	if err != nil {
 		errMsg := fmt.Sprintf("安装 pnpm 失败: %v", err)
 		return p.LogAndReturnErrorf("%s", errMsg)
 	}
@@ -57,7 +59,8 @@ func (p *Pnpm) Install() error {
 func (p *Pnpm) Uninstall() error {
 	p.Infof("正在卸载 pnpm...")
 
-	if err := p.RunShell("npm", "uninstall", "-g", "pnpm"); err != nil {
+	err, _ := p.RunShell("npm", "uninstall", "-g", "pnpm")
+	if err != nil {
 		errMsg := fmt.Sprintf("卸载 pnpm 失败: %v", err)
 		return p.LogAndReturnErrorf("%s", errMsg)
 	}
@@ -68,7 +71,8 @@ func (p *Pnpm) Uninstall() error {
 
 func (p *Pnpm) GetStatus() (map[string]string, error) {
 	// 检查 nodejs 是否已安装
-	if _, err := p.RunShellWithOutput("node", "--version"); err != nil {
+	err, _ := p.RunShellWithOutput("node", "--version")
+	if err != nil {
 		return map[string]string{
 			"status":  "nodejs_not_installed",
 			"version": "",
@@ -76,7 +80,8 @@ func (p *Pnpm) GetStatus() (map[string]string, error) {
 	}
 
 	// 检查 npm 是否已安装
-	if _, err := p.RunShellWithOutput("npm", "--version"); err != nil {
+	err, _ = p.RunShellWithOutput("npm", "--version")
+	if err != nil {
 		return map[string]string{
 			"status":  "npm_not_installed",
 			"version": "",
@@ -85,8 +90,8 @@ func (p *Pnpm) GetStatus() (map[string]string, error) {
 
 	// 获取 pnpm 版本
 	version := ""
-	if output, err := p.RunShellWithOutput("pnpm", "--version"); err == nil {
-		version = strings.TrimSpace(output)
+	err, _ = p.RunShellWithOutput("pnpm", "--version")
+	if err != nil {
 		return map[string]string{
 			"status":  "installed",
 			"version": version,

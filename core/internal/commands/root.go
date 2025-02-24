@@ -9,13 +9,13 @@ var shell = utils.DefaultShellUtil
 var stringUtil = utils.DefaultStringUtil
 
 var NewCommand = utils.NewCommand
-var RunShell = shell.Execute
+var RunShell = shell.RunShell
 var PrintKeyValue = logger.PrintKeyValue
 var PrintKeyValues = logger.PrintKeyValues
 var PrintListWithTitle = logger.ListWithTitle
 var PrintInfo = logger.Info
 var PrintInfof = logger.Infof
-var PrintCommandOutput = shell.ExecuteWithOutput
+var PrintCommandOutput = shell.RunShellWithOutput
 var PrintSuccessf = logger.Successf
 var PrintSuccess = logger.Success
 var PrintError = logger.Error

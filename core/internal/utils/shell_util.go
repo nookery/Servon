@@ -3,8 +3,9 @@ package utils
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"os/exec"
+	"os/user"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -18,131 +19,106 @@ func NewShellUtil() *ShellUtil {
 }
 
 // RunShell 执行命令
-func (c *ShellUtil) RunShell(command string, args ...string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("command is required")
-	}
-
-	return c.Execute(command, args...)
+func (c *ShellUtil) RunShell(command string, args ...string) (error, string) {
+	return c.execute("", false, command, args...)
 }
 
-// Execute 执行命令
-func (c *ShellUtil) Execute(command string, args ...string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("command is required")
-	}
-
-	// 使用青色（Cyan）输出命令和参数，用空格连接参数
-	color.Cyan("📺 %s %s", command, JoinArgs(args))
-
-	execCmd := exec.Command(command, args...)
-	execCmd.Stdout = os.Stdout
-	execCmd.Stderr = os.Stderr
-	execCmd.Stdin = os.Stdin
-
-	return execCmd.Run()
+// RunShellWithSudo 使用sudo执行命令
+func (c *ShellUtil) RunShellWithSudo(command string, args ...string) (error, string) {
+	return c.execute("", true, command, args...)
 }
 
-// StreamCommand 执行命令并打印输出
-func (c *ShellUtil) StreamCommand(cmd *exec.Cmd) error {
+// RunShellInFolder 在指定目录中执行命令
+func (c *ShellUtil) RunShellInFolder(dir string, command string, args ...string) (error, string) {
+	return c.execute(dir, false, command, args...)
+}
+
+// RunShellWithSudoInFolder 在指定目录中使用sudo执行命令
+func (c *ShellUtil) RunShellWithSudoInFolder(dir string, command string, args ...string) (error, string) {
+	return c.execute(dir, true, command, args...)
+}
+
+// RunShellWithOutput 执行命令并返回输出
+func (c *ShellUtil) RunShellWithOutput(command string, args ...string) (error, string) {
+	return c.execute("", false, command, args...)
+}
+
+// RunShellWithSudoOutput 使用sudo执行命令并返回输出
+func (c *ShellUtil) RunShellWithSudoOutput(command string, args ...string) (error, string) {
+	return c.execute("", true, command, args...)
+}
+
+// execute 是内部函数，负责实际的命令执行逻辑
+func isRoot() bool {
+	currentUser, err := user.Current()
+	if err != nil {
+		return false
+	}
+	return currentUser.Uid == "0"
+}
+
+func (c *ShellUtil) execute(dir string, withSudo bool, command string, args ...string) (error, string) {
+	if len(args) == 0 {
+		return fmt.Errorf("command is required"), ""
+	}
+
+	// 构建完整的命令参数
+	var cmdArgs []string
+	if withSudo && !isRoot() {
+		cmdArgs = append(cmdArgs, "sudo")
+	}
+	cmdArgs = append(cmdArgs, command)
+	cmdArgs = append(cmdArgs, args...)
+
+	// 创建命令对象
+	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+
+	// 设置工作目录（如果指定）
+	if dir != "" {
+		cmd.Dir = dir
+	}
+
+	// 创建输出缓冲区
+	var output strings.Builder
+
+	// 设置标准输出和错误输出
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return fmt.Errorf("获取标准输出失败: %v", err)
+		return fmt.Errorf("failed to create stdout pipe: %v", err), ""
 	}
-
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return fmt.Errorf("获取标准错误输出失败: %v", err)
+		return fmt.Errorf("failed to create stderr pipe: %v", err), ""
 	}
 
+	// 启动命令
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start command: %v", err), ""
+	}
+
+	// 读取输出
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
-			fmt.Println(scanner.Text())
+			line := scanner.Text()
+			output.WriteString(line + "\n")
+			color.Green(line)
 		}
 	}()
 
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
-			fmt.Println(scanner.Text())
+			line := scanner.Text()
+			output.WriteString(line + "\n")
+			color.Red(line)
 		}
 	}()
 
-	return cmd.Run()
-}
-
-func (c *ShellUtil) ExecuteWithOutput(command string, args ...string) (string, error) {
-	if len(args) == 0 {
-		return "", fmt.Errorf("command is required")
+	// 等待命令完成
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("command execution failed: %v", err), output.String()
 	}
 
-	execCmd := exec.Command(command, args...)
-	execCmd.Stdout = os.Stdout
-	execCmd.Stderr = os.Stderr
-	execCmd.Stdin = os.Stdin
-
-	output, err := execCmd.Output()
-	if err != nil {
-		return "", err
-	}
-
-	return string(output), nil
-}
-
-func (c *ShellUtil) ExecuteWithSudo(command string, args ...string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("command is required")
-	}
-
-	return c.Execute("sudo", append([]string{command}, args...)...)
-}
-
-// RunShellWithSudo 执行命令并使用 sudo 执行
-func (c *ShellUtil) RunShellWithSudo(command string, args ...string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("command is required")
-	}
-
-	return c.ExecuteWithSudo(command, args...)
-}
-
-func (c *ShellUtil) ExecuteWithSudoAndOutput(command string, args ...string) (string, error) {
-	if len(args) == 0 {
-		return "", fmt.Errorf("command is required")
-	}
-
-	return c.ExecuteWithOutput("sudo", append([]string{command}, args...)...)
-}
-
-// RunShellWithOutput 运行命令并返回输出
-func (c *ShellUtil) RunShellWithOutput(command string, args ...string) (string, error) {
-	if len(args) == 0 {
-		return "", fmt.Errorf("command is required")
-	}
-
-	DefaultLogUtil.Infof("%s %s", command, JoinArgs(args))
-
-	execCmd := exec.Command(command, args...)
-
-	output, err := execCmd.CombinedOutput()
-
-	return string(output), err
-}
-
-// RunShellInFolder 在指定文件夹中运行命令
-func (c *ShellUtil) RunShellInFolder(folder string, command string, args ...string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("command is required")
-	}
-
-	return c.Execute(command, append([]string{folder}, args...)...)
-}
-
-func (c *ShellUtil) RunShellWithSudoInFolder(folder string, command string, args ...string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("command is required")
-	}
-
-	return c.ExecuteWithSudo(command, append([]string{folder}, args...)...)
+	return nil, output.String()
 }

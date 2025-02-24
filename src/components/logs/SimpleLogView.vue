@@ -217,11 +217,16 @@ async function handleSearch() {
                             调试
                         </label>
                     </div>
-                    <IconButton icon="ri-delete-bin-line" variant="error" size="sm" @click="handleCleanLogs">
+                    <IconButton icon="ri-delete-bin-line" variant="error" size="sm" @click="handleDeleteCurrentLog"
+                        :disabled="!selectedFile" title="删除当前日志文件">
+                        删除日志
+                    </IconButton>
+                    <IconButton icon="ri-delete-bin-line" variant="error" size="sm" @click="handleCleanLogs"
+                        title="清理30天前的日志">
                         清理旧日志
                     </IconButton>
                     <IconButton icon="ri-eraser-line" variant="error" size="sm" @click="handleClearCurrentLog"
-                        :disabled="!selectedFile">
+                        :disabled="!selectedFile" title="清空当前日志内容">
                         清空日志
                     </IconButton>
                 </div>
@@ -260,8 +265,6 @@ async function handleSearch() {
                     <!-- 文件列表头部 -->
                     <div class="flex-none p-2 flex items-center justify-between">
                         <span class="text-sm font-medium">日志文件列表</span>
-                        <IconButton v-if="selectedFile" icon="ri-delete-bin-line" variant="error" size="xs"
-                            @click="handleDeleteCurrentLog" title="删除当前日志文件" />
                     </div>
                     <!-- 可滚动的文件列表 -->
                     <div class="flex-1 min-h-0 overflow-y-auto p-2">

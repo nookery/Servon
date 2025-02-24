@@ -9,6 +9,7 @@ type UtilProvider struct {
 	*utils.FileUtil
 	*utils.DevUtil
 	*utils.StringUtil
+	*utils.ProjectUtil
 }
 
 func NewUtilProvider() *UtilProvider {
@@ -17,5 +18,6 @@ func NewUtilProvider() *UtilProvider {
 		FileUtil:    utils.DefaultFileUtil,
 		DevUtil:     utils.DefaultDevUtil,
 		StringUtil:  utils.DefaultStringUtil,
+		ProjectUtil: utils.DefaultProjectUtil,
 	}
 }

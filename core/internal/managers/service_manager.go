@@ -221,13 +221,13 @@ func (p *ServiceManager) Reload(serviceName string) error {
 	PrintInfof("正在重载服务: %s", serviceName)
 
 	// 首先执行 reread 命令读取新配置
-	output, err := RunShellWithOutput("supervisorctl", "reread")
+	err, output := RunShellWithOutput("supervisorctl", "reread")
 	if err != nil {
 		return fmt.Errorf("读取配置失败: %v\n%s", err, output)
 	}
 
 	// 然后执行 update 命令更新配置
-	output, err = RunShellWithOutput("supervisorctl", "update")
+	err, output = RunShellWithOutput("supervisorctl", "update")
 	if err != nil {
 		return fmt.Errorf("更新配置失败: %v\n%s", err, output)
 	}
@@ -244,7 +244,7 @@ func (p *ServiceManager) Start(serviceName string) error {
 
 	PrintInfof("正在启动服务: %s", serviceName)
 
-	output, err := RunShellWithOutput("supervisorctl", "start", serviceName)
+	err, output := RunShellWithOutput("supervisorctl", "start", serviceName)
 	if err != nil {
 		return fmt.Errorf("启动服务失败: %v\n%s", err, output)
 	}
@@ -344,7 +344,7 @@ func (p *ServiceManager) GetServiceList() (string, error) {
 		return "", err
 	}
 
-	output, err := RunShellWithOutput("supervisorctl", "status")
+	err, output := RunShellWithOutput("supervisorctl", "status")
 	if err != nil {
 		return "", fmt.Errorf("获取服务列表失败: %v", err)
 	}

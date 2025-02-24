@@ -36,7 +36,8 @@ func (n *NodeJSPlugin) Install() error {
 		n.Infof("添加 NodeJS 官方源...")
 
 		// 下载并安装 NodeSource 设置脚本
-		if err := n.RunShell("sh", "-c", "curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -"); err != nil {
+		err, _ := n.RunShell("sh", "-c", "curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -")
+		if err != nil {
 			return err
 		}
 
@@ -77,13 +78,13 @@ func (n *NodeJSPlugin) Uninstall() error {
 	}
 
 	// 删除 NodeSource 源文件
-	err := n.RunShell("sudo", "rm", "/etc/apt/sources.list.d/nodesource.list")
+	err, _ := n.RunShell("sudo", "rm", "/etc/apt/sources.list.d/nodesource.list")
 	if err != nil {
 		return fmt.Errorf("删除源文件失败:\n%s", err)
 	}
 
 	// 清理自动安装的依赖
-	err = n.RunShell("sudo", "apt-get", "autoremove", "-y")
+	err, _ = n.RunShell("sudo", "apt-get", "autoremove", "-y")
 	if err != nil {
 		return fmt.Errorf("清理依赖失败:\n%s", err)
 	}

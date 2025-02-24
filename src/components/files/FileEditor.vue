@@ -21,6 +21,8 @@ import {
     RiAlertLine,
     RiMapLine,
     RiDeleteBinLine,
+    RiTimeLine,
+    RiTimeFill,
 } from '@remixicon/vue'
 import { getLanguageFromFileName, getSupportedLanguages } from '../../utils/languages'
 
@@ -329,9 +331,9 @@ function updateEditorStats() {
 
 <template>
     <dialog class="modal" :class="{ 'modal-open': show }">
-        <div class="modal-box w-11/12 max-w-5xl h-4/5 flex flex-col pb-0 px-0">
+        <div class="modal-box w-11/12 max-w-5xl h-4/5 flex flex-col pb-0 px-0 pt-0">
             <!-- 标题栏和主要操作按钮 -->
-            <div class="flex justify-between items-center mb-4 px-4">
+            <div class="flex justify-between items-center py-2 px-4">
                 <h3 class="font-bold text-lg">编辑文件: {{ file?.name }}</h3>
                 <div class="flex items-center gap-2">
                     <div class="form-control">
@@ -340,59 +342,12 @@ function updateEditorStats() {
                             <input type="checkbox" v-model="autoSave" class="toggle toggle-primary toggle-sm" />
                         </label>
                     </div>
-                    <IconButton @click="$emit('update:show', false)">
+                    <IconButton @click="$emit('update:show', false)" title="取消" size="xs" tooltip-position="left">
                         <RiCloseLine />
-                        取消
                     </IconButton>
-                    <IconButton variant="primary" @click="saveFile">
+                    <IconButton variant="primary" @click="saveFile" title="保存" size="xs" tooltip-position="left">
                         <RiSaveLine />
-                        保存
                     </IconButton>
-                </div>
-            </div>
-
-            <!-- 次要工具栏 -->
-            <div
-                class="flex justify-between items-center mx-4 py-2 mb-4 bg-base-200 rounded-lg px-4 shadow-sm transition-colors">
-                <div class="flex gap-2">
-                    <IconButton @click="formatCode" title="格式化 (Shift+Alt+F)">
-                        <RiCodeLine />
-                        格式化
-                    </IconButton>
-                    <IconButton @click="copyAll" title="复制全部">
-                        <RiFileCopyLine />
-                        复制
-                    </IconButton>
-                    <IconButton @click="downloadFile" title="下载文件">
-                        <RiDownloadLine />
-                        下载
-                    </IconButton>
-                    <IconButton variant="warning" @click="resetChanges" title="重置更改">
-                        <RiRestartLine />
-                        重置
-                    </IconButton>
-                    <IconButton variant="error" @click="clearContent" title="清空内容">
-                        <RiDeleteBinLine />
-                        清空
-                    </IconButton>
-                    <IconButton @click="toggleMinimap" :title="showMinimap ? '隐藏小地图' : '显示小地图'">
-                        <RiMapLine />
-                        {{ showMinimap ? '隐藏地图' : '显示地图' }}
-                    </IconButton>
-                    <IconButton :icon="autoRefresh ? 'ri-time-fill' : 'ri-time-line'"
-                        :variant="autoRefresh ? 'primary' : 'default'" @click="toggleAutoRefresh"
-                        :title="`自动刷新 (${refreshInterval}秒)`">
-                        {{ autoRefresh ? '停止刷新' : '自动刷新' }}
-                    </IconButton>
-                    <div v-if="autoRefresh" class="flex items-center gap-2">
-                        <select v-model="refreshInterval" class="select select-bordered select-sm"
-                            @change="startAutoRefresh">
-                            <option value="3">3秒</option>
-                            <option value="5">5秒</option>
-                            <option value="10">10秒</option>
-                            <option value="30">30秒</option>
-                        </select>
-                    </div>
                 </div>
             </div>
 
@@ -406,11 +361,47 @@ function updateEditorStats() {
             <div ref="editorContainer" class="flex-1"></div>
 
             <!-- 状态栏 -->
-            <div class="flex justify-between items-center py-0 px-4 bg-base-300 text-sm mt-0 rounded-b-lg">
-                <!-- 左侧状态信息 -->
-                <div class="flex items-center gap-4 text-base-content/70">
-                    <span>{{ lineCount }} 行</span>
-                    <span>{{ characterCount }} 个字符</span>
+            <div class="flex justify-between items-center py-1 px-4 bg-base-300 text-sm mt-0 rounded-b-lg">
+                <!-- 左侧状态信息和工具按钮 -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 text-base-content/70">
+                        <span>{{ lineCount }} 行</span>
+                        <span>{{ characterCount }} 个字符</span>
+                    </div>
+                    <div class="divider divider-horizontal mx-0"></div>
+                    <div class="flex gap-1">
+                        <IconButton @click="formatCode" title="格式化 (Shift+Alt+F)" size="xs">
+                            <RiCodeLine />
+                        </IconButton>
+                        <IconButton @click="copyAll" title="复制全部" size="xs">
+                            <RiFileCopyLine />
+                        </IconButton>
+                        <IconButton @click="downloadFile" title="下载文件" size="xs">
+                            <RiDownloadLine />
+                        </IconButton>
+                        <IconButton variant="warning" @click="resetChanges" title="重置更改" size="xs">
+                            <RiRestartLine />
+                        </IconButton>
+                        <IconButton variant="error" @click="clearContent" title="清空内容" size="xs">
+                            <RiDeleteBinLine />
+                        </IconButton>
+                        <IconButton @click="toggleMinimap" :title="showMinimap ? '隐藏小地图' : '显示小地图'" size="xs">
+                            <RiMapLine />
+                        </IconButton>
+                        <IconButton :variant="autoRefresh ? 'primary' : 'default'" @click="toggleAutoRefresh"
+                            :title="`自动刷新 (${refreshInterval}秒)`" size="xs">
+                            <component :is="autoRefresh ? RiTimeFill : RiTimeLine" />
+                        </IconButton>
+                        <div v-if="autoRefresh" class="flex items-center">
+                            <select v-model="refreshInterval" class="select select-bordered select-xs"
+                                @change="startAutoRefresh">
+                                <option value="3">3秒</option>
+                                <option value="5">5秒</option>
+                                <option value="10">10秒</option>
+                                <option value="30">30秒</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 语言选择器 -->

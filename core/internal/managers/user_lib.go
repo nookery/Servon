@@ -85,7 +85,7 @@ func (u *UserManager) GetUserList() ([]User, error) {
 
 // 获取用户组信息
 func (u *UserManager) getUserGroups(username string) ([]string, error) {
-	output, err := RunShellWithOutput("groups", username)
+	err, output := RunShellWithOutput("groups", username)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (u *UserManager) getUserCreateTime(homeDir string) time.Time {
 
 // 获取最后登录时间
 func (u *UserManager) getLastLogin(username string) time.Time {
-	err := RunShell("last", "-1", username)
+	err, _ := RunShell("last", "-1", username)
 	if err != nil {
 		return time.Time{} // 返回零值表示未知
 	}
@@ -120,7 +120,7 @@ func (u *UserManager) getLastLogin(username string) time.Time {
 // 检查是否有 sudo 权限
 func (u *UserManager) hasSudoPermission(username string) bool {
 	// 检查用户是否在 sudo 组中
-	output, err := RunShellWithOutput("groups", username)
+	err, output := RunShellWithOutput("groups", username)
 	if err != nil {
 		return false
 	}
@@ -138,7 +138,7 @@ func (u *UserManager) CreateUser(username string, password string) error {
 	}
 
 	// 创建用户
-	err = RunShell("useradd", "-m", username)
+	err, _ = RunShell("useradd", "-m", username)
 	if err != nil {
 		return fmt.Errorf("创建用户失败: %v", err)
 	}
@@ -163,7 +163,7 @@ func (u *UserManager) DeleteUser(username string) error {
 		return fmt.Errorf("用户 %s 不存在", username)
 	}
 
-	err = RunShell("userdel", "-r", username)
+	err, _ = RunShell("userdel", "-r", username)
 	if err != nil {
 		return fmt.Errorf("删除用户失败: %v", err)
 	}
@@ -172,7 +172,7 @@ func (u *UserManager) DeleteUser(username string) error {
 
 // UserExists 检查用户是否存在
 func (u *UserManager) UserExists(username string) (bool, error) {
-	output, err := RunShellWithOutput("id", username)
+	err, output := RunShellWithOutput("id", username)
 
 	if err != nil {
 		if strings.Contains(output, "no such user") {

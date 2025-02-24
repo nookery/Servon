@@ -76,7 +76,7 @@ func (s *SupervisorPlugin) Uninstall() error {
 	}
 
 	// 清理自动安装的依赖
-	err := s.RunShell("apt-get", "autoremove", "-y")
+	err, _ := s.RunShell("apt-get", "autoremove", "-y")
 	if err != nil {
 		return fmt.Errorf("清理依赖失败:\n%s", err)
 	}
@@ -232,7 +232,8 @@ func (s *SupervisorPlugin) GetInfo() core.SoftwareInfo {
 func (s *SupervisorPlugin) Start() error {
 	s.Infof("Supervisor 开始启动")
 
-	if err := s.RunShellWithSudo("supervisord", "-c", "/etc/supervisor/supervisord.conf"); err != nil {
+	err, _ := s.RunShellWithSudo("supervisord", "-c", "/etc/supervisor/supervisord.conf")
+	if err != nil {
 		return err
 	}
 
@@ -243,7 +244,8 @@ func (s *SupervisorPlugin) Start() error {
 func (s *SupervisorPlugin) Stop() error {
 	s.Infof("Supervisor 开始停止")
 
-	if err := s.RunShellWithSudo("supervisorctl", "shutdown"); err != nil {
+	err, _ := s.RunShellWithSudo("supervisorctl", "shutdown")
+	if err != nil {
 		return err
 	}
 

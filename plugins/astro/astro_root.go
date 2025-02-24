@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"servon/core"
-	"strings"
-	"time"
 )
 
 type AstroPlugin struct {
@@ -35,29 +33,23 @@ func NewAstroDeployer(app *core.App) *AstroDeployer {
 }
 
 // deploy 部署 Astro 项目
-func (a *AstroDeployer) deploy(repo string, branch string, host string, port int, logger *core.LogUtil) error {
-	logger.Info("开始部署 Astro 项目")
+func (a *AstroDeployer) deploy(workDir string, targetDir string, host string, port int, logger *core.LogUtil) error {
+	projectName := getProjectNameFromWorkDir(workDir)
 
-	projectFolder := a.DataManager.GetProjectsRootFolder() + "/" + getProjectNameFromRepo(repo)
-	targetFolder := projectFolder + "/" + time.Now().Format("20060102150405")
-
-	err := a.GitClone(repo, branch, targetFolder)
-	if err != nil {
-		return logger.LogAndReturnErrorf("拉取代码失败: %v", err)
-	}
+	logger.Info("开始部署 Astro 项目，项目名称：" + projectName)
 
 	// 判断是不是 Astro 项目
-	if !isAstroProject(targetFolder) {
-		return logger.LogAndReturnErrorf("项目不是 Astro 项目")
+	if projectType := a.DetectProjectType(workDir); projectType != "astro" {
+		return logger.LogAndReturnErrorf("项目不是 Astro 项目，项目类型是 %s", projectType)
 	}
 
-	err = a.build(targetFolder)
+	err := a.build(workDir)
 	if err != nil {
 		return logger.LogAndReturnErrorf("构建失败: %v", err)
 	}
 
 	// 计算 current 目录
-	currentFolder := projectFolder + "/current"
+	currentFolder := targetDir + "/current"
 
 	// 如果项目目录下的 current 目录存在，则删除
 	if _, err := os.Stat(currentFolder); err == nil {
@@ -68,7 +60,7 @@ func (a *AstroDeployer) deploy(repo string, branch string, host string, port int
 	}
 
 	// 将构建好的项目软链接到项目目录下的 current 目录
-	err = os.Symlink(targetFolder, currentFolder)
+	err = os.Symlink(workDir, currentFolder)
 	if err != nil {
 		return logger.LogAndReturnErrorf("创建软链接失败: %v", err)
 	}
@@ -86,8 +78,8 @@ func (a *AstroDeployer) deploy(repo string, branch string, host string, port int
 	serviceFilePath := ""
 
 	// 检查服务配置文件是否存在，不存在则需要创建
-	if !a.ServiceManager.HasServiceConf(getProjectNameFromRepo(repo)) {
-		serviceFilePath, err = a.AddBackgroundService(getProjectNameFromRepo(repo), "node", []string{currentFolder + "/dist/server/entry.mjs"}, []string{
+	if !a.ServiceManager.HasServiceConf(projectName) {
+		serviceFilePath, err = a.AddBackgroundService(projectName, "node", []string{currentFolder + "/dist/server/entry.mjs"}, []string{
 			fmt.Sprintf("HOST=%s", host),
 			fmt.Sprintf("PORT=%d", port),
 		})
@@ -95,17 +87,15 @@ func (a *AstroDeployer) deploy(repo string, branch string, host string, port int
 			return logger.LogAndReturnErrorf("添加背景服务失败: %v", err)
 		}
 	} else {
-		serviceFilePath = a.GetServiceFilePath(getProjectNameFromRepo(repo))
+		serviceFilePath = a.GetServiceFilePath(projectName)
 	}
 
 	// 成功提示
 	fmt.Println()
 	logger.Info("✨ Astro项目部署成功！")
 	fmt.Println()
-	logger.Infof("📦 仓库地址: %s", repo)
-	logger.Infof("📦 分支: %s", branch)
-	logger.Infof("📁 项目路径: %s", projectFolder)
-	logger.Infof("📁 目标路径: %s", targetFolder)
+	logger.Infof("📦 工作目录: %s", workDir)
+	logger.Infof("📦 目标目录: %s", targetDir)
 	logger.Infof("📁 current（软链接） 路径: %s", currentFolder)
 	logger.Infof("📁 服务文件路径: %s", serviceFilePath)
 	logger.Infof("🌐 服务端口: %d", port)
@@ -115,38 +105,9 @@ func (a *AstroDeployer) deploy(repo string, branch string, host string, port int
 	return nil
 }
 
-// isAstroProject 判断是否是 Astro 项目
-func isAstroProject(projectFolder string) bool {
-	if _, err := os.Stat(projectFolder + "/astro.config.mjs"); os.IsNotExist(err) {
-		return false
-	}
-
-	return true
-}
-
-// getProjectNameFromRepo 从仓库地址中获取项目名称
-// 比如：https://github.com/user/project.git 返回 project
-// 比如：git@github.com:user/project.git 返回 project
-// 比如：ssh://git@github.com/user/project.git 返回 project
-// 比如：git+ssh://git@github.com/user/project.git 返回 project
-// 比如：git+https://github.com/user/project.git 返回 project
-// 比如：git+http://github.com/user/project.git 返回 project
-// 如果不能获取到项目名称，则返回随机字符串（根据当前时间生成）
-func getProjectNameFromRepo(repo string) string {
-	repo = strings.TrimSuffix(repo, ".git")
-	repo = strings.TrimPrefix(repo, "https://")
-	repo = strings.TrimPrefix(repo, "http://")
-	repo = strings.TrimPrefix(repo, "git@")
-	repo = strings.TrimPrefix(repo, "ssh://")
-	repo = strings.TrimPrefix(repo, "git+")
-	repo = strings.TrimPrefix(repo, "git+ssh://")
-
-	parts := strings.Split(repo, "/")
-	if len(parts) > 0 {
-		return parts[len(parts)-1]
-	}
-
-	return time.Now().Format("20060102150405")
+// getProjectNameFromWorkDir 从工作目录中获取项目名称
+func getProjectNameFromWorkDir(workDir string) string {
+	return filepath.Base(workDir)
 }
 
 func (a *AstroDeployer) build(path string) error {
@@ -156,14 +117,14 @@ func (a *AstroDeployer) build(path string) error {
 	}
 
 	// pnpm install
-	if err := a.RunShellInFolder(path, "pnpm", "install"); err != nil {
-		return err
+	if err, _ := a.RunShellInFolder(path, "pnpm", "install"); err != nil {
+		return a.LogAndReturnErrorf("pnpm install 失败: %v", err)
 	}
 
 	a.Info("pnpm install 成功")
 
 	// pnpm build
-	if err := a.RunShellInFolder(path, "pnpm", "build"); err != nil {
+	if err, _ := a.RunShellInFolder(path, "pnpm", "build"); err != nil {
 		return err
 	}
 
@@ -182,10 +143,11 @@ func (d *AstroDeployer) CanHandle(workDir string) bool {
 }
 
 func (d *AstroDeployer) Deploy(workDir string, targetDir string, logger *core.LogUtil) error {
-	logger.Info("开始部署 Astro 项目")
+	logger.Info("开始部署 Astro 项目，工作目录：" + workDir)
+	logger.Info("开始部署 Astro 项目，目标目录：" + targetDir)
+
 	// 使用现有的 deploy 函数，但需要调整参数
-	repo := filepath.Base(workDir) // 使用目录名作为项目名
-	return d.deploy(repo, DefaultBranch, DefaultHost, DefaultPort, logger)
+	return d.deploy(workDir, targetDir, DefaultHost, DefaultPort, logger)
 }
 func (d *AstroDeployer) Build(workDir string, logger *core.LogUtil) error {
 	return d.build(workDir)

@@ -54,7 +54,8 @@ func (g *Git) Install() error {
 	case core.CentOS, core.RedHat:
 		// 使用 yum 安装
 		cmd := exec.Command("yum", "install", "-y", "git")
-		if err := g.StreamCommand(cmd); err != nil {
+		err, _ := g.RunShell(cmd.String())
+		if err != nil {
 			errMsg := fmt.Sprintf("安装 Git 失败: %v", err)
 			g.Errorf("%s", errMsg)
 			return fmt.Errorf("%s", errMsg)
@@ -83,7 +84,8 @@ func (g *Git) Uninstall() error {
 
 	case core.CentOS, core.RedHat:
 		cmd := exec.Command("yum", "remove", "-y", "git")
-		if err := g.StreamCommand(cmd); err != nil {
+		err, _ := g.RunShell(cmd.String())
+		if err != nil {
 			errMsg := fmt.Sprintf("卸载 Git 失败: %v", err)
 			return g.LogAndReturnErrorf("%s", errMsg)
 		}

@@ -53,7 +53,7 @@ func (g *GitHubRunner) Uninstall() error {
 	// 运行卸载脚本
 	g.Infof("正在卸载 GitHub Runner...")
 	if _, err := os.Stat(g.targetDir + "/config.sh"); !os.IsNotExist(err) {
-		err = g.RunShell(g.targetDir+"/config.sh", "remove", "--unattended")
+		err, _ = g.RunShell(g.targetDir+"/config.sh", "remove", "--unattended")
 		if err != nil {
 			return fmt.Errorf("卸载失败:\n%s", err.Error())
 		}
@@ -131,14 +131,14 @@ func (g *GitHubRunner) Start() error {
 		}
 
 		// 以 github-runner 用户身份配置 runner
-		err = g.RunShell("su", "-", "github-runner", "-c", fmt.Sprintf("%s/config.sh --url %s --token %s --unattended", g.targetDir, url, token))
+		err, _ = g.RunShell("su", "-", "github-runner", "-c", fmt.Sprintf("%s/config.sh --url %s --token %s --unattended", g.targetDir, url, token))
 		if err != nil {
 			return g.LogAndReturnErrorf("配置 runner 失败: %s", err.Error())
 		}
 	}
 
 	// 以 github-runner 用户身份启动 runner
-	err = g.RunShell("su", "-", "github-runner", "-c", fmt.Sprintf("cd %s && nohup ./run.sh > runner.log 2>&1 &", g.targetDir))
+	err, _ = g.RunShell("su", "-", "github-runner", "-c", fmt.Sprintf("cd %s && nohup ./run.sh > runner.log 2>&1 &", g.targetDir))
 	if err != nil {
 		return fmt.Errorf("启动失败: %s", err)
 	}

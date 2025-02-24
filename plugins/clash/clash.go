@@ -181,7 +181,7 @@ func (c *Clash) Start() error {
 	}
 
 	// 启动服务
-	err = c.RunShell("bash", c.targetDir+"/start.sh")
+	err, _ = c.RunShell("bash", c.targetDir+"/start.sh")
 	if err != nil {
 		return fmt.Errorf("启动失败: %s", err)
 	}

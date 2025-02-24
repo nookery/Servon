@@ -29,6 +29,7 @@ type DeployManager struct {
 	// gitUtil 用于处理Git操作
 	gitUtil     *utils.GitUtil
 	fileUtil    *utils.FileUtil
+	stringUtil  *utils.StringUtil
 	github      *github.GitHubIntegration
 	logsDir     string
 	tempDir     string
@@ -101,7 +102,7 @@ func (m *DeployManager) DeployProject(repoURL string) error {
 	deployID := time.Now().Format("20060102150405")
 
 	// 创建临时工作目录
-	workDir := filepath.Join(m.tempDir, fmt.Sprintf("deploy_%s_%s", repoURL, deployID))
+	workDir := filepath.Join(m.tempDir, fmt.Sprintf("deploy_%s_%s", m.stringUtil.GetProjectNameFromString(repoURL), deployID))
 	m.logger.Infof("创建临时工作目录: %s", workDir)
 
 	if err := os.MkdirAll(workDir, 0755); err != nil {

@@ -208,3 +208,23 @@ func (p *FileUtil) CopyFile(srcPath, destPath string) error {
 	_, err = io.Copy(dest, src)
 	return err
 }
+
+// ListFiles 列出目录下的文件
+func (p *FileUtil) ListFiles(dirPath string) ([]FileInfo, error) {
+	files, err := p.GetFileList(dirPath, SortByName, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
+// ListFilesWithLimit 列出目录下的文件，并限制数量
+func (p *FileUtil) ListFilesWithLimit(dirPath string, limit int) ([]FileInfo, error) {
+	files, err := p.ListFiles(dirPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return files[:limit], nil
+}

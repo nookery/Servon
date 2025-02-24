@@ -16,13 +16,13 @@ var PrintError = logger.Error
 var PrintList = logger.List
 var PrintTitle = logger.Title
 var PrintListWithTitle = logger.ListWithTitle
-var PrintCommandOutput = shell.ExecuteWithOutput
+var PrintCommandOutput = shell.RunShellWithOutput
 var PrintAndReturnError = logger.LogAndReturnError
 var PrintAndReturnErrorf = logger.LogAndReturnErrorf
 var PrintAlert = logger.Alert
 var PrintLn = logger.EmptyLine
 var PrintErrorMessage = logger.ErrorMessage
 
-var RunShell = shell.Execute
-var RunShellWithSudo = shell.ExecuteWithSudo
+var RunShell = shell.RunShell
+var RunShellWithSudo = shell.RunShellWithSudo
 var RunShellWithOutput = shell.RunShellWithOutput

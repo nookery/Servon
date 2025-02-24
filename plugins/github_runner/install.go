@@ -105,7 +105,7 @@ func (g *GitHubRunner) Install() error {
 		}
 
 		// 获取系统架构
-		arch, err := g.RunShellWithOutput("uname", "-m")
+		err, arch := g.RunShellWithOutput("uname", "-m")
 		if err != nil {
 			return fmt.Errorf("获取系统架构失败: %s", err)
 		}
@@ -133,7 +133,7 @@ func (g *GitHubRunner) Install() error {
 
 		// 解压
 		g.Infof("开始解压 GitHub Runner...")
-		err = g.RunShell("tar", "xzf", g.targetDir+"/actions-runner-linux.tar.gz", "-C", g.targetDir)
+		err, _ = g.RunShell("tar", "xzf", g.targetDir+"/actions-runner-linux.tar.gz", "-C", g.targetDir)
 		if err != nil {
 			return fmt.Errorf("解压失败: %s", err)
 		}
@@ -147,14 +147,15 @@ func (g *GitHubRunner) Install() error {
 
 		// 安装依赖
 		g.Infof("开始安装依赖...")
-		err = g.RunShell("/bin/bash", g.targetDir+"/bin/installdependencies.sh")
+		err, _ = g.RunShell("/bin/bash", g.targetDir+"/bin/installdependencies.sh")
 		if err != nil {
 			return fmt.Errorf("安装依赖失败: %s", err)
 		}
 
 		// 修改目录所有权
 		g.Infof("修改目录所有权...")
-		if err := g.RunShell("chown", "-R", runnerUser+":"+runnerUser, g.targetDir); err != nil {
+		err, _ = g.RunShell("chown", "-R", runnerUser+":"+runnerUser, g.targetDir)
+		if err != nil {
 			return fmt.Errorf("修改目录所有权失败: %s", err)
 		}
 
