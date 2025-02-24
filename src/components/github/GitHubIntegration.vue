@@ -21,27 +21,18 @@ const webhookLogsRef = ref<InstanceType<typeof GitHubLogs> | null>(null)
                 <i class="ri-file-list-line mr-2"></i>
                 日志
             </a>
-            <a role="tab" class="tab" :class="{ 'tab-active': currentTab === 'webhook' }" @click="currentTab = 'webhook'">
-                <i class="ri-webhook-line mr-2"></i>
-                Webhook日志
-            </a>
             <a role="tab" class="tab" :class="{ 'tab-active': currentTab === 'config' }" @click="currentTab = 'config'">
                 <i class="ri-settings-line mr-2"></i>
-                安装配置
+                配置
             </a>
         </div>
 
         <!-- 授权仓库内容 -->
         <GitHubRepos v-if="currentTab === 'repos'" />
 
-        <!-- 集成日志内容 -->
+        <!-- 日志内容 -->
         <div v-else-if="currentTab === 'logs'">
             <GitHubLogs ref="githubLogsRef" />
-        </div>
-
-        <!-- Webhook日志内容 -->
-        <div v-else-if="currentTab === 'webhook'">
-            <GitHubLogs ref="webhookLogsRef" initial-path="/data/github/webhook" />
         </div>
 
         <!-- 配置内容 -->

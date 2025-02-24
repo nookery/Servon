@@ -1,17 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import FileManager from '../files/FileManager.vue'
-
-const props = defineProps<{
-    initialPath?: string
-}>()
-
-const currentPath = ref(props.initialPath || '/data/github')
-const fileManagerRef = ref<InstanceType<typeof FileManager> | null>(null)
+import SimpleLogView from '../logs/SimpleLogView.vue';
 
 </script>
 
 <template>
-    <FileManager ref="fileManagerRef" v-model:path="currentPath" :initial-path="currentPath" :show-breadcrumbs="true"
-        :show-toolbar="false" :show-pagination="true" :show-shortcuts="false" :read-only="true" />
+    <SimpleLogView current-dir="" />
 </template>
