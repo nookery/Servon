@@ -5,17 +5,25 @@ import (
 	"net/http"
 	"os"
 	"servon/core/internal/contract"
+	"servon/core/internal/utils"
+	"strconv"
 )
-
-var DefaultSoftManager = newSoftManager()
 
 type SoftManager struct {
 	Softwares map[string]contract.SuperSoft
+	LogDir    string
+	LogUtil   *utils.LogUtil
 }
 
-func newSoftManager() *SoftManager {
+func NewSoftManager(logDir string) *SoftManager {
+	logUtil := utils.NewTopicLogUtil(logDir, "soft")
+
+	logUtil.Info("初始化软件管理器")
+
 	return &SoftManager{
 		Softwares: make(map[string]contract.SuperSoft),
+		LogDir:    logDir,
+		LogUtil:   logUtil,
 	}
 }
 
@@ -100,6 +108,7 @@ func (c *SoftManager) GetSoftwareStatus(name string) (map[string]string, error) 
 
 // RegisterSoftware 注册软件
 func (c *SoftManager) RegisterSoftware(name string, software contract.SuperSoft) error {
+	c.LogUtil.Info("注册软件: " + name)
 	if _, exists := c.Softwares[name]; exists {
 		return PrintAndReturnError(fmt.Sprintf("软件 %s 已注册", name))
 	}
@@ -109,11 +118,13 @@ func (c *SoftManager) RegisterSoftware(name string, software contract.SuperSoft)
 
 // GetAllSoftware 获取所有软件
 func (c *SoftManager) GetAllSoftware() []string {
-	PrintInfo("获取所有软件...")
+	c.LogUtil.Info("获取所有软件...")
 	softwareNames := make([]string, 0, len(c.Softwares))
 	for name := range c.Softwares {
 		softwareNames = append(softwareNames, name)
 	}
+
+	c.LogUtil.Success("获取所有软件成功，共 " + strconv.Itoa(len(softwareNames)) + " 个")
 	return softwareNames
 }
 

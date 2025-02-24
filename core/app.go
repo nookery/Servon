@@ -30,7 +30,7 @@ func New() *App {
 	app := &App{
 		eventBus:        eventBus,
 		WebProvider:     webProvider,
-		ManagerProvider: providers.NewManagerProvider(eventBus),
+		ManagerProvider: providers.NewManagerProvider(eventBus, manager),
 		CommandProvider: providers.NewCommandProvider(manager, webProvider.Server),
 		UtilProvider:    providers.NewUtilProvider(),
 	}

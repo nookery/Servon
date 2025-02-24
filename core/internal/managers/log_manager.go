@@ -212,3 +212,25 @@ func (m *LogManager) GetLogStats(subDir string) (map[string]int, error) {
 
 	return stats, nil
 }
+
+// DeleteLogFile 删除指定的日志文件
+func (m *LogManager) DeleteLogFile(logPath string) error {
+	// 确保文件路径在日志目录内，防止任意文件删除
+	fullPath := filepath.Join(m.baseLogDir, logPath)
+	if !strings.HasPrefix(fullPath, m.baseLogDir) {
+		return fmt.Errorf("无效的日志文件路径")
+	}
+
+	// 检查文件是否存在
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		return fmt.Errorf("日志文件不存在: %s", logPath)
+	}
+
+	// 删除文件
+	if err := os.Remove(fullPath); err != nil {
+		return fmt.Errorf("删除日志文件失败: %v", err)
+	}
+
+	m.Infof("已删除日志文件: %s", logPath)
+	return nil
+}

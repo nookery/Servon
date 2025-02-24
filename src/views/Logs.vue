@@ -17,7 +17,7 @@ const tabs = [
 </script>
 
 <template>
-    <PageContainer title="日志管理" :error="error" :tabs="tabs" v-model="activeTab">
+    <PageContainer title="日志管理" :error="error" :tabs="tabs" v-model="activeTab" :full-height="true">
         <template #simple>
             <SimpleLogView :current-dir="currentDir" />
         </template>

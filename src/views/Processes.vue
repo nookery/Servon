@@ -119,7 +119,7 @@ onMounted(() => {
         </template>
 
         <!-- 默认插槽用于主要内容 -->
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto h-full">
             <table class="table table-zebra w-full">
                 <thead>
                     <tr>

@@ -2,8 +2,12 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from '../composables/useToast'
 import PageContainer from '../layouts/PageContainer.vue'
+import IconButton from '../components/IconButton.vue'
+import SimpleLogView from '../components/logs/SimpleLogView.vue'
 import { systemAPI, type Software } from '../api/info'
+import { RiAppsLine, RiListSettingsLine, RiFileListLine } from '@remixicon/vue'
 
+const activeTab = ref('software')
 const softwares = ref<Software[]>([])
 const loading = ref(false)
 const currentLogs = ref<string[]>([])
@@ -13,6 +17,20 @@ const operationFailed = ref(false)
 const error = ref<string | null>(null)
 
 const toast = useToast()
+
+// 定义标签页配置
+const tabs = [
+    {
+        key: 'software',
+        title: '软件列表',
+        icon: RiListSettingsLine
+    },
+    {
+        key: 'logs',
+        title: '日志查看',
+        icon: RiFileListLine
+    }
+]
 
 async function handleAction(software: Software) {
     currentSoftware.value = software.name
@@ -94,45 +112,57 @@ onMounted(() => {
 </script>
 
 <template>
-    <PageContainer title="软件管理" :error="error">
-        <div class="overflow-x-auto">
-            <table class="table table-zebra w-full">
-                <thead>
-                    <tr>
-                        <th>软件名称</th>
-                        <th>状态</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="item in softwares" :key="item.name">
-                        <td>{{ item.name }}</td>
-                        <td :class="{
-                            'text-info': item.status === 'not_installed',
-                            'text-warning': item.status === 'stopped',
-                            'text-success': item.status === 'running'
-                        }">{{ item.status }}</td>
-                        <td>
-                            <div class="flex gap-2">
-                                <button class="btn btn-sm"
-                                    :class="item.status === 'not_installed' ? 'btn-primary' : 'btn-error'"
-                                    :disabled="installing && currentSoftware === item.name" @click="handleAction(item)"
-                                    v-if="item.status !== 'running'">
-                                    {{ item.status === 'not_installed' ? '安装' : '卸载' }}
-                                </button>
-                                <button v-if="item.status === 'stopped'" class="btn btn-sm btn-primary"
-                                    @click="handleStart(item.name)">
-                                    启动
-                                </button>
-                                <button v-if="item.status === 'running'" class="btn btn-sm btn-secondary"
-                                    @click="handleStop(item.name)">
-                                    停止
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <PageContainer title="软件管理" :error="error" :empty="!loading && softwares.length === 0" emptyText="还没有可用的软件包"
+        emptyDescription="系统正在等待您添加第一个软件包，让我们开始吧！" :emptyIcon="RiAppsLine" :tabs="tabs" v-model="activeTab">
+
+        <!-- 软件列表标签页 -->
+        <template #software>
+            <div v-if="softwares.length > 0" class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>软件名称</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in softwares" :key="item.name">
+                            <td>{{ item.name }}</td>
+                            <td :class="{
+                                'text-info': item.status === 'not_installed',
+                                'text-warning': item.status === 'stopped',
+                                'text-success': item.status === 'running'
+                            }">{{ item.status }}</td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <IconButton v-if="item.status !== 'running'"
+                                        :icon="item.status === 'not_installed' ? 'ri-download-line' : 'ri-delete-bin-line'"
+                                        :variant="item.status === 'not_installed' ? 'primary' : 'error'"
+                                        :disabled="installing && currentSoftware === item.name"
+                                        @click="handleAction(item)">
+                                        {{ item.status === 'not_installed' ? '安装' : '卸载' }}
+                                    </IconButton>
+                                    <IconButton v-if="item.status === 'stopped'" icon="ri-play-line" variant="primary"
+                                        @click="handleStart(item.name)">
+                                        启动
+                                    </IconButton>
+                                    <IconButton v-if="item.status === 'running'" icon="ri-stop-line" variant="secondary"
+                                        @click="handleStop(item.name)">
+                                        停止
+                                    </IconButton>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <!-- 日志查看标签页 -->
+        <template #logs>
+            <SimpleLogView current-dir="" />
+        </template>
+
     </PageContainer>
 </template>

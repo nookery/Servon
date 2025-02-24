@@ -12,10 +12,14 @@ const (
 	maxRetries = 3 // 最大重试次数
 )
 
-type DownloadManager struct{}
+type DownloadManager struct {
+	SoftManager *SoftManager
+}
 
-func NewDownloadManager() *DownloadManager {
-	return &DownloadManager{}
+func NewDownloadManager(softManager *SoftManager) *DownloadManager {
+	return &DownloadManager{
+		SoftManager: softManager,
+	}
 }
 
 // Download 下载文件
@@ -39,9 +43,9 @@ func (d *DownloadManager) Download(url string, destPath string) error {
 	}
 
 	// 如果常规下载失败，尝试使用代理
-	if !DefaultSoftManager.IsProxyOn() {
+	if !d.SoftManager.IsProxyOn() {
 		PrintCommandOutput("常规下载失败，尝试开启代理重新下载...")
-		software, err := DefaultSoftManager.OpenProxy()
+		software, err := d.SoftManager.OpenProxy()
 		if err != nil {
 			return fmt.Errorf("开启代理失败: %v，上一次下载错误: %v", err, lastErr)
 		}

@@ -50,7 +50,8 @@ func newLogUtil(logDir string, topic string) *LogUtil {
 			logFile = filepath.Join(logDir, "app.log")
 		}
 
-		file, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		// 使用自定义的文件写入器，支持自动重建文件
+		file, err := newAutoCreateFile(logFile)
 		if err != nil {
 			panic(err)
 		}
@@ -88,6 +89,43 @@ func newLogUtil(logDir string, topic string) *LogUtil {
 		logger:        logger,
 		consoleLogger: consoleLogger,
 	}
+}
+
+// autoCreateFile 是一个支持自动重建的文件写入器
+type autoCreateFile struct {
+	filename string
+	file     *os.File
+}
+
+func newAutoCreateFile(filename string) (*autoCreateFile, error) {
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+	return &autoCreateFile{
+		filename: filename,
+		file:     file,
+	}, nil
+}
+
+func (f *autoCreateFile) Write(p []byte) (n int, err error) {
+	if f.file == nil {
+		// 如果文件不存在，尝试重新创建
+		file, err := os.OpenFile(f.filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			return 0, err
+		}
+		f.file = file
+	}
+
+	n, err = f.file.Write(p)
+	if err != nil {
+		// 如果写入出错（可能是文件被删除），关闭当前文件句柄
+		f.file.Close()
+		f.file = nil
+		return n, err
+	}
+	return n, nil
 }
 
 // Alert 记录警告日志

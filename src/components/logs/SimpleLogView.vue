@@ -155,83 +155,91 @@ async function handleSearch() {
 </script>
 
 <template>
-    <div>
-        <!-- 操作栏 -->
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex gap-2 items-center">
-                <input type="text" v-model="props.currentDir" placeholder="日志目录"
-                    class="input input-bordered input-sm" />
-                <IconButton icon="ri-refresh-line" size="sm" @click="handleRefresh">刷新</IconButton>
+    <!-- 使用 h-full 和 overflow-hidden 确保组件占满所有可用空间 -->
+    <div class="h-full flex flex-col overflow-hidden">
+        <!-- 固定的操作栏和统计信息 -->
+        <div class="flex-none space-y-4">
+            <!-- 操作栏 -->
+            <div class="flex justify-between items-center gap-4">
+                <div class="flex gap-2 items-center">
+                    <input type="text" v-model="props.currentDir" placeholder="日志目录"
+                        class="input input-bordered input-sm" />
+                    <IconButton icon="ri-refresh-line" size="sm" @click="handleRefresh">刷新</IconButton>
+                </div>
+                <div class="flex gap-2">
+                    <div class="join">
+                        <input type="text" v-model="searchKeyword" placeholder="搜索日志"
+                            class="input input-bordered input-sm join-item" @keyup.enter="handleSearch" />
+                        <IconButton icon="ri-search-line" size="sm" class="join-item" @click="handleSearch">搜索
+                        </IconButton>
+                    </div>
+                    <div class="join">
+                        <label class="join-item btn btn-sm" :class="{ 'btn-error': selectedLevels.includes('error') }">
+                            <input type="checkbox" class="hidden" v-model="selectedLevels" value="error" />
+                            <i class="ri-error-warning-fill mr-1"></i>
+                            错误
+                        </label>
+                        <label class="join-item btn btn-sm" :class="{ 'btn-warning': selectedLevels.includes('warn') }">
+                            <input type="checkbox" class="hidden" v-model="selectedLevels" value="warn" />
+                            <i class="ri-alert-fill mr-1"></i>
+                            警告
+                        </label>
+                        <label class="join-item btn btn-sm" :class="{ 'btn-info': selectedLevels.includes('info') }">
+                            <input type="checkbox" class="hidden" v-model="selectedLevels" value="info" />
+                            <i class="ri-information-fill mr-1"></i>
+                            信息
+                        </label>
+                        <label class="join-item btn btn-sm"
+                            :class="{ 'btn-neutral': selectedLevels.includes('debug') }">
+                            <input type="checkbox" class="hidden" v-model="selectedLevels" value="debug" />
+                            <i class="ri-bug-fill mr-1"></i>
+                            调试
+                        </label>
+                    </div>
+                    <IconButton icon="ri-delete-bin-line" variant="error" size="sm" @click="handleCleanLogs">
+                        清理旧日志
+                    </IconButton>
+                </div>
             </div>
-            <div class="flex gap-2">
-                <div class="join">
-                    <input type="text" v-model="searchKeyword" placeholder="搜索日志"
-                        class="input input-bordered input-sm join-item" @keyup.enter="handleSearch" />
-                    <IconButton icon="ri-search-line" size="sm" class="join-item" @click="handleSearch">搜索</IconButton>
+
+            <!-- 日志统计 -->
+            <div v-if="logStats" class="stats shadow w-full">
+                <div class="stat">
+                    <div class="stat-title">错误</div>
+                    <div class="stat-value text-error">{{ logStats.error }}</div>
+                    <div class="stat-desc"><i class="ri-error-warning-fill"></i></div>
                 </div>
-                <div class="join">
-                    <label class="join-item btn btn-sm" :class="{ 'btn-error': selectedLevels.includes('error') }">
-                        <input type="checkbox" class="hidden" v-model="selectedLevels" value="error" />
-                        <i class="ri-error-warning-fill mr-1"></i>
-                        错误
-                    </label>
-                    <label class="join-item btn btn-sm" :class="{ 'btn-warning': selectedLevels.includes('warn') }">
-                        <input type="checkbox" class="hidden" v-model="selectedLevels" value="warn" />
-                        <i class="ri-alert-fill mr-1"></i>
-                        警告
-                    </label>
-                    <label class="join-item btn btn-sm" :class="{ 'btn-info': selectedLevels.includes('info') }">
-                        <input type="checkbox" class="hidden" v-model="selectedLevels" value="info" />
-                        <i class="ri-information-fill mr-1"></i>
-                        信息
-                    </label>
-                    <label class="join-item btn btn-sm" :class="{ 'btn-neutral': selectedLevels.includes('debug') }">
-                        <input type="checkbox" class="hidden" v-model="selectedLevels" value="debug" />
-                        <i class="ri-bug-fill mr-1"></i>
-                        调试
-                    </label>
+                <div class="stat">
+                    <div class="stat-title">警告</div>
+                    <div class="stat-value text-warning">{{ logStats.warn }}</div>
+                    <div class="stat-desc"><i class="ri-alert-fill"></i></div>
                 </div>
-                <IconButton icon="ri-delete-bin-line" variant="error" size="sm" @click="handleCleanLogs">
-                    清理旧日志
-                </IconButton>
+                <div class="stat">
+                    <div class="stat-title">信息</div>
+                    <div class="stat-value text-info">{{ logStats.info }}</div>
+                    <div class="stat-desc"><i class="ri-information-fill"></i></div>
+                </div>
+                <div class="stat">
+                    <div class="stat-title">调试</div>
+                    <div class="stat-value text-neutral">{{ logStats.debug }}</div>
+                    <div class="stat-desc"><i class="ri-bug-fill"></i></div>
+                </div>
             </div>
         </div>
 
-        <!-- 日志统计 -->
-        <div v-if="logStats" class="stats shadow mb-4">
-            <div class="stat">
-                <div class="stat-title">错误</div>
-                <div class="stat-value text-error">{{ logStats.error }}</div>
-                <div class="stat-desc"><i class="ri-error-warning-fill"></i></div>
-            </div>
-            <div class="stat">
-                <div class="stat-title">警告</div>
-                <div class="stat-value text-warning">{{ logStats.warn }}</div>
-                <div class="stat-desc"><i class="ri-alert-fill"></i></div>
-            </div>
-            <div class="stat">
-                <div class="stat-title">信息</div>
-                <div class="stat-value text-info">{{ logStats.info }}</div>
-                <div class="stat-desc"><i class="ri-information-fill"></i></div>
-            </div>
-            <div class="stat">
-                <div class="stat-title">调试</div>
-                <div class="stat-value text-neutral">{{ logStats.debug }}</div>
-                <div class="stat-desc"><i class="ri-bug-fill"></i></div>
-            </div>
-        </div>
-
-        <!-- 日志内容 -->
-        <div class="grid grid-cols-12 gap-4">
-            <!-- 日志文件列表 -->
-            <div class="col-span-3">
-                <div class="card bg-base-200">
-                    <div class="card-body p-2">
-                        <div class="flex items-center justify-between mb-2 px-2">
-                            <span class="text-sm font-medium">日志文件列表</span>
-                            <IconButton v-if="selectedFile" icon="ri-delete-bin-line" variant="error" size="xs"
-                                @click="handleDeleteCurrentLog" title="删除当前日志文件" />
-                        </div>
+        <!-- 可滚动的内容区域 - 使用 flex-1 和 min-h-0 确保正确的滚动行为 -->
+        <div class="flex-1 min-h-0 grid grid-cols-12 gap-4 mt-4">
+            <!-- 日志文件列表 - 使用 overflow-hidden 和 flex 布局 -->
+            <div class="col-span-3 card bg-base-200 overflow-hidden">
+                <div class="h-full flex flex-col">
+                    <!-- 文件列表头部 -->
+                    <div class="flex-none p-2 flex items-center justify-between">
+                        <span class="text-sm font-medium">日志文件列表</span>
+                        <IconButton v-if="selectedFile" icon="ri-delete-bin-line" variant="error" size="xs"
+                            @click="handleDeleteCurrentLog" title="删除当前日志文件" />
+                    </div>
+                    <!-- 可滚动的文件列表 -->
+                    <div class="flex-1 min-h-0 overflow-y-auto p-2">
                         <ul class="menu bg-base-200 w-full">
                             <li v-for="file in logFiles" :key="file.path">
                                 <a class="flex items-center gap-2 transition-colors duration-200 hover:bg-base-300"
@@ -251,46 +259,44 @@ async function handleSearch() {
                 </div>
             </div>
 
-            <!-- 日志内容 -->
-            <div class="col-span-9">
-                <div class="card bg-base-200">
-                    <div class="card-body p-4">
-                        <div v-if="loading" class="flex justify-center">
-                            <span class="loading loading-spinner loading-lg"></span>
-                        </div>
-                        <div v-else class="overflow-x-auto">
-                            <table class="table table-xs">
-                                <thead>
-                                    <tr>
-                                        <th>时间</th>
-                                        <th>级别</th>
-                                        <th>调用位置</th>
-                                        <th>消息</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="entry in filteredLogEntries" :key="entry.time">
-                                        <td class="whitespace-nowrap">{{ entry.time }}</td>
-                                        <td>
-                                            <span :class="getLevelClass(entry.level)">
-                                                {{ entry.level }}
-                                            </span>
-                                        </td>
-                                        <td class="text-xs">{{ entry.caller }}</td>
-                                        <td class="whitespace-pre-wrap">{{ entry.message }}</td>
-                                    </tr>
-                                    <tr v-if="filteredLogEntries.length === 0">
-                                        <td colspan="4" class="text-center text-base-content/50 py-8">
-                                            <div class="flex flex-col items-center gap-2">
-                                                <RiEmotionHappyLine class="w-8 h-8 text-success" />
-                                                <span>暂无符合条件的日志 </span>
-                                                <span class="text-xs opacity-50">这说明系统运行得很顺利呢！</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+            <!-- 日志内容 - 使用 overflow-hidden 和 flex 布局 -->
+            <div class="col-span-9 card bg-base-200 overflow-hidden">
+                <div class="h-full flex flex-col">
+                    <div v-if="loading" class="flex-1 flex justify-center items-center">
+                        <span class="loading loading-spinner loading-lg"></span>
+                    </div>
+                    <div v-else class="flex-1 min-h-0 overflow-auto">
+                        <table class="table table-xs w-full">
+                            <thead class="sticky top-0 bg-base-200 z-10">
+                                <tr>
+                                    <th>时间</th>
+                                    <th>级别</th>
+                                    <th>调用位置</th>
+                                    <th>消息</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="entry in filteredLogEntries" :key="entry.time">
+                                    <td class="whitespace-nowrap">{{ entry.time }}</td>
+                                    <td>
+                                        <span :class="getLevelClass(entry.level)">
+                                            {{ entry.level }}
+                                        </span>
+                                    </td>
+                                    <td class="text-xs">{{ entry.caller }}</td>
+                                    <td class="whitespace-pre-wrap">{{ entry.message }}</td>
+                                </tr>
+                                <tr v-if="filteredLogEntries.length === 0">
+                                    <td colspan="4" class="text-center text-base-content/50 py-8">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <RiEmotionHappyLine class="w-8 h-8 text-success" />
+                                            <span>暂无符合条件的日志 </span>
+                                            <span class="text-xs opacity-50">这说明系统运行得很顺利呢！</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

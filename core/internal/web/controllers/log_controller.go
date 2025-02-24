@@ -27,6 +27,12 @@ func (c *LogController) HandleListLogFiles(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// 确保返回空数组而不是 null
+	if files == nil {
+		files = make([]string, 0)
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{"files": files})
 }
 
@@ -100,4 +106,32 @@ func (c *LogController) HandleCleanOldLogs(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "Old logs cleaned successfully"})
+}
+
+// HandleDeleteLogFile 处理删除日志文件的请求
+func (c *LogController) HandleDeleteLogFile(ctx *gin.Context) {
+	// 定义请求体结构
+	var req struct {
+		Params struct {
+			Path string `json:"path"`
+		} `json:"params"`
+	}
+
+	// 解析JSON请求体
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求格式"})
+		return
+	}
+
+	if req.Params.Path == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "需要提供文件路径"})
+		return
+	}
+
+	if err := c.logManager.DeleteLogFile(req.Params.Path); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "日志文件删除成功"})
 }

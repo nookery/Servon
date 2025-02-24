@@ -9,9 +9,9 @@ type ManagerProvider struct {
 	*managers.FullManager
 }
 
-func NewManagerProvider(eventBus *events.EventBus) *ManagerProvider {
+func NewManagerProvider(eventBus *events.EventBus, manager *managers.FullManager) *ManagerProvider {
 	core := &ManagerProvider{
-		FullManager: managers.NewManager(eventBus),
+		FullManager: manager,
 	}
 
 	return core

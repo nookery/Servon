@@ -11,12 +11,14 @@ const (
 )
 
 type GitManager struct {
-	gitUtil *utils.GitUtil
+	gitUtil     *utils.GitUtil
+	SoftManager *SoftManager
 }
 
-func NewGitManager() *GitManager {
+func NewGitManager(softManager *SoftManager) *GitManager {
 	return &GitManager{
-		gitUtil: utils.NewGitUtil(nil),
+		gitUtil:     utils.NewGitUtil(nil),
+		SoftManager: softManager,
 	}
 }
 
@@ -47,9 +49,9 @@ func (g *GitManager) GitClone(url string, branch string, targetDir string) error
 	}
 
 	// 如果常规克隆失败，尝试使用代理
-	if !DefaultSoftManager.IsProxyOn() {
+	if !g.SoftManager.IsProxyOn() {
 		PrintCommandOutput("常规克隆失败，尝试开启代理重新克隆...")
-		software, err := DefaultSoftManager.OpenProxy()
+		software, err := g.SoftManager.OpenProxy()
 		if err != nil {
 			return fmt.Errorf("开启代理失败: %v，上一次克隆错误: %v", err, lastErr)
 		}
