@@ -32,7 +32,7 @@ type FullManager struct {
 
 func NewManager(eventBus *events.EventBus) *FullManager {
 	dataManager := DefaultDataManager
-	githubIntegration := github.NewGitHubIntegration(eventBus)
+	githubIntegration := github.NewGitHubIntegration(eventBus, dataManager.GetLogsRootFolder())
 	softManager := NewSoftManager(dataManager.GetLogsRootFolder())
 	gitManager := NewGitManager(softManager)
 	downloadManager := NewDownloadManager(softManager)

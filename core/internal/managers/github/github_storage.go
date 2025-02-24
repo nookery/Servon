@@ -17,7 +17,7 @@ import (
 
 // SaveWebhookPayload 保存 webhook 事件数据到指定目录
 // 文件名格式：时间戳_事件ID_事件类型.json
-func SaveWebhookPayload(dataDir string, eventType, eventID string, payload []byte) error {
+func (g *GitHubIntegration) SaveWebhookPayload(dataDir string, eventType, eventID string, payload []byte) error {
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %v", err)
 	}
@@ -33,22 +33,22 @@ func SaveWebhookPayload(dataDir string, eventType, eventID string, payload []byt
 
 // GetWebhooks 从指定目录获取所有保存的 webhook 事件数据
 // 返回 WebhookPayload 数组，包含所有成功解析的事件数据
-func GetWebhooks(dataDir string) ([]WebhookPayload, error) {
-	logger.Infof("GetWebhooks: %s", dataDir)
+func (g *GitHubIntegration) GetWebhooks(dataDir string) ([]WebhookPayload, error) {
+	g.logger.Infof("GetWebhooks: %s", dataDir)
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		logger.Errorf("failed to create webhooks directory: %v", err)
+		g.logger.Errorf("failed to create webhooks directory: %v", err)
 		return nil, fmt.Errorf("failed to create webhooks directory: %v", err)
 	}
 
 	files, err := os.ReadDir(dataDir)
 	if err != nil {
-		logger.Errorf("failed to read webhooks directory: %v", err)
+		g.logger.Errorf("failed to read webhooks directory: %v", err)
 		return nil, fmt.Errorf("failed to read webhooks directory: %v", err)
 	}
 
 	var webhooks []WebhookPayload
 	for _, file := range files {
-		logger.Infof("GetWebhooks: %s", file.Name())
+		g.logger.Infof("GetWebhooks: %s", file.Name())
 		if filepath.Ext(file.Name()) != ".json" {
 			continue
 		}
@@ -66,13 +66,13 @@ func GetWebhooks(dataDir string) ([]WebhookPayload, error) {
 		webhooks = append(webhooks, webhook)
 	}
 
-	logger.Infof("GetWebhooks: %d", len(webhooks))
+	g.logger.Infof("GetWebhooks: %d", len(webhooks))
 	return webhooks, nil
 }
 
 // readWebhookFile 读取单个 webhook 数据文件
 // 解析文件名中的元数据和文件内容
-func readWebhookFile(dataDir, filename string) (WebhookPayload, error) {
+func (g *GitHubIntegration) readWebhookFile(dataDir, filename string) (WebhookPayload, error) {
 	var webhook WebhookPayload
 
 	// 移除 .json 后缀
@@ -83,7 +83,7 @@ func readWebhookFile(dataDir, filename string) (WebhookPayload, error) {
 	secondUnderscore := strings.Index(basename[firstUnderscore+1:], "_") + firstUnderscore + 1
 
 	if firstUnderscore == -1 || secondUnderscore == -1 {
-		logger.Errorf("readWebhookFile: invalid filename format: %s", filename)
+		g.logger.Errorf("readWebhookFile: invalid filename format: %s", filename)
 		return webhook, fmt.Errorf("invalid filename format")
 	}
 
@@ -94,17 +94,17 @@ func readWebhookFile(dataDir, filename string) (WebhookPayload, error) {
 
 	data, err := os.ReadFile(filepath.Join(dataDir, filename))
 	if err != nil {
-		logger.Errorf("readWebhookFile: failed to read file: %v", err)
+		g.logger.Errorf("readWebhookFile: failed to read file: %v", err)
 		return webhook, err
 	}
 
 	var payload interface{}
 	if err := json.Unmarshal(data, &payload); err != nil {
-		logger.Errorf("readWebhookFile: failed to unmarshal file: %v", err)
+		g.logger.Errorf("readWebhookFile: failed to unmarshal file: %v", err)
 		return webhook, err
 	}
 
-	webhook.Timestamp = parseTimestamp(timestamp)
+	webhook.Timestamp = g.parseTimestamp(timestamp)
 	webhook.ID = eventID
 	webhook.Type = eventType
 	webhook.Payload = payload
@@ -113,17 +113,17 @@ func readWebhookFile(dataDir, filename string) (WebhookPayload, error) {
 }
 
 // parseTimestamp 将字符串时间戳解析为 Unix 时间戳
-func parseTimestamp(ts string) int64 {
+func (g *GitHubIntegration) parseTimestamp(ts string) int64 {
 	timestamp, err := strconv.ParseInt(ts, 10, 64)
 	if err != nil {
-		logger.Errorf("parseTimestamp: failed to parse timestamp: %v", err)
+		g.logger.Errorf("parseTimestamp: failed to parse timestamp: %v", err)
 		return 0
 	}
 	return timestamp
 }
 
 // GetInstallationConfig 从存储中读取所有安装配置信息
-func GetInstallationConfig() (map[int64]*Installation, error) {
+func (g *GitHubIntegration) GetInstallationConfig() (map[int64]*Installation, error) {
 	// 确保目录存在
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return nil, fmt.Errorf("创建配置目录失败: %w", err)
@@ -145,13 +145,13 @@ func GetInstallationConfig() (map[int64]*Installation, error) {
 
 		data, err := os.ReadFile(filepath.Join(configDir, file.Name()))
 		if err != nil {
-			logger.Errorf("读取配置文件失败 %s: %v", file.Name(), err)
+			g.logger.Errorf("读取配置文件失败 %s: %v", file.Name(), err)
 			continue
 		}
 
 		var config InstallationConfig
 		if err := json.Unmarshal(data, &config); err != nil {
-			logger.Errorf("解析配置文件失败 %s: %v", file.Name(), err)
+			g.logger.Errorf("解析配置文件失败 %s: %v", file.Name(), err)
 			continue
 		}
 

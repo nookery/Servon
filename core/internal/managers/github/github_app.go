@@ -18,18 +18,18 @@ import (
 // GenerateManifest 生成 GitHub App 的 manifest
 // 接收 gin.Context 作为参数，从中获取应用名称、描述和基础URL
 // 返回包含 manifest 的 HTML 表单，用于自动提交到 GitHub
-func GenerateManifest(name, description, baseURL string) (string, error) {
-	logger.Infof("GenerateManifest")
+func (g *GitHubIntegration) GenerateManifest(name, description, baseURL string) (string, error) {
+	g.logger.Infof("GenerateManifest")
 
 	manifest := createManifest(name, description, baseURL)
 	manifestJSON, err := json.Marshal(manifest)
 	if err != nil {
-		return "", logger.LogAndReturnErrorf("failed to generate manifest: %v", err)
+		return "", g.logger.LogAndReturnErrorf("failed to generate manifest: %v", err)
 	}
 
 	state, err := generateState()
 	if err != nil {
-		return "", logger.LogAndReturnErrorf("failed to generate state: %v", err)
+		return "", g.logger.LogAndReturnErrorf("failed to generate state: %v", err)
 	}
 
 	return generateHTML(state, string(manifestJSON)), nil
