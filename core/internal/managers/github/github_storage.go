@@ -124,6 +124,7 @@ func (g *GitHubIntegration) parseTimestamp(ts string) int64 {
 
 // GetInstallationConfig 从存储中读取所有安装配置信息
 func (g *GitHubIntegration) GetInstallationConfig() (map[int64]*Installation, error) {
+	g.logger.Infof("开始获取安装配置: %s", configDir)
 	// 确保目录存在
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return nil, fmt.Errorf("创建配置目录失败: %w", err)

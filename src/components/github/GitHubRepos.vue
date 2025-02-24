@@ -29,6 +29,8 @@ async function loadGitHubRepos() {
     } finally {
         loading.value = false
     }
+
+    console.log(repos.value)
 }
 
 // 筛选状态：null 表示全部，true 表示私有，false 表示公开
@@ -42,7 +44,8 @@ const paginatedRepos = computed(() => {
     let filtered = repos.value
 
     // 先按私有状态筛选
-    if (filterPrivate !== null) {
+    if (filterPrivate !== null && filterPrivate.value !== null) {
+        console.log(filterPrivate.value)
         filtered = filtered.filter(repo => repo.private === filterPrivate.value)
     }
 
@@ -84,12 +87,16 @@ function changePage(page: number) {
     currentPage.value = page
 }
 
+function getRepoHTMLURL(repo: GitHubRepo) {
+    return `https://github.com/${repo.full_name}`
+}
+
 async function handleDeploy(repo: GitHubRepo) {
     if (deployingRepo.value) return
 
     deployingRepo.value = repo.name
     try {
-        const res = await deployRepository(repo.html_url)
+        const res = await deployRepository(getRepoHTMLURL(repo))
         toast.success(res.message)
     } catch (err: any) {
         error.value = err.response?.data?.error || err.message || '部署失败'
@@ -106,10 +113,7 @@ loadGitHubRepos()
         <div class="flex justify-between mb-6">
             <div class="flex items-center gap-4">
                 <GitHubButton />
-                <RefreshButton 
-                    :loading="loading"
-                    @refresh="loadGitHubRepos"
-                />
+                <RefreshButton :loading="loading" @refresh="loadGitHubRepos" />
                 <!-- 搜索框 -->
                 <div class="form-control">
                     <input type="text" v-model="searchQuery" placeholder="搜索仓库..."
@@ -172,7 +176,7 @@ loadGitHubRepos()
                             </td>
                             <td>
                                 <div class="flex gap-2">
-                                    <a :href="repo.html_url" target="_blank" class="btn btn-sm btn-ghost">
+                                    <a :href="getRepoHTMLURL(repo)" target="_blank" class="btn btn-sm btn-ghost">
                                         <i class="ri-external-link-line mr-1"></i>
                                         查看
                                     </a>

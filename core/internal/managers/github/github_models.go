@@ -20,7 +20,6 @@ type GitHubRepo struct {
 	FullName    string `json:"full_name"`   // 仓库完整名称 (owner/name)
 	Description string `json:"description"` // 仓库描述
 	Private     bool   `json:"private"`     // 是否为私有仓库
-	HTMLURL     string `json:"html_url"`    // 仓库的Web页面URL
 }
 
 // InstallationConfig 表示GitHub App安装的配置信息
@@ -32,7 +31,7 @@ type InstallationConfig struct {
 	AppID          int64        `json:"app_id"`          // GitHub App ID
 	Permissions    Permissions  `json:"permissions"`     // 权限配置
 	Events         []string     `json:"events"`          // 订阅的事件
-	Repositories   []Repository `json:"repositories"`    // 仓库列表
+	Repositories   []GitHubRepo `json:"repositories"`    // 仓库列表
 	CreatedAt      string       `json:"created_at"`      // 创建时间
 }
 
@@ -81,7 +80,7 @@ type Installation struct {
 	SingleFileName      *string      `json:"single_file_name"`          // 单文件名称(如果适用)
 	HasMultipleFiles    bool         `json:"has_multiple_single_files"` // 是否有多个单文件
 	SingleFilePaths     []string     `json:"single_file_paths"`         // 单文件路径列表
-	Repositories        []Repository `json:"repositories"`              // 安装的仓库列表
+	Repositories        []GitHubRepo `json:"repositories"`              // 安装的仓库列表
 	Permissions         Permissions  `json:"permissions"`               // 安装权限
 	Events              []string     `json:"events"`                    // 订阅的事件列表
 	CreatedAt           string       `json:"created_at"`                // 创建时间
@@ -95,15 +94,6 @@ type Installation struct {
 		AvatarURL string `json:"avatar_url"` // 头像URL
 		Type      string `json:"type"`       // 账户类型
 	} `json:"account"`
-}
-
-// Repository 表示仓库信息
-type Repository struct {
-	ID       int64  `json:"id"`        // 仓库ID
-	NodeID   string `json:"node_id"`   // GraphQL节点ID
-	Name     string `json:"name"`      // 仓库名称
-	FullName string `json:"full_name"` // 完整仓库名称
-	Private  bool   `json:"private"`   // 是否为私有仓库
 }
 
 // Permissions 表示安装的权限配置

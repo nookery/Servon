@@ -171,6 +171,7 @@ func (g *GitHubIntegration) GetStoredWebhooks() ([]WebhookPayload, error) {
 //   - []GitHubRepo: 已授权的仓库列表
 //   - error: 获取过程中的错误
 func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]GitHubRepo, error) {
+	g.logger.Infof("开始获取已授权的仓库列表")
 	// 从存储中读取安装配置
 	installations, err := g.GetInstallationConfig()
 	if err != nil {
@@ -182,19 +183,12 @@ func (g *GitHubIntegration) ListAuthorizedRepos(ctx context.Context) ([]GitHubRe
 
 	// 遍历所有安装实例
 	for _, installation := range installations {
-		g.logger.Infof("正在处理安装实例: %v", installation)
+		g.logger.Infof("正在处理安装实例: %v", installation.ID)
 		// 获取该安装实例下的所有仓库
-		for _, repoName := range installation.Repositories {
-			repo := GitHubRepo{
-				Name:     repoName.Name,
-				FullName: fmt.Sprintf("%s/%s", installation.AccountLogin, repoName.Name),
-				Private:  repoName.Private,
-				HTMLURL:  fmt.Sprintf("https://github.com/%s", repoName.FullName),
-			}
-			repos = append(repos, repo)
-		}
+		repos = installation.Repositories
 	}
 
+	g.logger.Infof("成功获取已授权的仓库列表，共有 %d 个仓库", len(repos))
 	return repos, nil
 }
 
@@ -482,7 +476,7 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 	var event struct {
 		Action       string       `json:"action"`
 		Installation Installation `json:"installation"`
-		Repositories []Repository `json:"repositories"`
+		Repositories []GitHubRepo `json:"repositories"`
 		Sender       struct {
 			Login     string `json:"login"`
 			ID        int64  `json:"id"`
