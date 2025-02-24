@@ -48,12 +48,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <PageContainer title="端口列表">
+    <PageContainer title="端口列表" :error="error">
         <template #header>
-            <div v-if="error" class="alert alert-error">
-                {{ error }}
-            </div>
-
             <div class="flex flex-wrap gap-2 mb-4 p-4 bg-base-200 rounded-lg border border-base-300">
                 <IconButton icon="ri-list-unordered" size="sm" :variant="activeFilter === null ? 'primary' : 'default'"
                     @click="filterPorts(null, null)">

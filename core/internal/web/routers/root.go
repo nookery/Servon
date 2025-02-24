@@ -2,12 +2,9 @@ package routers
 
 import (
 	"servon/core/internal/managers"
-	"servon/core/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
-
-var logger = utils.DefaultLogUtil
 
 func Setup(manager *managers.FullManager, r *gin.Engine, isDev bool) {
 	api := r.Group("/web_api")
@@ -23,5 +20,6 @@ func Setup(manager *managers.FullManager, r *gin.Engine, isDev bool) {
 	SetupUserRouter(api, manager)
 	SetupDeployRouter(api, manager)
 	SetupIntegrationRouter(api, manager)
+	SetupLogRouter(api, manager.LogManager)
 	SetupUIRoutes(r)
 }

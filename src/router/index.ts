@@ -9,6 +9,8 @@ import Users from '../views/Users.vue'
 import DeployLogs from '../views/DeployLogs.vue'
 import Integrations from '../views/Integrations.vue'
 import DataPage from '../views/DataPage.vue'
+import Logs from '../views/Logs.vue'
+
 const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -62,6 +64,15 @@ const router = createRouter({
             path: '/data',
             name: 'data',
             component: DataPage
+        },
+        {
+            path: '/logs',
+            name: 'Logs',
+            component: Logs,
+            meta: {
+                title: '日志管理',
+                icon: 'ri-file-list-line'
+            }
         }
     ]
 })

@@ -34,7 +34,3 @@ onMounted(() => {
             v-model:sort-by="currentSort" v-model:sort-order="sortOrder" />
     </PageContainer>
 </template>
-
-<style>
-@import 'remixicon/fonts/remixicon.css';
-</style>

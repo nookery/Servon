@@ -93,12 +93,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <PageContainer title="进程列表">
+    <PageContainer title="进程列表" :error="error">
         <template #header>
-            <div v-if="error" class="alert alert-error">
-                {{ error }}
-            </div>
-
             <!-- 操作栏 -->
             <div class="flex flex-wrap gap-2 mb-4 p-4 bg-base-200 rounded-lg border border-base-300">
                 <!-- 搜索框组 -->

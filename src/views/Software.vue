@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useToast } from '../composables/useToast'
-import Alert from '../components/Alert.vue'
 import PageContainer from '../layouts/PageContainer.vue'
 import { systemAPI, type Software } from '../api/info'
 
@@ -95,11 +94,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <PageContainer title="软件管理">
-        <template #header>
-            <Alert v-if="error" type="error" :message="error" />
-        </template>
-
+    <PageContainer title="软件管理" :error="error">
         <div class="overflow-x-auto">
             <table class="table table-zebra w-full">
                 <thead>

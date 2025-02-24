@@ -51,6 +51,11 @@ const menuOptions = [
         key: 'data',
         icon: 'ri-database-line'
     },
+    {
+        label: '日志管理',
+        key: 'logs',
+        icon: 'ri-file-list-line'
+    },
     // {
     //     label: '定时任务',
     //     key: 'cron',
