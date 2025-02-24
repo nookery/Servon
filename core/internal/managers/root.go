@@ -4,8 +4,6 @@ import (
 	"servon/core/internal/utils"
 )
 
-const deployLogDir = "/data/deploy"
-
 var logger = utils.DefaultLogUtil
 var shell = utils.DefaultShellUtil
 

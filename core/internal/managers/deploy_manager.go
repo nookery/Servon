@@ -28,15 +28,16 @@ type DeployManager struct {
 	// gitUtil 用于处理Git操作
 	gitUtil *utils.GitUtil
 	github  *github.GitHubIntegration
+	logsDir string
 }
 
-func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegration) (*DeployManager, error) {
-	logger := utils.NewLogUtil(deployLogDir)
+func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegration, logsDir string) (*DeployManager, error) {
 	dm := &DeployManager{
 		eventBus: eventBus,
-		logger:   logger,
-		gitUtil:  utils.NewGitUtil(logger),
+		logger:   utils.NewTopicLogUtil(logsDir, "deploy"),
+		gitUtil:  utils.NewGitUtil(utils.NewLogUtil(logsDir)),
 		github:   github,
+		logsDir:  logsDir,
 	}
 
 	// 订阅Git Push事件

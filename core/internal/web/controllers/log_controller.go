@@ -44,6 +44,12 @@ func (c *LogController) HandleReadLogEntries(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// 确保返回空数组而不是 null
+	if entries == nil {
+		entries = make([]managers.LogEntry, 0)
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{"entries": entries})
 }
 
@@ -61,6 +67,12 @@ func (c *LogController) HandleSearchLogs(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// 确保返回空数组而不是 null
+	if entries == nil {
+		entries = make([]managers.LogEntry, 0)
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{"entries": entries})
 }
 

@@ -66,3 +66,13 @@ func (c *DataManager) GetConfigRootFolder() string {
 
 	return folder
 }
+
+// GetLogsRootFolder 获取日志根目录
+func (c *DataManager) GetLogsRootFolder() string {
+	folder := c.GetDataRootFolder() + "/logs"
+	if _, err := os.Stat(folder); os.IsNotExist(err) {
+		os.MkdirAll(folder, 0755)
+	}
+
+	return folder
+}

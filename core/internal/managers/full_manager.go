@@ -31,8 +31,9 @@ type FullManager struct {
 }
 
 func NewManager(eventBus *events.EventBus) *FullManager {
+	dataManager := DefaultDataManager
 	githubIntegration := github.NewGitHubIntegration(eventBus)
-	deployManager, err := NewDeployManager(eventBus, githubIntegration)
+	deployManager, err := NewDeployManager(eventBus, githubIntegration, dataManager.GetLogsRootFolder())
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create deploy manager: %v", err))
 	}
@@ -40,7 +41,7 @@ func NewManager(eventBus *events.EventBus) *FullManager {
 	core := &FullManager{
 		CronManager:            DefaultCronManager,
 		SoftManager:            DefaultSoftManager,
-		DataManager:            DefaultDataManager,
+		DataManager:            dataManager,
 		ServiceManager:         DefaultServiceManager,
 		AptManager:             DefaultAptManager,
 		VersionManager:         NewVersionManager(),
