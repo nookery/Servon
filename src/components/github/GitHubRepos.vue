@@ -67,10 +67,12 @@ const paginatedRepos = computed(() => {
 const totalPages = computed(() => {
     let filtered = repos.value
 
-    if (filterPrivate !== null) {
+    // 先按私有状态筛选
+    if (filterPrivate.value !== null) {
         filtered = filtered.filter(repo => repo.private === filterPrivate.value)
     }
 
+    // 再按搜索关键词筛选
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase()
         filtered = filtered.filter(repo =>
@@ -79,7 +81,7 @@ const totalPages = computed(() => {
         )
     }
 
-    return Math.ceil(filtered.length / pageSize.value)
+    return Math.max(1, Math.ceil(filtered.length / pageSize.value))
 })
 
 // 页面切换
@@ -104,6 +106,41 @@ async function handleDeploy(repo: GitHubRepo) {
         deployingRepo.value = null
     }
 }
+
+// 计算中间要显示的页码
+const middlePages = computed(() => {
+    const total = totalPages.value
+    const current = currentPage.value
+    const delta = 2 // 当前页码左右各显示多少个页码
+
+    let start = Math.max(2, current - delta)
+    let end = Math.min(total - 1, current + delta)
+
+    // 调整start和end，确保显示固定数量的页码
+    if (end - start < delta * 2) {
+        if (start === 2) {
+            end = Math.min(total - 1, start + delta * 2)
+        } else if (end === total - 1) {
+            start = Math.max(2, end - delta * 2)
+        }
+    }
+
+    const pages = []
+    for (let i = start; i <= end; i++) {
+        pages.push(i)
+    }
+    return pages
+})
+
+// 是否显示左省略号
+const showLeftEllipsis = computed(() => {
+    return middlePages.value[0] > 2
+})
+
+// 是否显示右省略号
+const showRightEllipsis = computed(() => {
+    return middlePages.value[middlePages.value.length - 1] < totalPages.value - 1
+})
 
 loadGitHubRepos()
 </script>
@@ -193,21 +230,59 @@ loadGitHubRepos()
                 </table>
             </div>
 
-            <!-- 分页 -->
-            <div class="flex justify-center mt-4">
+            <!-- 分页区域 -->
+            <div class="flex flex-col items-center gap-2 mt-4">
+                <!-- 分页按钮 -->
                 <div class="join">
+                    <!-- 第一页按钮 -->
+                    <button class="join-item btn btn-sm" :disabled="currentPage === 1" @click="changePage(1)"
+                        title="第一页">
+                        <i class="ri-skip-back-line"></i>
+                    </button>
+
+                    <!-- 上一页 -->
                     <button class="join-item btn btn-sm" :disabled="currentPage === 1"
-                        @click="changePage(currentPage - 1)">
+                        @click="changePage(currentPage - 1)" title="上一页">
                         <i class="ri-arrow-left-s-line"></i>
                     </button>
-                    <button v-for="page in totalPages" :key="page" class="join-item btn btn-sm"
+
+                    <!-- 第一页 -->
+                    <button class="join-item btn btn-sm" :class="{ 'btn-active': currentPage === 1 }"
+                        @click="changePage(1)">1</button>
+
+                    <!-- 左省略号 -->
+                    <button v-if="showLeftEllipsis" class="join-item btn btn-sm btn-disabled">...</button>
+
+                    <!-- 中间页码 -->
+                    <button v-for="page in middlePages" :key="page" class="join-item btn btn-sm"
                         :class="{ 'btn-active': page === currentPage }" @click="changePage(page)">
                         {{ page }}
                     </button>
+
+                    <!-- 右省略号 -->
+                    <button v-if="showRightEllipsis" class="join-item btn btn-sm btn-disabled">...</button>
+
+                    <!-- 最后一页 -->
+                    <button v-if="totalPages > 1" class="join-item btn btn-sm"
+                        :class="{ 'btn-active': currentPage === totalPages }" @click="changePage(totalPages)">{{
+                        totalPages }}</button>
+
+                    <!-- 下一页 -->
                     <button class="join-item btn btn-sm" :disabled="currentPage === totalPages"
-                        @click="changePage(currentPage + 1)">
+                        @click="changePage(currentPage + 1)" title="下一页">
                         <i class="ri-arrow-right-s-line"></i>
                     </button>
+
+                    <!-- 最后一页按钮 -->
+                    <button class="join-item btn btn-sm" :disabled="currentPage === totalPages"
+                        @click="changePage(totalPages)" title="最后一页">
+                        <i class="ri-skip-forward-line"></i>
+                    </button>
+                </div>
+
+                <!-- 分页信息 -->
+                <div class="text-sm text-base-content/70">
+                    共 {{ repos.length }} 个仓库，第 {{ currentPage }} / {{ totalPages }} 页
                 </div>
             </div>
         </div>

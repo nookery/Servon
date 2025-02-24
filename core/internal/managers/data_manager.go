@@ -76,3 +76,23 @@ func (c *DataManager) GetLogsRootFolder() string {
 
 	return folder
 }
+
+// GetTempRootFolder 获取临时根目录
+func (c *DataManager) GetTempRootFolder() string {
+	folder := c.GetDataRootFolder() + "/temp"
+	if _, err := os.Stat(folder); os.IsNotExist(err) {
+		os.MkdirAll(folder, 0755)
+	}
+
+	return folder
+}
+
+// GetProjectsFolder 获取项目根目录
+func (c *DataManager) GetProjectsFolder() string {
+	folder := c.GetDataRootFolder() + "/projects"
+	if _, err := os.Stat(folder); os.IsNotExist(err) {
+		os.MkdirAll(folder, 0755)
+	}
+
+	return folder
+}

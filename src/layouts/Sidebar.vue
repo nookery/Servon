@@ -51,6 +51,11 @@ const menuOptions = [
         key: 'logs',
         icon: 'ri-file-list-line'
     },
+    {
+        label: '项目拓扑',
+        key: 'topology',
+        icon: 'ri-node-tree'
+    },
     // {
     //     label: '定时任务',
     //     key: 'cron',

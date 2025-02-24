@@ -26,18 +26,24 @@ type DeployManager struct {
 	// logger 用于记录部署过程的日志
 	logger *utils.LogUtil
 	// gitUtil 用于处理Git操作
-	gitUtil *utils.GitUtil
-	github  *github.GitHubIntegration
-	logsDir string
+	gitUtil     *utils.GitUtil
+	fileUtil    *utils.FileUtil
+	github      *github.GitHubIntegration
+	logsDir     string
+	tempDir     string
+	projectsDir string
 }
 
-func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegration, logsDir string) (*DeployManager, error) {
+func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegration, logsDir string, tempDir string, projectsDir string) (*DeployManager, error) {
 	dm := &DeployManager{
-		eventBus: eventBus,
-		logger:   utils.NewTopicLogUtil(logsDir, "deploy"),
-		gitUtil:  utils.NewGitUtil(utils.NewLogUtil(logsDir)),
-		github:   github,
-		logsDir:  logsDir,
+		eventBus:    eventBus,
+		logger:      utils.NewTopicLogUtil(logsDir, "deploy"),
+		gitUtil:     utils.NewGitUtil(utils.NewLogUtil(logsDir)),
+		fileUtil:    utils.DefaultFileUtil,
+		github:      github,
+		logsDir:     logsDir,
+		tempDir:     tempDir,
+		projectsDir: projectsDir,
 	}
 
 	// 订阅Git Push事件
@@ -92,7 +98,7 @@ func (m *DeployManager) DeployProject(repoURL string) error {
 	deployID := time.Now().Format("20060102150405")
 
 	// 创建临时工作目录
-	workDir := filepath.Join(os.TempDir(), fmt.Sprintf("deploy_%s_%s", repoURL, deployID))
+	workDir := filepath.Join(m.tempDir, fmt.Sprintf("deploy_%s_%s", repoURL, deployID))
 	m.logger.Infof("创建临时工作目录: %s", workDir)
 
 	if err := os.MkdirAll(workDir, 0755); err != nil {
@@ -249,7 +255,21 @@ func (m *DeployManager) buildProject(workDir string) error {
 
 // deployService 部署服务
 func (m *DeployManager) deployService(workDir string) error {
-	// TODO: 实现具体的服务部署逻辑
-	// 可能需要调用 ServiceManager 的方法
+	// 将源代码复制到项目目录
+	projectName := filepath.Base(workDir)
+	projectDir := filepath.Join(m.projectsDir, projectName)
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		return m.logger.LogAndReturnErrorf("创建项目目录失败: %v", err)
+	}
+
+	// 复制源代码到项目目录
+	if err := m.fileUtil.CopyDir(workDir, projectDir); err != nil {
+		return m.logger.LogAndReturnErrorf("复制源代码失败: %v", err)
+	}
+
+	m.logger.Infof("源代码复制成功: %s -> %s", workDir, projectDir)
+
+	// 执行构建命令
+
 	return nil
 }

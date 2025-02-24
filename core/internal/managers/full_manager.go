@@ -36,7 +36,14 @@ func NewManager(eventBus *events.EventBus) *FullManager {
 	softManager := NewSoftManager(dataManager.GetLogsRootFolder())
 	gitManager := NewGitManager(softManager)
 	downloadManager := NewDownloadManager(softManager)
-	deployManager, err := NewDeployManager(eventBus, githubIntegration, dataManager.GetLogsRootFolder())
+
+	deployManager, err := NewDeployManager(
+		eventBus,
+		githubIntegration,
+		dataManager.GetLogsRootFolder(),
+		dataManager.GetTempRootFolder(),
+		dataManager.GetProjectsFolder(),
+	)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create deploy manager: %v", err))
 	}

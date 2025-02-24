@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -153,4 +154,48 @@ func (p *FileUtil) GetDirSize(dirPath string) int64 {
 		return 0
 	}
 	return info.Size()
+}
+
+// CopyDir 复制目录
+func (p *FileUtil) CopyDir(srcDir, destDir string) error {
+	return filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// 构建目标路径
+		relPath, err := filepath.Rel(srcDir, path)
+		if err != nil {
+			return err
+		}
+
+		// 构建目标路径
+		destPath := filepath.Join(destDir, relPath)
+
+		// 如果源路径是目录，则创建目标目录
+		if info.IsDir() {
+			return os.MkdirAll(destPath, 0755)
+		}
+
+		// 如果源路径是文件，则复制文件
+		return p.CopyFile(path, destPath)
+	})
+}
+
+// CopyFile 复制文件
+func (p *FileUtil) CopyFile(srcPath, destPath string) error {
+	src, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	dest, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+	defer dest.Close()
+
+	_, err = io.Copy(dest, src)
+	return err
 }
