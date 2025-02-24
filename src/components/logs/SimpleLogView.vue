@@ -3,10 +3,10 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useConfirm } from '../../composables/useConfirm'
 import { useToast } from '../../composables/useToast'
 import { useError } from '../../composables/useError'
-import type { LogEntry, LogStats } from '../../types/log'
-import * as logApi from '../../api/logs'
+import type { LogEntry, LogFile, LogStats } from '../../types/log'
+import * as logApi from '../../api/logs_api'
 import IconButton from '../IconButton.vue'
-import { RiDeleteBinLine } from '@remixicon/vue'
+import { RiEmotionHappyLine } from '@remixicon/vue'
 
 const props = defineProps<{
     currentDir: string
@@ -16,7 +16,7 @@ const confirm = useConfirm()
 const toast = useToast()
 const { error } = useError()
 
-const logFiles = ref<LogEntry[]>([])
+const logFiles = ref<LogFile[]>([])
 const selectedFile = ref<string>('')
 const logEntries = ref<LogEntry[]>([])
 const logStats = ref<LogStats | null>(null)
@@ -24,12 +24,14 @@ const searchKeyword = ref('')
 const loading = ref(false)
 const selectedLevels = ref<string[]>(['error', 'warn', 'info', 'debug'])
 
-// 加载日志文件列表
-async function loadLogFiles() {
+// 基础加载函数，不显示提示
+async function loadLogFiles(showToast = false) {
     try {
         loading.value = true
         logFiles.value = await logApi.getLogFiles(props.currentDir)
-        toast.success('日志列表已刷新')
+        if (showToast) {
+            toast.success('日志列表已刷新')
+        }
     } catch (err: any) {
         error('获取日志文件列表失败: ' + (err.response?.data?.error || err.message || '未知错误'))
     } finally {
@@ -37,14 +39,16 @@ async function loadLogFiles() {
     }
 }
 
-// 加载日志内容
-async function loadLogEntries() {
+// 基础加载函数，不显示提示
+async function loadLogEntries(showToast = false) {
     if (!selectedFile.value) return
 
     try {
         loading.value = true
         logEntries.value = await logApi.getLogEntries(selectedFile.value)
-        toast.success('日志内容已刷新')
+        if (showToast) {
+            toast.success('日志内容已刷新')
+        }
     } catch (err: any) {
         error('获取日志内容失败: ' + (err.response?.data?.error || err.message || '未知错误'))
     } finally {
@@ -52,18 +56,9 @@ async function loadLogEntries() {
     }
 }
 
-// 搜索日志
-async function handleSearch() {
-    if (!searchKeyword.value) return
-
-    try {
-        loading.value = true
-        logEntries.value = await logApi.searchLogs(props.currentDir, searchKeyword.value)
-    } catch (err: any) {
-        error('搜索日志失败: ' + (err.response?.data?.error || err.message || '未知错误'))
-    } finally {
-        loading.value = false
-    }
+// 手动刷新按钮点击事件，显示提示
+async function handleRefresh() {
+    await loadLogFiles(true)
 }
 
 // 加载统计信息
@@ -131,18 +126,32 @@ function getLevelClass(level: string): string {
     return `badge ${levelMap[level.toLowerCase()] || 'badge-ghost'}`
 }
 
-// 监听 logFiles 变化，自动选择第一个文件
+// 监听文件列表变化，自动加载不显示提示
 watch(logFiles, (newFiles) => {
     if (newFiles.length > 0 && !selectedFile.value) {
         selectedFile.value = newFiles[0].path
-        loadLogEntries()
+        loadLogEntries()  // 自动加载不显示提示
     }
 })
 
 onMounted(() => {
-    loadLogFiles()
+    loadLogFiles()  // 初始加载不显示提示
     loadStats()
 })
+
+// 搜索日志
+async function handleSearch() {
+    if (!searchKeyword.value) return
+
+    try {
+        loading.value = true
+        logEntries.value = await logApi.searchLogs(props.currentDir, searchKeyword.value)
+    } catch (err: any) {
+        error('搜索日志失败: ' + (err.response?.data?.error || err.message || '未知错误'))
+    } finally {
+        loading.value = false
+    }
+}
 </script>
 
 <template>
@@ -152,7 +161,7 @@ onMounted(() => {
             <div class="flex gap-2 items-center">
                 <input type="text" v-model="props.currentDir" placeholder="日志目录"
                     class="input input-bordered input-sm" />
-                <IconButton icon="ri-refresh-line" size="sm" @click="loadLogFiles">刷新</IconButton>
+                <IconButton icon="ri-refresh-line" size="sm" @click="handleRefresh">刷新</IconButton>
             </div>
             <div class="flex gap-2">
                 <div class="join">
@@ -271,8 +280,12 @@ onMounted(() => {
                                         <td class="whitespace-pre-wrap">{{ entry.message }}</td>
                                     </tr>
                                     <tr v-if="filteredLogEntries.length === 0">
-                                        <td colspan="4" class="text-center text-base-content/50 py-4">
-                                            暂无符合条件的日志
+                                        <td colspan="4" class="text-center text-base-content/50 py-8">
+                                            <div class="flex flex-col items-center gap-2">
+                                                <RiEmotionHappyLine class="w-8 h-8 text-success" />
+                                                <span>暂无符合条件的日志 </span>
+                                                <span class="text-xs opacity-50">这说明系统运行得很顺利呢！</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>

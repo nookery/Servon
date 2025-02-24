@@ -4,6 +4,7 @@ export interface LogEntry {
     caller: string;
     message: string;
     extra?: Record<string, any>;
+    path: string;
 }
 
 export interface LogStats {

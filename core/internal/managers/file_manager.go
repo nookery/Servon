@@ -29,3 +29,8 @@ func (m *FileManager) BatchDeleteFiles(paths []string) []error {
 	}
 	return errors
 }
+
+// DeleteFile 删除单个文件
+func (m *FileManager) DeleteFile(path string) error {
+	return os.Remove(path)
+}

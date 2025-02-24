@@ -28,8 +28,8 @@ func (h *FileController) HandleDeleteFile(c *gin.Context) {
 		return
 	}
 
-	err := os.Remove(path)
-	if err != nil {
+	// 使用 FileManager 处理文件删除
+	if err := h.FullManager.FileManager.DeleteFile(path); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "删除文件失败: " + err.Error()})
 		return
 	}

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import IconButton from './IconButton.vue'
-import { RiCloseLine, RiErrorWarningLine, RiFileCopyLine } from '@remixicon/vue'
+import { RiErrorWarningLine } from '@remixicon/vue'
 import { useToast } from '../composables/useToast'
 
 const errors = ref<{ id: number; message: string }[]>([])

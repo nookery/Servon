@@ -4,6 +4,7 @@ import Toast from './components/Toast.vue'
 import ErrorAlert from './components/ErrorAlert.vue'
 import GlobalConfirm from './components/GlobalConfirm.vue'
 import LockScreen from './components/LockScreen.vue'
+import IconButton from './components/IconButton.vue'
 import { useLockStore } from './stores/lockStore'
 import { ref, provide } from 'vue'
 

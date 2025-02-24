@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import IconButton from '../IconButton.vue'
-import { RiGitlabFill, RiAddLine, RiDeleteBinLine, RiRefreshLine } from '@remixicon/vue'
+import { RiGitlabFill } from '@remixicon/vue'
 import { useToast } from '../../composables/useToast'
 import { useConfirm } from '../../composables/useConfirm'
 

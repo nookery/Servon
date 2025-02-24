@@ -27,4 +27,8 @@ export async function getLogStats(dir: string = ''): Promise<LogStats> {
 
 export async function cleanOldLogs(days: number = 30): Promise<void> {
     await request.post('/logs/clean', { params: { days } })
+}
+
+export async function deleteFile(path: string): Promise<void> {
+    await request.post('/logs/delete', { params: { path } })
 } 

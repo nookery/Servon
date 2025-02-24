@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Alert from '../components/Alert.vue'
 import { RiInboxLine } from '@remixicon/vue'
 import { ref, provide, watch } from 'vue'
 import { useError } from '../composables/useError'

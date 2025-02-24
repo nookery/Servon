@@ -22,7 +22,6 @@ const emit = defineEmits<{
     (e: 'cancel'): void
 }>()
 
-const formError = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 const showCronHelp = ref(false)
 
