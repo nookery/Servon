@@ -108,6 +108,27 @@ async function handleDeleteCurrentLog() {
     }
 }
 
+// 清空当前日志文件
+async function handleClearCurrentLog() {
+    if (!selectedFile.value) {
+        toast.warning('请先选择要清空的日志文件')
+        return
+    }
+
+    if (await confirm.error('清空日志文件', `确定要清空日志文件 "${selectedFile.value}" 吗？此操作不可恢复！`, {
+        confirmText: '清空',
+        cancelText: '取消'
+    })) {
+        try {
+            await logApi.clearLogFile(selectedFile.value)
+            toast.success('日志文件已清空')
+            await loadLogEntries(true)  // 重新加载日志内容
+        } catch (err: any) {
+            error('清空日志文件失败: ' + (err.response?.data?.error || err.message))
+        }
+    }
+}
+
 // 过滤日志条目
 const filteredLogEntries = computed(() => {
     return logEntries.value.filter(entry =>
@@ -198,6 +219,10 @@ async function handleSearch() {
                     </div>
                     <IconButton icon="ri-delete-bin-line" variant="error" size="sm" @click="handleCleanLogs">
                         清理旧日志
+                    </IconButton>
+                    <IconButton icon="ri-eraser-line" variant="error" size="sm" @click="handleClearCurrentLog"
+                        :disabled="!selectedFile">
+                        清空日志
                     </IconButton>
                 </div>
             </div>

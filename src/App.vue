@@ -32,13 +32,15 @@ const removeHeaderError = (id: number) => {
   <template v-if="!lockStore.isLocked">
     <main-layout>
       <!-- 头部错误提示 -->
-      <div v-for="error in headerErrors" :key="error.id" class="alert alert-error shadow-lg mb-4 animate-slide-in-down">
+      <div v-for="error in headerErrors" :key="error.id"
+        class="alert alert-error shadow-lg mb-4 animate-slide-in-down mx-4 my-2">
         <div class="flex-1 flex items-center gap-2">
           <i class="ri-error-warning-line text-xl" />
           <span>{{ error.message }}</span>
         </div>
         <IconButton icon="ri-close-line" variant="ghost" circle size="sm" @click="removeHeaderError(error.id)" />
       </div>
+
       <router-view></router-view>
     </main-layout>
   </template>

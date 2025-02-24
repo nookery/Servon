@@ -1,5 +1,6 @@
 import { request } from '../utils/request'
 import type { LogEntry, LogStats, LogFile } from '../types/log'
+import axios from 'axios'
 
 export async function getLogFiles(dir: string = ''): Promise<LogFile[]> {
     const { files } = await request.get<{ files: string[] }>('/logs/files', { params: { dir } })
@@ -31,4 +32,9 @@ export async function cleanOldLogs(days: number = 30): Promise<void> {
 
 export async function deleteFile(path: string): Promise<void> {
     await request.post('/logs/delete', { params: { path } })
+}
+
+// 清空指定的日志文件
+export async function clearLogFile(file: string): Promise<void> {
+    await request.post('/logs/clear', { params: { file } })
 } 

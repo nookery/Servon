@@ -56,6 +56,11 @@ func (c *LogController) HandleReadLogEntries(ctx *gin.Context) {
 		entries = make([]managers.LogEntry, 0)
 	}
 
+	// 反转日志条目顺序，让新的日志在前面
+	for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
+		entries[i], entries[j] = entries[j], entries[i]
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{"entries": entries})
 }
 
@@ -134,4 +139,31 @@ func (c *LogController) HandleDeleteLogFile(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "日志文件删除成功"})
+}
+
+// HandleClearLogFile 清空指定日志文件
+func (c *LogController) HandleClearLogFile(ctx *gin.Context) {
+	var req struct {
+		Params struct {
+			File string `json:"file"`
+		} `json:"params"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求格式"})
+		return
+	}
+
+	if req.Params.File == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "需要提供文件名"})
+		return
+	}
+
+	err := c.logManager.ClearLogFile(req.Params.File)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "日志文件已清空"})
 }

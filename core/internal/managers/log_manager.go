@@ -234,3 +234,10 @@ func (m *LogManager) DeleteLogFile(logPath string) error {
 	m.Infof("已删除日志文件: %s", logPath)
 	return nil
 }
+
+// ClearLogFile 清空指定的日志文件
+func (m *LogManager) ClearLogFile(logFile string) error {
+	fullPath := filepath.Join(m.baseLogDir, logFile)
+	// 清空文件内容
+	return os.Truncate(fullPath, 0)
+}
