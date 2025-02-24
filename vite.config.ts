@@ -14,7 +14,7 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/web_api': {
-        target: process.env.VITE_API_TARGET || 'http://127.0.0.1:7654',
+        target: process.env.VITE_API_TARGET || 'http://127.0.0.1:9754',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/web_api/, '/web_api'),
       },

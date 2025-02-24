@@ -2,8 +2,8 @@ import { request } from '../utils/request'
 import type { LogEntry, LogStats, LogFile } from '../types/log'
 
 export async function getLogFiles(dir: string = ''): Promise<LogFile[]> {
-    const { files } = await request.get<{ files: LogFile[] }>('/logs/files', { params: { dir } })
-    return files
+    const { files } = await request.get<{ files: string[] }>('/logs/files', { params: { dir } })
+    return files.map(path => ({ path }))
 }
 
 export async function getLogEntries(file: string, limit: number = 100): Promise<LogEntry[]> {

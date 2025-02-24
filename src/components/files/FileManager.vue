@@ -276,6 +276,23 @@ onBeforeUnmount(() => {
 onMounted(() => {
     loadFilesWithClear(props.initialPath)
 })
+
+async function copyFile(file: FileInfo) {
+    try {
+        const baseName = file.name.split('.')
+        const ext = baseName.length > 1 ? baseName.pop() : ''
+        const newName = `${baseName.join('.')} - 副本${ext ? '.' + ext : ''}`
+        const newPath = `${currentPath.value}/${newName}`
+
+        await fileAPI.copyFile(file.path, newPath)
+        loadFiles(currentPath.value)
+    } catch (err: any) {
+        error.value = err.response?.data?.error || err.message || '复制失败'
+        setTimeout(() => {
+            error.value = null
+        }, 5000)
+    }
+}
 </script>
 
 <template>
@@ -440,6 +457,9 @@ onMounted(() => {
                                 <button v-if="!file.isDir" class="btn btn-xs join-item" @click="downloadFile(file)">
                                     <i class="ri-download-line"></i>
                                 </button>
+                                <button v-if="!file.isDir" class="btn btn-xs join-item" @click="copyFile(file)">
+                                    <i class="ri-file-copy-line"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -467,8 +487,6 @@ onMounted(() => {
 </template>
 
 <style>
-@import 'remixicon/fonts/remixicon.css';
-
 .breadcrumbs a {
     text-decoration: none !important;
 }

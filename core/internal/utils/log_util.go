@@ -12,50 +12,81 @@ import (
 var DefaultLogUtil = NewConsoleUtil()
 
 type LogUtil struct {
-	logDir string
-	logger zerolog.Logger
+	logDir        string
+	topic         string
+	logger        zerolog.Logger
+	consoleLogger zerolog.Logger
 }
 
 // NewConsoleUtil 初始化记录到控制台的日志工具
 func NewConsoleUtil() *LogUtil {
-	return newLogUtil("")
+	return newLogUtil("", "")
 }
 
 // NewLogUtil 初始化记录到文件和控制台的日志工具
 func NewLogUtil(logDir string) *LogUtil {
-	return newLogUtil(logDir)
+	return newLogUtil(logDir, "")
 }
 
-func newLogUtil(logDir string) *LogUtil {
+// NewTopicLogUtil 初始化带主题的日志工具
+func NewTopicLogUtil(logDir string, topic string) *LogUtil {
+	return newLogUtil(logDir, topic)
+}
+
+func newLogUtil(logDir string, topic string) *LogUtil {
 	var multi zerolog.LevelWriter
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
 
 	if logDir != "" {
 		if err := os.MkdirAll(logDir, 0755); err != nil {
 			panic(err)
 		}
 
-		// 创建日志文件
-		logFile := filepath.Join(logDir, "app.log")
+		// 根据主题创建日志文件
+		var logFile string
+		if topic != "" {
+			logFile = filepath.Join(logDir, fmt.Sprintf("%s.log", topic))
+		} else {
+			logFile = filepath.Join(logDir, "app.log")
+		}
+
 		file, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
 			panic(err)
 		}
-		// 同时输出到控制台和文件
-		multi = zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stdout}, file)
+		multi = zerolog.MultiLevelWriter(consoleWriter, file)
 	} else {
-		// 仅输出到控制台
-		multi = zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stdout})
+		multi = zerolog.MultiLevelWriter(consoleWriter)
 	}
 
 	// 配置 zerolog
 	zerolog.TimeFieldFormat = "2006-01-02 15:04:05.000"
-	logger := zerolog.New(multi).With().Timestamp().
-		CallerWithSkipFrameCount(3). // 跳过日志工具的调用栈
-		Logger()
+
+	// 创建基础logger配置
+	baseLoggerContext := zerolog.New(multi).With().Timestamp().
+		CallerWithSkipFrameCount(3)
+
+	// 如果有主题，添加到日志上下文
+	if topic != "" {
+		baseLoggerContext = baseLoggerContext.Str("topic", topic)
+	}
+
+	// 创建标准logger
+	logger := baseLoggerContext.Logger()
+
+	// 创建仅控制台输出的logger
+	consoleLoggerContext := zerolog.New(consoleWriter).With().Timestamp().
+		CallerWithSkipFrameCount(3)
+	if topic != "" {
+		consoleLoggerContext = consoleLoggerContext.Str("topic", topic)
+	}
+	consoleLogger := consoleLoggerContext.Logger()
 
 	return &LogUtil{
-		logDir: logDir,
-		logger: logger,
+		logDir:        logDir,
+		topic:         topic,
+		logger:        logger,
+		consoleLogger: consoleLogger,
 	}
 }
 
@@ -82,11 +113,11 @@ func (lu *LogUtil) Trace(message string) {
 }
 
 func (lu *LogUtil) Error(err error) {
-	lu.logger.Error().Msg(err.Error())
+	lu.logger.Error().Msg("❌ " + err.Error())
 }
 
 func (lu *LogUtil) ErrorMessage(message string) {
-	lu.logger.Error().Msg(message)
+	lu.logger.Error().Msg("❌ " + message)
 }
 
 func (lu *LogUtil) Errorf(format string, args ...interface{}) {
@@ -121,18 +152,23 @@ func (lu *LogUtil) Warnf(format string, args ...interface{}) {
 	lu.logger.Warn().Msgf(format, args...)
 }
 
+// WarnfConsole 记录警告日志到控制台
+func (lu *LogUtil) WarnfConsole(format string, args ...interface{}) {
+	lu.consoleLogger.Warn().Msgf(format, args...)
+}
+
 func (lu *LogUtil) Fatal(message string) {
 	lu.logger.Fatal().Msg(message)
 }
 
 // Success 记录成功日志
 func (lu *LogUtil) Success(message string) {
-	lu.logger.Info().Msg(message)
+	lu.logger.Info().Msg("✅ " + message)
 }
 
 // Successf 记录成功日志
 func (lu *LogUtil) Successf(format string, args ...interface{}) {
-	lu.logger.Info().Msgf(format, args...)
+	lu.logger.Info().Msgf("✅ "+format, args...)
 }
 
 // EmptyLine 记录空行
@@ -175,4 +211,24 @@ func (lu *LogUtil) PrintKeyValues(keyValues map[string]string) {
 	for key, value := range keyValues {
 		lu.logger.Info().Msgf("%s: %s", key, value)
 	}
+}
+
+// InfoConsole 记录信息日志到控制台
+func (lu *LogUtil) InfoConsole(message string) {
+	lu.consoleLogger.Info().Msg(message)
+}
+
+// InfofConsole 记录信息日志到控制台
+func (lu *LogUtil) InfofConsole(format string, args ...interface{}) {
+	lu.consoleLogger.Info().Msgf(format, args...)
+}
+
+// ErrorConsole 记录错误日志到控制台
+func (lu *LogUtil) ErrorConsole(err error) {
+	lu.consoleLogger.Error().Msg(err.Error())
+}
+
+// ErrorfConsole 记录错误日志到控制台
+func (lu *LogUtil) ErrorfConsole(format string, args ...interface{}) {
+	lu.consoleLogger.Error().Msgf(format, args...)
 }

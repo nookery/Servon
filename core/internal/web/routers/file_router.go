@@ -20,4 +20,5 @@ func SetupFileRouter(r *gin.RouterGroup, manager *managers.FullManager) {
 	api.POST("/create", fileController.HandleCreateFile)
 	api.POST("/rename", fileController.HandleRenameFile)
 	api.POST("/batch-delete", fileController.HandleBatchDeleteFiles)
+	api.POST("/copy", fileController.HandleCopyFile)
 }

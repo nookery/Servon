@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"servon/core/internal/managers"
 	"servon/core/internal/utils"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -229,4 +230,81 @@ func (h *FileController) HandleBatchDeleteFiles(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
+}
+
+type CopyFileRequest struct {
+	Source string `json:"source" binding:"required"`
+	Target string `json:"target" binding:"required"`
+}
+
+func (c *FileController) HandleCopyFile(ctx *gin.Context) {
+	var req CopyFileRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求参数"})
+		return
+	}
+
+	// 检查源文件是否存在
+	if _, err := os.Stat(req.Source); os.IsNotExist(err) {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "源文件不存在"})
+		return
+	}
+
+	// 生成目标文件路径
+	targetPath := req.Target
+	counter := 1
+
+	// 如果目标文件已存在，自动添加序号
+	for {
+		_, err := os.Stat(targetPath)
+		if os.IsNotExist(err) {
+			break
+		}
+
+		// 分析文件名和扩展名
+		dir := filepath.Dir(req.Target)
+		fileName := filepath.Base(req.Target)
+		ext := filepath.Ext(fileName)
+		baseName := fileName[:len(fileName)-len(ext)]
+
+		// 如果文件名已经包含序号，移除它
+		if strings.HasSuffix(baseName, fmt.Sprintf(" %d", counter-1)) {
+			baseName = strings.TrimSuffix(baseName, fmt.Sprintf(" %d", counter-1))
+		}
+
+		// 生成新的文件名
+		targetPath = filepath.Join(dir, fmt.Sprintf("%s %d%s", baseName, counter, ext))
+		counter++
+
+		// 防止无限循环
+		if counter > 1000 {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "无法生成有效的目标文件名"})
+			return
+		}
+	}
+
+	// 读取源文件
+	sourceData, err := os.ReadFile(req.Source)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("读取源文件失败: %v", err)})
+		return
+	}
+
+	// 写入目标文件
+	if err := os.WriteFile(targetPath, sourceData, 0644); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("写入目标文件失败: %v", err)})
+		return
+	}
+
+	// 复制文件权限
+	if sourceInfo, err := os.Stat(req.Source); err == nil {
+		if err := os.Chmod(targetPath, sourceInfo.Mode()); err != nil {
+			logger.Warnf("复制文件权限失败: %v", err)
+		}
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "文件复制成功",
+		"path":    targetPath,
+	})
 }

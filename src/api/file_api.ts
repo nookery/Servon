@@ -50,4 +50,11 @@ export const fileAPI = {
     // 批量删除文件
     batchDeleteFiles: (paths: string[]) =>
         axios.post('/web_api/files/batch-delete', { paths }),
+
+    copyFile(sourcePath: string, targetPath: string) {
+        return axios.post('/web_api/files/copy', {
+            source: sourcePath,
+            target: targetPath
+        })
+    }
 }

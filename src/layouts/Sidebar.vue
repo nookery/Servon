@@ -37,11 +37,6 @@ const menuOptions = [
         icon: 'ri-user-settings-line'
     },
     {
-        label: '部署日志',
-        key: 'deploy-logs',
-        icon: 'ri-file-list-line'
-    },
-    {
         label: '集成管理',
         key: 'integrations',
         icon: 'ri-settings-3-line'

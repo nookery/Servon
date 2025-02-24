@@ -15,6 +15,4 @@ export interface LogStats {
 
 export interface LogFile {
     path: string;
-    modTime: string;
-    size: number;
 } 

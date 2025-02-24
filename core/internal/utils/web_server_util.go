@@ -192,7 +192,7 @@ func (ws *WebServer) RunUntilSignal() error {
 
 // RunInBackground 在后台运行服务器（作为独立进程）
 func (ws *WebServer) RunInBackground() error {
-	DefaultLogUtil.Infof("在后台运行服务器: http://%s:%d", ws.config.Host, ws.config.Port)
+	DefaultLogUtil.Successf("在后台运行服务器: http://%s:%d", ws.config.Host, ws.config.Port)
 
 	// 检查服务器是否已经在运行
 	if pid, err := DefaultProcessUtil.FindProcessByPort(ws.config.Port); err == nil && pid > 0 {
@@ -252,9 +252,9 @@ func (ws *WebServer) StopBackground() error {
 	// 清理 PID 文件
 	pidFile := "servon.pid"
 	if err := os.Remove(pidFile); err == nil {
-		DefaultLogUtil.Infof("服务器已关闭")
+		DefaultLogUtil.Success("服务器已关闭")
 	} else {
-		DefaultLogUtil.Infof("服务器未在运行")
+		DefaultLogUtil.Warn("服务器未在运行")
 	}
 
 	return nil

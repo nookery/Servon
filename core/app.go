@@ -17,7 +17,7 @@ type App struct {
 	*providers.UtilProvider
 }
 
-// New 创建Core实例
+// New 创建App实例
 func New() *App {
 	eventBus, err := events.NewEventBus(filepath.Join(DataRootFolder, "events"))
 	if err != nil {
@@ -27,7 +27,7 @@ func New() *App {
 	manager := managers.NewManager(eventBus)
 	webProvider := providers.NewWebProvider(manager, DefaultHost, DefaultPort)
 
-	core := &App{
+	app := &App{
 		eventBus:        eventBus,
 		WebProvider:     webProvider,
 		ManagerProvider: providers.NewManagerProvider(eventBus),
@@ -35,5 +35,7 @@ func New() *App {
 		UtilProvider:    providers.NewUtilProvider(),
 	}
 
-	return core
+	app.Success("App 初始化完成")
+
+	return app
 }
