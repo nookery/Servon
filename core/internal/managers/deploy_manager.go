@@ -108,7 +108,7 @@ func (m *DeployManager) DeployProject(repoURL string) error {
 	targetDir := filepath.Join(m.projectsDir, projectName)
 
 	// 创建临时工作目录
-	workDir := filepath.Join(m.tempDir, fmt.Sprintf("deploy_%s_%s", projectName, deployID))
+	workDir := filepath.Join(m.tempDir, "deploy", fmt.Sprintf("%s_%s", projectName, deployID))
 	m.logger.Infof("创建临时工作目录: %s", workDir)
 
 	if err := os.MkdirAll(workDir, 0755); err != nil {

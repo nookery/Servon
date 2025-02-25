@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import FileEditor from './files/FileEditor.vue'
-import type { FileInfo } from '../types/FileInfo'
-import { topologyAPI } from '../api/topology'
-import { useToast } from '../composables/useToast'
+import FileEditor from '../files/FileEditor.vue'
+import type { FileInfo } from '../../types/FileInfo'
+import { topologyAPI } from '../../api/topology'
+import { useToast } from '../../composables/useToast'
 
 const props = defineProps<{
     modelValue: boolean

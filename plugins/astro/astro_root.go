@@ -84,7 +84,7 @@ func (d *AstroDeployer) Deploy(projectName string, workDir string, targetDir str
 			fmt.Sprintf("PORT=%d", port),
 		})
 		if err != nil {
-			return logger.LogAndReturnErrorf("添加背景服务失败: %v", err)
+			return logger.LogAndReturnErrorf("添加后台服务失败: %v", err)
 		}
 	} else {
 		serviceFilePath = d.GetServiceFilePath(projectName)

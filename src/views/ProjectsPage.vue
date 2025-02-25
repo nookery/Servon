@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { RiFolderOpenLine, RiFileListLine } from '@remixicon/vue'
+import { RiNodeTree, RiFolderOpenLine, RiFileListLine } from '@remixicon/vue'
 import PageContainer from '../layouts/PageContainer.vue'
-import FileManager from '../components/files/FileManager.vue'
-import SimpleLogView from '../components/logs/SimpleLogView.vue'
+import ProjectTopology from '../components/projects/ProjectTopology.vue'
+import ProjectFiles from '../components/projects/ProjectFiles.vue'
+import ProjectLogs from '../components/projects/ProjectLogs.vue'
 import type { SortBy, SortOrder } from '../types/FileInfo'
 
 const route = useRoute()
@@ -15,20 +16,14 @@ const STORAGE_KEY = 'projectsLastPath'
 
 // 默认项目目录
 const defaultProjectPath = '/data/projects'
-const currentPath = ref(route.query.path as string || defaultProjectPath)
-const currentSort = ref<SortBy>('name')
-const sortOrder = ref<SortOrder>('asc')
+const currentPath = ref(route.query.path as string || '')
 
 // 当前激活的 Tab
-const activeTab = ref(route.query.tab as string || 'files')
-
-// 日志相关
-const logsPath = ref('/var/log/projects')
-const logsSort = ref<SortBy>('modTime')
-const logsSortOrder = ref<SortOrder>('desc')
+const activeTab = ref(route.query.tab as string || 'topology')
 
 // 定义标签页
 const tabs = [
+    { key: 'topology', title: '项目拓扑', icon: RiNodeTree },
     { key: 'files', title: '文件管理', icon: RiFolderOpenLine },
     { key: 'logs', title: '项目日志', icon: RiFileListLine }
 ]
@@ -77,16 +72,19 @@ onMounted(() => {
 
 <template>
     <PageContainer title="项目管理" :tabs="tabs" v-model="activeTab">
+        <!-- 项目拓扑 Tab -->
+        <template #topology>
+            <ProjectTopology :project-path="currentPath" />
+        </template>
+
         <!-- 文件管理 Tab -->
         <template #files>
-            <FileManager v-model:path="currentPath" :initial-path="currentPath" :show-breadcrumbs="true"
-                :show-toolbar="true" :show-pagination="true" :show-shortcuts="false" :read-only="false"
-                v-model:sort-by="currentSort" v-model:sort-order="sortOrder" />
+            <ProjectFiles />
         </template>
 
         <!-- 日志 Tab -->
         <template #logs>
-            <SimpleLogView current-dir="" />
+            <ProjectLogs />
         </template>
     </PageContainer>
 </template>

@@ -10,7 +10,6 @@ import DeployLogs from './views/DeployLogs.vue'
 import Integrations from './views/Integrations.vue'
 import DataPage from './views/DataPage.vue'
 import Logs from './views/Logs.vue'
-import ProjectTopology from './views/ProjectTopology.vue'
 import ProjectsPage from './views/ProjectsPage.vue'
 const router = createRouter({
     history: createWebHistory(),
@@ -73,15 +72,6 @@ const router = createRouter({
             meta: {
                 title: '日志管理',
                 icon: 'ri-file-list-line'
-            }
-        },
-        {
-            path: '/topology',
-            name: 'ProjectTopology',
-            component: ProjectTopology,
-            meta: {
-                title: '项目拓扑',
-                icon: 'ri-node-tree',
             }
         },
         {

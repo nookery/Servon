@@ -27,7 +27,7 @@ type FullManager struct {
 	*ProcessManager
 	*DpkgManager
 	*LogManager
-	*TopologyManager
+	*ProjectManager
 	*github.GitHubIntegration
 }
 
@@ -70,7 +70,7 @@ func NewManager(eventBus *events.EventBus) *FullManager {
 		ProcessManager:         DefaultProcessManager,
 		GitHubIntegration:      githubIntegration,
 		LogManager:             DefaultLogManager,
-		TopologyManager:        NewTopologyManager(softManager),
+		ProjectManager:         NewTopologyManager(softManager),
 	}
 
 	return core

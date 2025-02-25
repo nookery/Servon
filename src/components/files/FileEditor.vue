@@ -361,62 +361,76 @@ function updateEditorStats() {
             <div ref="editorContainer" class="flex-1"></div>
 
             <!-- 状态栏 -->
-            <div class="flex justify-between items-center py-1 px-4 bg-base-300 text-sm mt-0 rounded-b-lg">
+            <div class="flex justify-between items-center py-0 px-4 bg-base-300 text-sm mt-0 rounded-b-lg h-8">
                 <!-- 左侧状态信息和工具按钮 -->
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
                     <div class="flex items-center gap-2 text-base-content/70">
                         <span>{{ lineCount }} 行</span>
                         <span>{{ characterCount }} 个字符</span>
                     </div>
-                    <div class="divider divider-horizontal mx-0"></div>
+                    <div class="divider divider-horizontal mx-0 h-4"></div>
                     <div class="flex gap-1">
-                        <IconButton @click="formatCode" title="格式化 (Shift+Alt+F)" size="xs">
-                            <RiCodeLine />
-                        </IconButton>
-                        <IconButton @click="copyAll" title="复制全部" size="xs">
-                            <RiFileCopyLine />
-                        </IconButton>
-                        <IconButton @click="downloadFile" title="下载文件" size="xs">
-                            <RiDownloadLine />
-                        </IconButton>
-                        <IconButton variant="warning" @click="resetChanges" title="重置更改" size="xs">
-                            <RiRestartLine />
-                        </IconButton>
-                        <IconButton variant="error" @click="clearContent" title="清空内容" size="xs">
-                            <RiDeleteBinLine />
-                        </IconButton>
-                        <IconButton @click="toggleMinimap" :title="showMinimap ? '隐藏小地图' : '显示小地图'" size="xs">
-                            <RiMapLine />
-                        </IconButton>
-                        <IconButton :variant="autoRefresh ? 'primary' : 'default'" @click="toggleAutoRefresh"
-                            :title="`自动刷新 (${refreshInterval}秒)`" size="xs">
-                            <component :is="autoRefresh ? RiTimeFill : RiTimeLine" />
-                        </IconButton>
-                        <div v-if="autoRefresh" class="flex items-center">
-                            <select v-model="refreshInterval" class="select select-bordered select-xs"
-                                @change="startAutoRefresh">
-                                <option value="3">3秒</option>
-                                <option value="5">5秒</option>
-                                <option value="10">10秒</option>
-                                <option value="30">30秒</option>
-                            </select>
-                        </div>
+                        <button @click="formatCode"
+                            class="flex items-center justify-center px-1.5  text-xs rounded hover:bg-base-content/10 transition-colors h-6"
+                            title="格式化 (Shift+Alt+F)">
+                            <RiCodeLine class="h-3.5 w-3.5" />
+                        </button>
+                        <button @click="copyAll"
+                            class="flex items-center justify-center px-1.5 py-0.5 text-xs rounded hover:bg-base-content/10 transition-colors h-6"
+                            title="复制全部">
+                            <RiFileCopyLine class="h-3.5 w-3.5" />
+                        </button>
+                        <button @click="downloadFile"
+                            class="flex items-center justify-center px-1.5 py-0.5 text-xs rounded hover:bg-base-content/10 transition-colors h-6"
+                            title="下载文件">
+                            <RiDownloadLine class="h-3.5 w-3.5" />
+                        </button>
+                        <button @click="resetChanges"
+                            class="flex items-center justify-center px-1.5 py-0.5 text-xs rounded hover:bg-warning/20 hover:text-warning transition-colors h-6"
+                            title="重置更改">
+                            <RiRestartLine class="h-3.5 w-3.5" />
+                        </button>
+                        <button @click="clearContent"
+                            class="flex items-center justify-center px-1.5 py-0.5 text-xs rounded hover:bg-error/20 hover:text-error transition-colors h-6"
+                            title="清空内容">
+                            <RiDeleteBinLine class="h-3.5 w-3.5" />
+                        </button>
+                        <button @click="toggleMinimap"
+                            class="flex items-center justify-center px-1.5 py-0.5 text-xs rounded hover:bg-base-content/10 transition-colors h-6"
+                            :title="showMinimap ? '隐藏小地图' : '显示小地图'">
+                            <RiMapLine class="h-3.5 w-3.5" />
+                        </button>
+                        <button @click="toggleAutoRefresh"
+                            class="flex items-center justify-center px-1.5 py-0.5 text-xs rounded hover:bg-base-content/10 transition-colors h-6"
+                            :class="{ 'bg-primary/20 text-primary': autoRefresh }"
+                            :title="`自动刷新 (${refreshInterval}秒)`">
+                            <component :is="autoRefresh ? RiTimeFill : RiTimeLine" class="h-3.5 w-3.5" />
+                        </button>
+                        <select v-if="autoRefresh" v-model="refreshInterval"
+                            class="bg-transparent border-none text-xs px-1 outline-none" @change="startAutoRefresh">
+                            <option value="3">3秒</option>
+                            <option value="5">5秒</option>
+                            <option value="10">10秒</option>
+                            <option value="30">30秒</option>
+                        </select>
                     </div>
                 </div>
 
                 <!-- 语言选择器 -->
                 <div class="dropdown dropdown-top dropdown-end">
-                    <label tabindex="0" class="btn btn-ghost btn-sm normal-case">
+                    <button tabindex="0"
+                        class="flex items-center justify-center px-1.5 py-0.5 text-xs rounded hover:bg-base-content/10 transition-colors h-6">
                         {{supportedLanguages.find(lang => lang.id === currentLanguage)?.name || currentLanguage}}
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20"
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1" viewBox="0 0 20 20"
                             fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </label>
+                    </button>
                     <ul tabindex="0"
-                        class="dropdown-content menu p-2 shadow bg-base-200 rounded-box w-52 max-h-60 overflow-y-auto">
+                        class="dropdown-content menu p-2 shadow bg-base-200 rounded-box w-52 max-h-60 overflow-y-auto"
+                        style="bottom: 100%; margin-bottom: 4px;">
                         <li v-for="lang in supportedLanguages" :key="lang.id">
                             <a @click="changeLanguage(lang.id)" :class="{ 'active': currentLanguage === lang.id }">
                                 {{ lang.name }}
@@ -428,10 +442,3 @@ function updateEditorStats() {
         </div>
     </dialog>
 </template>
-
-<style scoped>
-.dropdown-content {
-    bottom: 100%;
-    margin-bottom: 4px;
-}
-</style>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import PageContainer from '../layouts/PageContainer.vue'
-import GatewayConfigModal from '../components/GatewayConfigModal.vue'
+import PageContainer from '../../layouts/PageContainer.vue'
+import GatewayConfigModal from './GatewayConfigModal.vue'
 import { RiGlobalLine, RiRouteLine, RiServerLine } from '@remixicon/vue'
-import { topologyAPI } from '../api/topology'
-import { useToast } from '../composables/useToast'
+import { topologyAPI } from '../../api/topology'
+import { useToast } from '../../composables/useToast'
 
 // 模拟数据
 const projects = ref([

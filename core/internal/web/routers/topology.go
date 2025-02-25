@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupTopologyRoutes(r *gin.RouterGroup, manager *managers.TopologyManager) {
+func SetupTopologyRoutes(r *gin.RouterGroup, manager *managers.ProjectManager) {
 	controller := controllers.NewTopologyController(manager)
 
 	topology := r.Group("/topology")

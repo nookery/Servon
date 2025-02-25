@@ -8,10 +8,10 @@ import (
 )
 
 type TopologyController struct {
-	topologyManager *managers.TopologyManager
+	topologyManager *managers.ProjectManager
 }
 
-func NewTopologyController(manager *managers.TopologyManager) *TopologyController {
+func NewTopologyController(manager *managers.ProjectManager) *TopologyController {
 	return &TopologyController{
 		topologyManager: manager,
 	}

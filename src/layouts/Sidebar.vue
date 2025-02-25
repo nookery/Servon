@@ -52,11 +52,6 @@ const menuOptions = [
         icon: 'ri-file-list-line'
     },
     {
-        label: '项目拓扑',
-        key: 'topology',
-        icon: 'ri-node-tree'
-    },
-    {
         label: '项目管理',
         key: 'projects',
         icon: 'ri-folder-open-line'

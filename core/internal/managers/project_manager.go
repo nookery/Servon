@@ -4,21 +4,21 @@ import (
 	"servon/core/internal/contract"
 )
 
-type TopologyManager struct {
+type ProjectManager struct {
 	softManager *SoftManager
 }
 
-func NewTopologyManager(softManager *SoftManager) *TopologyManager {
-	return &TopologyManager{
+func NewTopologyManager(softManager *SoftManager) *ProjectManager {
+	return &ProjectManager{
 		softManager: softManager,
 	}
 }
 
-func (m *TopologyManager) GetAllGateways() []string {
+func (m *ProjectManager) GetAllGateways() []string {
 	return m.softManager.GetAllGateways()
 }
 
-func (m *TopologyManager) GetProjects(gatewayName string) ([]contract.Project, error) {
+func (m *ProjectManager) GetProjects(gatewayName string) ([]contract.Project, error) {
 	gateway, err := m.softManager.GetGateway(gatewayName)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func (m *TopologyManager) GetProjects(gatewayName string) ([]contract.Project, e
 	return gateway.GetProjects()
 }
 
-func (m *TopologyManager) AddProject(gatewayName string, project contract.Project) error {
+func (m *ProjectManager) AddProject(gatewayName string, project contract.Project) error {
 	gateway, err := m.softManager.GetGateway(gatewayName)
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (m *TopologyManager) AddProject(gatewayName string, project contract.Projec
 	return gateway.AddProject(project)
 }
 
-func (m *TopologyManager) RemoveProject(gatewayName string, projectName string) error {
+func (m *ProjectManager) RemoveProject(gatewayName string, projectName string) error {
 	gateway, err := m.softManager.GetGateway(gatewayName)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (m *TopologyManager) RemoveProject(gatewayName string, projectName string) 
 }
 
 // GetGateway 获取指定的网关软件
-func (m *TopologyManager) GetGateway(gatewayName string) (contract.SuperGateway, error) {
+func (m *ProjectManager) GetGateway(gatewayName string) (contract.SuperGateway, error) {
 	gateway, err := m.softManager.GetGateway(gatewayName)
 	if err != nil {
 		return nil, err
