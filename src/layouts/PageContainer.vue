@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { RiInboxLine, RiLayoutGridLine, RiLayoutLine } from '@remixicon/vue'
-import { ref, provide, watch, onMounted } from 'vue'
+import { RiInboxLine, RiPushpinLine, RiPushpinFill } from '@remixicon/vue'
+import { ref, provide, watch, onMounted, computed } from 'vue'
 
 interface Tab {
     key: string
@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<{
     emptyIcon?: any
     tabs?: Tab[]
     modelValue?: string
-    // 添加一个唯一标识符，用于存储布局模式
+    // 添加一个唯一标识符，用于存储标签页状态
     layoutId?: string
 }>(), {
     modelValue: '',
@@ -29,12 +29,30 @@ const emit = defineEmits<{
 }>()
 
 const activeTab = ref(props.modelValue || (props.tabs?.[0]?.key ?? ''))
-const isGridView = ref(false)
+const pinnedTabs = ref<Set<string>>(new Set()) // 存储被固定的标签页
+
+// 计算当前显示的标签页
+const visibleTabs = computed(() => {
+    const result = new Set(pinnedTabs.value)
+    if (!result.has(activeTab.value)) {
+        result.add(activeTab.value)
+    }
+    return result
+})
+
+// 计算布局列数
+const gridColumns = computed(() => {
+    const size = visibleTabs.value.size
+    if (size <= 1) return 1
+    if (size <= 4) return 2
+    return Math.ceil(Math.sqrt(size)) // 动态计算列数
+})
 
 // 提供给子组件的上下文
 provide('activeTab', activeTab)
+provide('pinnedTabs', pinnedTabs)
 
-// 从 localStorage 加载布局模式
+// 从 localStorage 加载标签页状态
 onMounted(() => {
     // 只有当提供了 layoutId 时才尝试恢复布局
     if (props.layoutId) {
@@ -42,9 +60,13 @@ onMounted(() => {
         if (savedLayout) {
             try {
                 const layoutData = JSON.parse(savedLayout)
-                isGridView.value = layoutData.isGridView || false
 
-                // 如果有保存的标签页，且该标签页在当前可用的标签页中存在，则恢复
+                // 恢复固定的标签页
+                if (layoutData.pinnedTabs && Array.isArray(layoutData.pinnedTabs)) {
+                    pinnedTabs.value = new Set(layoutData.pinnedTabs)
+                }
+
+                // 恢复活动标签页
                 if (layoutData.activeTab && props.tabs?.some(tab => tab.key === layoutData.activeTab)) {
                     activeTab.value = layoutData.activeTab
                     emit('update:modelValue', activeTab.value)
@@ -56,12 +78,12 @@ onMounted(() => {
     }
 })
 
-// 监听布局变化并保存
-watch([isGridView, activeTab], () => {
+// 监听标签页状态变化并保存
+watch([activeTab, pinnedTabs], () => {
     if (props.layoutId) {
         const layoutData = {
-            isGridView: isGridView.value,
-            activeTab: activeTab.value
+            activeTab: activeTab.value,
+            pinnedTabs: Array.from(pinnedTabs.value)
         }
         localStorage.setItem(`layout_${props.layoutId}`, JSON.stringify(layoutData))
     }
@@ -80,10 +102,28 @@ function handleTabChange(tabKey: string) {
     emit('update:modelValue', tabKey)
 }
 
-// 切换视图模式
-function toggleViewMode() {
-    isGridView.value = !isGridView.value
-    console.log('视图模式切换为:', isGridView.value ? '网格视图' : '列表视图')
+// 切换标签页固定状态
+function togglePinned(tabKey: string) {
+    const newPinnedTabs = new Set(pinnedTabs.value)
+
+    if (newPinnedTabs.has(tabKey)) {
+        newPinnedTabs.delete(tabKey)
+    } else {
+        newPinnedTabs.add(tabKey)
+    }
+
+    pinnedTabs.value = newPinnedTabs
+    console.log('标签页固定状态切换为:', tabKey, newPinnedTabs.has(tabKey) ? '已固定' : '未固定')
+}
+
+// 检查标签页是否被固定
+function isTabPinned(tabKey: string) {
+    return pinnedTabs.value.has(tabKey)
+}
+
+// 获取标签对象
+function getTabByKey(key: string) {
+    return props.tabs?.find(tab => tab.key === key)
 }
 </script>
 
@@ -91,22 +131,18 @@ function toggleViewMode() {
     <div class="card bg-base-100 h-full flex flex-col overflow-hidden">
         <!-- 固定头部 - 保持固定并添加阴影效果 -->
         <div class="flex-none bg-base-100 z-10 p-2 pb-0 shadow-sm">
-            <!-- 标签页和视图切换按钮 -->
+            <!-- 标签页 -->
             <div v-if="tabs?.length" class="flex justify-between items-center mb-4">
                 <div role="tablist" class="tabs tabs-lift bg-base-200 p-1">
-                    <a role="tab" v-for="tab in tabs" :key="tab.key" class="tab gap-2"
-                        :class="{ 'tab-active': activeTab === tab.key }" @click="handleTabChange(tab.key)">
+                    <a role="tab" v-for="tab in tabs" :key="tab.key" class="tab gap-2" :class="{
+                        'tab-active': activeTab === tab.key,
+                        'font-bold': isTabPinned(tab.key)
+                    }" @click="handleTabChange(tab.key)">
                         <component v-if="tab.icon" :is="tab.icon" class="text-lg" />
                         {{ tab.title }}
+                        <RiPushpinFill v-if="isTabPinned(tab.key)" class="text-xs text-primary" />
                     </a>
                 </div>
-
-                <!-- 视图切换按钮 -->
-                <button class="btn btn-sm" :class="isGridView ? 'btn-primary' : 'btn-outline'" @click="toggleViewMode"
-                    title="切换视图模式">
-                    <component :is="isGridView ? RiLayoutLine : RiLayoutGridLine" class="text-lg mr-1" />
-                    {{ isGridView ? '列表视图' : '网格视图' }}
-                </button>
             </div>
 
             <!-- 头部内容插槽 -->
@@ -125,8 +161,8 @@ function toggleViewMode() {
             </div>
 
             <!-- 内容区域 -->
-            <div v-if="!empty" class="h-full" :class="{
-                'grid grid-cols-1 md:grid-cols-2 gap-4': isGridView
+            <div v-if="!empty" class="h-full grid gap-4" :style="{
+                'grid-template-columns': `repeat(${gridColumns}, minmax(0, 1fr))`
             }">
                 <!-- 默认内容 -->
                 <template v-if="!tabs?.length">
@@ -135,13 +171,27 @@ function toggleViewMode() {
 
                 <!-- 具名插槽用于不同标签页内容 -->
                 <template v-else>
-                    <template v-for="tab in tabs" :key="tab.key">
-                        <div v-show="isGridView || activeTab === tab.key" class="h-full flex flex-col"
-                            :class="{ 'border rounded-lg p-4 border-primary': isGridView }">
-                            <div v-if="isGridView" class="flex-none text-lg font-medium mb-2 pb-2 border-b">{{ tab.title
-                            }}</div>
-                            <div class="flex-1 overflow-auto">
-                                <slot :name="tab.key"></slot>
+                    <!-- 可见的标签页 -->
+                    <template v-for="tabKey in Array.from(visibleTabs)" :key="tabKey">
+                        <div class="h-full flex flex-col relative">
+                            <div class="absolute top-2 right-2 z-10">
+                                <button @click="togglePinned(tabKey)" class="btn btn-xs btn-circle">
+                                    <component :is="isTabPinned(tabKey) ? RiPushpinFill : RiPushpinLine" class="text-lg"
+                                        :class="{ 'text-primary': isTabPinned(tabKey) }" />
+                                </button>
+                            </div>
+                            <div class="card border rounded-lg p-4 h-full overflow-hidden relative" :class="{
+                                'border-primary': isTabPinned(tabKey),
+                                'bg-base-200': activeTab === tabKey && !isTabPinned(tabKey)
+                            }">
+                                <div class="text-lg font-medium mb-2 pb-2 border-b flex items-center gap-2">
+                                    <component v-if="getTabByKey(tabKey)?.icon" :is="getTabByKey(tabKey)?.icon"
+                                        class="text-lg" />
+                                    {{ getTabByKey(tabKey)?.title }}
+                                </div>
+                                <div class="flex-1 overflow-auto">
+                                    <slot :name="tabKey"></slot>
+                                </div>
                             </div>
                         </div>
                     </template>

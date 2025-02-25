@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
+import { ref, onMounted, watch, computed, onUnmounted, nextTick } from 'vue'
 import { useConfirm } from '../../composables/useConfirm'
 import { useToast } from '../../composables/useToast'
 import { useError } from '../../composables/useError'
@@ -45,6 +45,13 @@ function toggleSidebar() {
 // 添加一个计算属性来检测容器宽度
 const isNarrow = ref(false)
 
+// 自动刷新相关状态
+const autoRefresh = ref(false)
+const autoRefreshInterval = ref(5) // 默认5秒刷新一次
+const lastRefreshTime = ref<Date | null>(null)
+const followNewest = ref(true) // 是否跟随最新日志
+let refreshTimer: number | null = null
+
 // 监听窗口大小变化
 onMounted(() => {
     // 初始检查
@@ -57,6 +64,7 @@ onMounted(() => {
 // 组件卸载时移除事件监听
 onUnmounted(() => {
     window.removeEventListener('resize', checkContainerWidth)
+    stopAutoRefresh()
 })
 
 // 检查容器宽度
@@ -83,26 +91,100 @@ async function loadLogFiles(showToast = false) {
     }
 }
 
-// 基础加载函数，不显示提示
+// 加载日志内容
 async function loadLogEntries(showToast = false) {
     if (!selectedFile.value) return
 
     try {
         loading.value = true
         logEntries.value = await logApi.getLogEntries(selectedFile.value)
+        lastRefreshTime.value = new Date()
         if (showToast) {
-            toast.success('日志内容已刷新')
+            toast.success('日志已刷新')
+        }
+
+        // 如果需要跟随最新日志，滚动到底部
+        if (followNewest.value) {
+            scrollToBottom()
         }
     } catch (err: any) {
-        error('获取日志内容失败: ' + (err.response?.data?.error || err.message || '未知错误'))
+        error('加载日志失败: ' + (err.response?.data?.error || err.message || '未知错误'))
     } finally {
         loading.value = false
     }
 }
 
+// 滚动到日志底部
+function scrollToBottom() {
+    nextTick(() => {
+        const container = document.querySelector('.log-content-container')
+        if (container) {
+            container.scrollTop = container.scrollHeight
+        }
+    })
+}
+
+// 切换自动刷新状态
+function toggleAutoRefresh() {
+    if (autoRefresh.value) {
+        stopAutoRefresh()
+        toast.info('已关闭自动刷新')
+    } else {
+        startAutoRefresh()
+        toast.info(`已开启自动刷新 (${autoRefreshInterval.value}秒)`)
+    }
+}
+
+// 启动自动刷新定时器
+function startAutoRefresh() {
+    // 先确保清除之前的定时器
+    stopAutoRefresh()
+
+    // 设置新的定时器
+    refreshTimer = window.setInterval(() => {
+        if (selectedFile.value) {
+            loadLogEntries(false) // 不显示刷新提示，避免过多通知
+        }
+    }, autoRefreshInterval.value * 1000)
+
+    // 立即进行一次刷新
+    if (selectedFile.value) {
+        loadLogEntries(false)
+    }
+}
+
+// 停止自动刷新定时器
+function stopAutoRefresh() {
+    if (refreshTimer !== null) {
+        clearInterval(refreshTimer)
+        refreshTimer = null
+    }
+}
+
+// 更新刷新间隔
+function updateRefreshInterval(seconds: number) {
+    autoRefreshInterval.value = seconds
+
+    // 如果自动刷新已启用，重启定时器以应用新间隔
+    if (autoRefresh.value) {
+        toast.info(`已更新刷新间隔为 ${seconds} 秒`)
+        startAutoRefresh()
+    }
+}
+
 // 手动刷新按钮点击事件，显示提示
 async function handleRefresh() {
-    await loadLogFiles(true)
+    try {
+        // 刷新日志文件列表
+        await loadLogFiles(true)
+
+        // 如果已选择文件，刷新内容
+        if (selectedFile.value) {
+            await loadLogEntries(true)
+        }
+    } catch (err: any) {
+        error('刷新失败: ' + err.message)
+    }
 }
 
 // 加载统计信息
@@ -191,6 +273,11 @@ async function handleSearch(keyword: string) {
 function handleFileSelect(filePath: string) {
     selectedFile.value = filePath
     loadLogEntries()
+
+    // 如果开启了自动刷新，重启定时器
+    if (autoRefresh.value) {
+        startAutoRefresh()
+    }
 }
 
 // 更新目录
@@ -216,6 +303,16 @@ watch(logFiles, (newFiles) => {
 onMounted(() => {
     loadLogFiles()  // 初始加载不显示提示
     loadStats()
+
+    // 如果默认开启自动刷新，启动定时器
+    if (autoRefresh.value) {
+        startAutoRefresh()
+    }
+})
+
+onUnmounted(() => {
+    // 组件卸载时清理定时器，避免内存泄漏
+    stopAutoRefresh()
 })
 </script>
 
@@ -228,6 +325,43 @@ onMounted(() => {
             <LogToolbar :currentDir="props.currentDir" :selectedFile="selectedFile"
                 @update:currentDir="updateCurrentDir" @refresh="handleRefresh" @search="handleSearch"
                 @delete-log="handleDeleteCurrentLog" @clean-logs="handleCleanLogs" @clear-log="handleClearCurrentLog" />
+
+            <!-- 自动刷新控制区域 -->
+            <div class="flex flex-wrap items-center gap-2 md:gap-4 p-2 bg-base-200 rounded-lg">
+                <div class="form-control">
+                    <label class="cursor-pointer label">
+                        <span class="label-text mr-2">自动刷新</span>
+                        <input type="checkbox" v-model="autoRefresh" @change="toggleAutoRefresh"
+                            class="toggle toggle-primary toggle-sm" />
+                    </label>
+                </div>
+
+                <div v-if="autoRefresh" class="form-control">
+                    <label class="cursor-pointer label">
+                        <span class="label-text mr-2">刷新间隔</span>
+                        <select v-model="autoRefreshInterval"
+                            @change="updateRefreshInterval(Number(autoRefreshInterval))"
+                            class="select select-bordered select-sm">
+                            <option :value="2">2秒</option>
+                            <option :value="5">5秒</option>
+                            <option :value="10">10秒</option>
+                            <option :value="30">30秒</option>
+                            <option :value="60">60秒</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="form-control">
+                    <label class="cursor-pointer label">
+                        <span class="label-text mr-2">跟随新日志</span>
+                        <input type="checkbox" v-model="followNewest" class="toggle toggle-primary toggle-sm" />
+                    </label>
+                </div>
+
+                <div v-if="lastRefreshTime" class="text-sm opacity-70 ml-auto">
+                    <i class="ri-time-line mr-1"></i>上次刷新: {{ lastRefreshTime.toLocaleTimeString() }}
+                </div>
+            </div>
 
             <!-- 日志统计 -->
             <div v-if="logStats" class="stats shadow w-full overflow-x-auto">
@@ -299,7 +433,7 @@ onMounted(() => {
                     <div v-if="loading" class="flex-1 flex justify-center items-center">
                         <span class="loading loading-spinner loading-lg"></span>
                     </div>
-                    <div v-else class="flex-1 min-h-0 overflow-auto">
+                    <div v-else class="flex-1 min-h-0 overflow-auto log-content-container">
                         <!-- 根据视图模式切换组件 -->
                         <TableLogView v-if="viewMode === 'table'" :logEntries="filteredLogEntries"
                             :visibleFields="visibleFields" />
