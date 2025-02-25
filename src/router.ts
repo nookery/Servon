@@ -11,7 +11,7 @@ import Integrations from './views/Integrations.vue'
 import DataPage from './views/DataPage.vue'
 import Logs from './views/Logs.vue'
 import ProjectTopology from './views/ProjectTopology.vue'
-
+import ProjectsPage from './views/ProjectsPage.vue'
 const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -83,6 +83,11 @@ const router = createRouter({
                 title: '项目拓扑',
                 icon: 'ri-node-tree',
             }
+        },
+        {
+            path: '/projects',
+            name: 'Projects',
+            component: ProjectsPage
         }
     ]
 })

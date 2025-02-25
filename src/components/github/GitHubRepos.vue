@@ -6,7 +6,7 @@ import { getAuthorizedRepos } from '../../api/github_api'
 import { deployRepository } from '../../api/deploy_api'
 import type { GitHubRepo } from '../../types/GitHubTypes'
 import { useToast } from '../../composables/useToast'
-
+import { RiRocket2Line, RiRocketLine } from '@remixicon/vue'
 const toast = useToast()
 const repos = ref<GitHubRepo[]>([])
 const loading = ref(false)
@@ -24,6 +24,10 @@ async function loadGitHubRepos() {
     error.value = null
     try {
         repos.value = await getAuthorizedRepos()
+        // 恢复当前页码
+        const storedPage = localStorage.getItem('currentPage')
+        const maxPage = totalPages.value
+        currentPage.value = storedPage ? Math.min(Number(storedPage), maxPage) : 1
     } catch (err: any) {
         error.value = err.response?.data?.error || err.message || '加载失败'
     } finally {
@@ -87,6 +91,8 @@ const totalPages = computed(() => {
 // 页面切换
 function changePage(page: number) {
     currentPage.value = page
+    // 存储当前页码
+    localStorage.setItem('currentPage', String(page))
 }
 
 function getRepoHTMLURL(repo: GitHubRepo) {
@@ -220,8 +226,9 @@ loadGitHubRepos()
                                     <button class="btn btn-sm btn-primary"
                                         :class="{ 'loading': deployingRepo === repo.name }" @click="handleDeploy(repo)"
                                         :disabled="deployingRepo !== null">
-                                        <i class="ri-rocket-line mr-1"></i>
-                                        {{ deployingRepo === repo.name ? '部署中' : '部署' }}
+                                        <RiRocket2Line v-if="deployingRepo === repo.name" class="animate-bounce" />
+                                        <RiRocketLine v-else />
+                                        {{ deployingRepo === repo.name ? '部署中...' : '部署' }}
                                     </button>
                                 </div>
                             </td>

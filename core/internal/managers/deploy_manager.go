@@ -101,8 +101,14 @@ func (m *DeployManager) DeployProject(repoURL string) error {
 	// 生成唯一的部署ID，根据当前日期和时间
 	deployID := time.Now().Format("20060102150405")
 
+	// 获取项目名称
+	projectName := m.stringUtil.GetProjectNameFromString(repoURL)
+
+	// 部署的目标目录
+	targetDir := filepath.Join(m.projectsDir, projectName)
+
 	// 创建临时工作目录
-	workDir := filepath.Join(m.tempDir, fmt.Sprintf("deploy_%s_%s", m.stringUtil.GetProjectNameFromString(repoURL), deployID))
+	workDir := filepath.Join(m.tempDir, fmt.Sprintf("deploy_%s_%s", projectName, deployID))
 	m.logger.Infof("创建临时工作目录: %s", workDir)
 
 	if err := os.MkdirAll(workDir, 0755); err != nil {
@@ -113,14 +119,13 @@ func (m *DeployManager) DeployProject(repoURL string) error {
 		os.RemoveAll(workDir)
 	}()
 
-	// 1. 拉取代码
+	// 拉取代码
 	m.logger.Infof("开始从仓库拉取代码: %s", repoURL)
 	if err := m.gitClone(repoURL, workDir); err != nil {
 		return m.logger.LogAndReturnErrorf("拉取代码失败: %v", err)
 	}
 
 	// 检测项目类型
-	m.logger.Infof("开始检测项目类型...")
 	projectType := utils.DefaultProjectUtil.DetectProjectType(workDir)
 	m.logger.Infof("检测到项目类型: %s", projectType)
 
@@ -137,7 +142,7 @@ func (m *DeployManager) DeployProject(repoURL string) error {
 	m.logger.Infof("使用部署器: %s", deployer.GetName())
 
 	// 执行部署
-	if err := deployer.Deploy(workDir, m.projectsDir, m.logger); err != nil {
+	if err := deployer.Deploy(projectName, workDir, targetDir, m.logger); err != nil {
 		return m.logger.LogAndReturnErrorf("部署失败: %v", err)
 	}
 

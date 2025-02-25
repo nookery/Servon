@@ -56,6 +56,11 @@ const menuOptions = [
         key: 'topology',
         icon: 'ri-node-tree'
     },
+    {
+        label: '项目管理',
+        key: 'projects',
+        icon: 'ri-folder-open-line'
+    },
     // {
     //     label: '定时任务',
     //     key: 'cron',

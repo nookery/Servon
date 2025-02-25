@@ -10,7 +10,7 @@ const webhookLogsRef = ref<InstanceType<typeof GitHubLogs> | null>(null)
 </script>
 
 <template>
-    <div class="github-integration py-4">
+    <div class="github-integration py-4 h-full">
         <!-- GitHub 子标签 -->
         <div class="tabs tabs-lift mb-6" role="tablist">
             <a role="tab" class="tab" :class="{ 'tab-active': currentTab === 'repos' }" @click="currentTab = 'repos'">
@@ -31,7 +31,7 @@ const webhookLogsRef = ref<InstanceType<typeof GitHubLogs> | null>(null)
         <GitHubRepos v-if="currentTab === 'repos'" />
 
         <!-- 日志内容 -->
-        <div v-else-if="currentTab === 'logs'">
+        <div v-else-if="currentTab === 'logs'" class="h-full">
             <GitHubLogs ref="githubLogsRef" />
         </div>
 

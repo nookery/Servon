@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/otiai10/copy"
 )
 
 var DefaultFileUtil = newFileUtil()
@@ -22,14 +24,16 @@ func newFileUtil() *FileUtil {
 
 // FileInfo 表示文件或目录的信息
 type FileInfo struct {
-	Name    string `json:"name"`    // 文件名
-	Path    string `json:"path"`    // 完整路径
-	Size    int64  `json:"size"`    // 文件大小（字节）
-	IsDir   bool   `json:"isDir"`   // 是否是目录
-	Mode    string `json:"mode"`    // 文件权限
-	ModTime string `json:"modTime"` // 修改时间
-	Owner   string `json:"owner"`   // Add owner field
-	Group   string `json:"group"`   // Add group field
+	Name       string `json:"name"`       // 文件名
+	Path       string `json:"path"`       // 完整路径
+	Size       int64  `json:"size"`       // 文件大小（字节）
+	IsDir      bool   `json:"isDir"`      // 是否是目录
+	Mode       string `json:"mode"`       // 文件权限
+	ModTime    string `json:"modTime"`    // 修改时间
+	Owner      string `json:"owner"`      // 所有者
+	Group      string `json:"group"`      // 组
+	IsSymlink  bool   `json:"isSymlink"`  // 是否是软链接
+	LinkTarget string `json:"linkTarget"` // 软链接目标路径
 }
 
 // SortBy 定义排序字段
@@ -87,15 +91,29 @@ func (p *FileUtil) GetFileList(dirPath string, sortBy SortBy, ascending bool) ([
 			group = strconv.FormatUint(uint64(stat.Gid), 10)
 		}
 
+		// 检查是否是软链接
+		isSymlink := false
+		var linkTarget string
+		fileInfo, err := os.Lstat(fullPath)
+		if err == nil && fileInfo.Mode()&os.ModeSymlink != 0 {
+			isSymlink = true
+			// 获取软链接目标路径
+			if target, err := os.Readlink(fullPath); err == nil {
+				linkTarget = target
+			}
+		}
+
 		files = append(files, FileInfo{
-			Name:    entry.Name(),
-			Path:    fullPath,
-			Size:    info.Size(),
-			IsDir:   entry.IsDir(),
-			Mode:    info.Mode().String(),
-			ModTime: info.ModTime().Format("2006-01-02T15:04:05Z07:00"),
-			Owner:   owner,
-			Group:   group,
+			Name:       entry.Name(),
+			Path:       fullPath,
+			Size:       info.Size(),
+			IsDir:      entry.IsDir(),
+			Mode:       info.Mode().String(),
+			ModTime:    info.ModTime().Format("2006-01-02T15:04:05Z07:00"),
+			Owner:      owner,
+			Group:      group,
+			IsSymlink:  isSymlink,
+			LinkTarget: linkTarget,
 		})
 	}
 
@@ -167,28 +185,29 @@ func (p *FileUtil) GetDirSize(dirPath string) int64 {
 
 // CopyDir 复制目录
 func (p *FileUtil) CopyDir(srcDir, destDir string) error {
-	return filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
+	// 确保源目录存在
+	srcInfo, err := os.Stat(srcDir)
+	if err != nil {
+		return fmt.Errorf("源目录不存在或无法访问: %v", err)
+	}
+	if !srcInfo.IsDir() {
+		return fmt.Errorf("源路径不是目录: %s", srcDir)
+	}
 
-		// 构建目标路径
-		relPath, err := filepath.Rel(srcDir, path)
-		if err != nil {
-			return err
-		}
+	// 使用 otiai10/copy 库复制目录
+	opt := copy.Options{
+		Skip: func(srcinfo os.FileInfo, src string, dest string) (bool, error) {
+			return false, nil // 不跳过任何文件
+		},
+		OnSymlink: func(src string) copy.SymlinkAction {
+			return copy.Deep // 复制软链接指向的内容
+		},
+		OnDirExists: func(src, dest string) copy.DirExistsAction {
+			return copy.Merge // 合并目录
+		},
+	}
 
-		// 构建目标路径
-		destPath := filepath.Join(destDir, relPath)
-
-		// 如果源路径是目录，则创建目标目录
-		if info.IsDir() {
-			return os.MkdirAll(destPath, 0755)
-		}
-
-		// 如果源路径是文件，则复制文件
-		return p.CopyFile(path, destPath)
-	})
+	return copy.Copy(srcDir, destDir, opt)
 }
 
 // CopyFile 复制文件
@@ -227,4 +246,88 @@ func (p *FileUtil) ListFilesWithLimit(dirPath string, limit int) ([]FileInfo, er
 	}
 
 	return files[:limit], nil
+}
+
+// SymlinkForce 强制创建软链接
+func (p *FileUtil) SymlinkForce(oldname, newname string) error {
+	// 如果目标路径存在，则删除
+	if _, err := os.Stat(newname); err == nil {
+		err = os.Remove(newname)
+		if err != nil {
+			return fmt.Errorf("删除目标路径失败: %v", err)
+		}
+	}
+
+	// 检查目标路径是否成功删除
+	if _, err := os.Stat(newname); err == nil {
+		return fmt.Errorf("目标路径删除失败: %v", err)
+	}
+
+	// 创建软链接
+	return p.Symlink(oldname, newname)
+}
+
+// Symlink 创建软链接
+func (p *FileUtil) Symlink(oldname, newname string) error {
+	// 获取目标路径的目录
+	targetDir := filepath.Dir(newname)
+
+	// 检查目标目录是否存在，如果不存在则创建
+	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(targetDir, 0755); err != nil {
+			return fmt.Errorf("创建目标目录失败: %v", err)
+		}
+	}
+
+	// 创建符号链接
+	err := os.Symlink(oldname, newname)
+	if err != nil {
+		return fmt.Errorf("os.Symlink 创建软链接失败: %v。oldname: %s, newname: %s", err, oldname, newname)
+	}
+
+	return nil
+}
+
+// MakeDir 创建目录
+func (p *FileUtil) MakeDir(dirPath string) error {
+	return os.MkdirAll(dirPath, 0755)
+}
+
+// RemoveDir 删除目录
+func (p *FileUtil) RemoveDir(dirPath string) error {
+	// 如果不存在，则忽略
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		return nil
+	}
+
+	return os.RemoveAll(dirPath)
+}
+
+// RemoveFile 删除文件
+func (p *FileUtil) RemoveFile(filePath string) error {
+	// 如果不存在，则忽略
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil
+	}
+
+	return os.Remove(filePath)
+}
+
+// RemoveFileOrDir 删除文件或目录
+func (p *FileUtil) RemoveFileOrDir(path string) error {
+	// 如果不存在，则忽略
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil
+	}
+
+	return os.RemoveAll(path)
+}
+
+// 检查文件是否是软链接
+func (p *FileUtil) IsSymlink(path string) bool {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return false
+	}
+	return info.Mode()&os.ModeSymlink != 0
 }

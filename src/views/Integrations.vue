@@ -14,7 +14,7 @@ const tabs = [
 </script>
 
 <template>
-    <PageContainer title="集成管理" :tabs="tabs" v-model="activeTab">
+    <PageContainer title="集成管理" :tabs="tabs" v-model="activeTab" :full-height="true">
         <template #github>
             <GitHubIntegration />
         </template>
