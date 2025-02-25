@@ -50,6 +50,11 @@ const menuOptions = [
         label: '日志管理',
         key: 'logs',
         icon: 'ri-file-list-line'
+    },
+    {
+        label: '项目管理',
+        key: 'projects',
+        icon: 'ri-folder-line'
     }
 ]
 

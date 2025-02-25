@@ -13,6 +13,7 @@ import (
 type Manager struct {
 	Softwares map[string]contract.Software
 	Gateways  map[string]contract.SuperGateway
+	Services  map[string]contract.SuperService
 	LogDir    string
 	LogUtil   *utils.LogUtil
 	ShellUtil *utils.ShellUtil
@@ -20,6 +21,7 @@ type Manager struct {
 	*GatewayManager
 	*AptManager
 	*DpkgManager
+	*ServiceManager
 }
 
 // NewManager 创建新的软件管理器
@@ -36,6 +38,7 @@ func NewManager(logDir string) *Manager {
 	sm.GatewayManager = &GatewayManager{Manager: sm}
 	sm.AptManager = &AptManager{Manager: sm}
 	sm.DpkgManager = &DpkgManager{Manager: sm}
+	sm.ServiceManager = &ServiceManager{Manager: sm}
 	sm.LogUtil.Info("初始化软件管理器")
 	return sm
 }

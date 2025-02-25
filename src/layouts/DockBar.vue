@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useWindowStore } from '../stores/windowStore'
+import DockItem from '../components/DockItem.vue'
 
 const windowStore = useWindowStore()
 
@@ -97,52 +98,11 @@ const handleMenuClick = (menuItem: typeof menuOptions[0]) => {
 
 <template>
     <!-- macOS风格的Dock -->
-    <div class="dock-container flex justify-center items-end h-full px-8 border border-red-200">
+    <div class="flex justify-center items-end h-full">
         <div
-            class="dock bg-info/50 backdrop-blur-md rounded-2xl w-full px-24 py-2 flex items-center gap-1 shadow-lg mb-4">
-            <div v-for="item in menuOptions" :key="item.key" class="dock-item relative flex flex-col items-center"
-                @click="handleMenuClick(item)">
-
-                <!-- Icon with custom color -->
-                <div class="icon-container p-2 rounded-xl flex items-center justify-center" :class="[
-                    activeItem === item.key
-                        ? 'bg-opacity-90 text-white'
-                        : 'bg-base-100 hover:bg-opacity-90 hover:text-white'
-                ]" :style="{
-                    backgroundColor: activeItem === item.key ? item.color : '',
-                    color: activeItem === item.key ? 'white' : item.color
-                }">
-                    <i :class="[item.icon, 'text-2xl']"></i>
-                </div>
-
-                <!-- Tooltip -->
-                <div class="tooltip tooltip-top" :data-tip="item.label"></div>
-
-                <!-- Indicator dot for active item -->
-                <div v-if="activeItem === item.key" class="indicator-dot h-1 w-1 rounded-full mt-1"
-                    :style="{ backgroundColor: item.color }">
-                </div>
-            </div>
+            class="flex bg-base-200/60 backdrop-blur-md rounded-2xl py-2 px-6 items-center justify-center gap-2 shadow-lg mb-4 min-w-fit w-max border border-white/10 transition-all duration-300">
+            <DockItem v-for="item in menuOptions" :key="item.key" :label="item.label" :icon="item.icon"
+                :color="item.color" :is-active="activeItem === item.key" :onClick="() => handleMenuClick(item)" />
         </div>
     </div>
 </template>
-
-<style scoped>
-.dock {
-    transition: all 0.3s ease;
-}
-
-.dock-item {
-    cursor: pointer;
-}
-
-.icon-container {
-    transition: all 0.2s ease;
-    border: 2px solid transparent;
-    border-radius: 12px;
-}
-
-.icon-container:hover {
-    transform: translateY(-2px);
-}
-</style>

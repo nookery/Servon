@@ -14,9 +14,12 @@ type CronTask = managers.CronTask
 type ValidationError = managers.ValidationError
 type ValidationErrors = managers.ValidationErrors
 type Task = models.Task
+
 type SoftwareInfo = contract.SoftwareInfo
 type SuperSoft = contract.SuperSoft
 type SuperGateway = contract.SuperGateway
+type SuperService = contract.SuperService
+
 type DeployLog = models.DeployLog
 type WebhookPayload = github.WebhookPayload
 type OSType = managers.OSType

@@ -77,6 +77,10 @@ const router = createRouter({
         {
             path: '/projects',
             name: 'Projects',
+            meta: {
+                title: '项目管理',
+                icon: 'ri-folder-line'
+            },
             component: ProjectsPage
         }
     ]

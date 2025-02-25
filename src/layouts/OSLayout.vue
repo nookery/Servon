@@ -57,7 +57,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Dock at bottom -->
-            <div class="dock-wrapper fixed bottom-4 left-0 right-0 flex justify-center items-center z-10">
+            <div class="dock-wrapper fixed bottom-4 w-auto left-1/2 -translate-x-1/2 z-10">
                 <DockBar />
             </div>
         </div>

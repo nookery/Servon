@@ -16,25 +16,9 @@ type Software interface {
 	GetInfo() SoftwareInfo
 }
 
-// Gateway 定义网关特有的操作接口
-type Gateway interface {
-	GetConfig() (map[string]interface{}, error)
-	SetConfig(config map[string]interface{}) error
-	GetProjects() ([]Project, error)
-	AddProject(project Project) error
-	RemoveProject(projectName string) error
-	ReloadConfig() error
-}
-
 // SuperSoft 组合基础软件和网关功能
 type SuperSoft interface {
 	Software
-}
-
-// SuperGateway 定义网关特有的操作接口
-type SuperGateway interface {
-	Software
-	Gateway
 }
 
 // SoftwareInfo 软件基本信息
@@ -43,13 +27,4 @@ type SoftwareInfo struct {
 	Description     string
 	IsProxySoftware bool
 	IsGateway       bool
-}
-
-// Project 网关项目配置
-type Project struct {
-	Name        string                 `json:"name"`
-	Domain      string                 `json:"domain"`
-	UpstreamURL string                 `json:"upstream_url"`
-	Enabled     bool                   `json:"enabled"`
-	Config      map[string]interface{} `json:"config"`
 }
