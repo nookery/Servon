@@ -1,38 +1,25 @@
 <script setup lang="ts">
 import Header from './Header.vue'
-import Sidebar from './Sidebar.vue'
-import { useLayoutStore } from '../stores/layout'
-
-const layoutStore = useLayoutStore()
+import DockBar from './DockBar.vue'
 </script>
 
 <template>
-    <div class="flex flex-col min-h-screen bg-base-200">
-        <!-- Header -->
+    <div class="flex flex-col min-h-screen bg-gradient-to-br from-cyan-300 to-cyan-500 overflow-hidden">
+        <!-- Header (顶部菜单栏) -->
         <div class="w-full h-16">
             <Header />
         </div>
 
-        <!-- Main Layout -->
-        <div class="flex flex-1 overflow-hidden">
-            <!-- Sidebar -->
-            <div :class="[
-                'transition-all duration-300 border-r border-base-300 h-[calc(100vh-4rem)] bg-base-100 fixed left-0 top-16',
-                layoutStore.collapsed ? 'w-16' : 'w-40'
-            ]">
-                <div class="sticky top-16 h-full">
-                    <Sidebar :collapsed="layoutStore.collapsed" />
-                </div>
+        <!-- Main Layout (桌面区域) -->
+        <div class="flex-1 overflow-hidden relative p-6 pt-2">
+            <!-- Content (窗口内容) -->
+            <div class="bg-base-100 rounded-xl shadow-lg p-6 h-[calc(100vh-9rem)] overflow-auto">
+                <slot></slot>
             </div>
 
-            <div class="flex flex-row w-full">
-                <!-- Content -->
-                <div :class="[
-                    'flex-1 p-0 transition-all duration-300 overflow-auto h-[calc(100vh-4rem)]',
-                    layoutStore.collapsed ? 'ml-16' : 'ml-40',
-                ]">
-                    <slot></slot>
-                </div>
+            <!-- Dock at bottom -->
+            <div class="dock-wrapper fixed bottom-4 left-0 right-0 flex justify-center items-center z-10">
+                <DockBar />
             </div>
         </div>
     </div>
