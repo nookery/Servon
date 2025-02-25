@@ -6,7 +6,6 @@ import PageContainer from '../layouts/PageContainer.vue'
 import ProjectTopology from '../components/projects/ProjectTopology.vue'
 import ProjectFiles from '../components/projects/ProjectFiles.vue'
 import ProjectLogs from '../components/projects/ProjectLogs.vue'
-import type { SortBy, SortOrder } from '../types/FileInfo'
 
 const route = useRoute()
 const router = useRouter()

@@ -1,4 +1,4 @@
-import { request } from '../utils/request'
+import { request } from './request'
 import type { LogEntry, LogStats, LogFile } from '../types/log'
 import axios from 'axios'
 
