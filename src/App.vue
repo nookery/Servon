@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import MainLayout from './layouts/MainLayout.vue'
+import WebLayout from './layouts/WebLayout.vue'
+import OSLayout from './layouts/OSLayout.vue'
 import Toast from './components/Toast.vue'
 import ErrorAlert from './components/ErrorAlert.vue'
 import GlobalConfirm from './components/GlobalConfirm.vue'
 import LockScreen from './components/LockScreen.vue'
 import IconButton from './components/IconButton.vue'
 import { useLockStore } from './stores/lockStore'
+import { useLayoutModeStore } from './stores/layoutModeStore'
 import { ref, provide } from 'vue'
 
 const lockStore = useLockStore()
+const layoutModeStore = useLayoutModeStore()
 const errorAlertRef = ref<InstanceType<typeof ErrorAlert> | null>(null)
 const headerErrors = ref<{ id: number; message: string }[]>([])
 let nextHeaderErrorId = 1
@@ -30,7 +33,8 @@ const removeHeaderError = (id: number) => {
 
 <template>
   <template v-if="!lockStore.isLocked">
-    <main-layout>
+    <!-- 使用正确的组件名称 -->
+    <WebLayout v-if="layoutModeStore.mode === 'web'">
       <!-- 头部错误提示 -->
       <div v-for="error in headerErrors" :key="error.id"
         class="alert alert-error shadow-lg mb-4 animate-slide-in-down mx-4 my-2">
@@ -42,7 +46,21 @@ const removeHeaderError = (id: number) => {
       </div>
 
       <router-view></router-view>
-    </main-layout>
+    </WebLayout>
+
+    <OSLayout v-else>
+      <!-- 头部错误提示 -->
+      <div v-for="error in headerErrors" :key="error.id"
+        class="alert alert-error shadow-lg mb-4 animate-slide-in-down mx-4 my-2 absolute top-16 left-0 right-0 z-50">
+        <div class="flex-1 flex items-center gap-2">
+          <i class="ri-error-warning-line text-xl" />
+          <span>{{ error.message }}</span>
+        </div>
+        <IconButton icon="ri-close-line" variant="ghost" circle size="sm" @click="removeHeaderError(error.id)" />
+      </div>
+
+      <router-view></router-view>
+    </OSLayout>
   </template>
   <LockScreen v-else />
   <Toast />
