@@ -1,4 +1,4 @@
-package managers
+package soft
 
 import (
 	"fmt"
@@ -8,11 +8,7 @@ import (
 
 // Dpkg 提供dpkg包管理器的基本操作
 type DpkgManager struct {
-}
-
-// NewDpkgManager 创建一个新的Dpkg实例
-func NewDpkgManager() *DpkgManager {
-	return &DpkgManager{}
+	*Manager
 }
 
 // IsInstalled 检查软件包是否已安装

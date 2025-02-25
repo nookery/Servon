@@ -12,11 +12,14 @@ const props = defineProps<{
 const editorContainer = ref<HTMLElement | null>(null)
 let editor: monaco.editor.IStandaloneCodeEditor | null = null
 
-// 格式化终端日志内容
+// 格式化终端日志内容，按照时间倒序排列
 const terminalContent = computed(() => {
     if (props.logEntries.length === 0) return ''
 
-    return props.logEntries.map(entry => {
+    // 创建日志条目的副本，以便排序
+    const sortedEntries = [...props.logEntries].reverse()
+
+    return sortedEntries.map(entry => {
         const parts = []
 
         if (props.visibleFields.includes('time')) {
@@ -130,7 +133,8 @@ watch(() => props.logEntries, () => {
         editor.setValue(terminalContent.value)
         // 滚动到底部
         if (terminalContent.value) {
-            editor.revealLine(props.logEntries.length)
+            const lineCount = terminalContent.value.split('\n').length
+            editor.revealLine(lineCount)
         }
     }
 }, { deep: true })
@@ -150,6 +154,11 @@ onMounted(() => {
     setTimeout(() => {
         if (editor) {
             editor.layout()
+            // 初始化时滚动到底部
+            if (terminalContent.value) {
+                const lineCount = terminalContent.value.split('\n').length
+                editor.revealLine(lineCount)
+            }
         }
     }, 100)
 })

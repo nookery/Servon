@@ -11,7 +11,6 @@ type FullManager struct {
 	*DeployManager
 	*DownloadManager
 	*GitManager
-	*AptManager
 	*SoftManager
 	*VersionManager
 	*DataManager
@@ -25,7 +24,6 @@ type FullManager struct {
 	*UserManager
 	*TaskManager
 	*ProcessManager
-	*DpkgManager
 	*LogManager
 	*ProjectManager
 	*github.GitHubIntegration
@@ -54,7 +52,6 @@ func NewManager(eventBus *events.EventBus) *FullManager {
 		SoftManager:            softManager,
 		DataManager:            dataManager,
 		ServiceManager:         DefaultServiceManager,
-		AptManager:             DefaultAptManager,
 		VersionManager:         NewVersionManager(),
 		DownloadManager:        downloadManager,
 		GitManager:             gitManager,

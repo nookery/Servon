@@ -58,20 +58,42 @@ func isRoot() bool {
 }
 
 func (c *ShellUtil) execute(dir string, withSudo bool, command string, args ...string) (error, string) {
-	if len(args) == 0 {
+	if command == "" {
 		return fmt.Errorf("command is required"), ""
 	}
 
 	// 构建完整的命令参数
 	var cmdArgs []string
-	if withSudo && !isRoot() {
-		cmdArgs = append(cmdArgs, "sudo")
+
+	// 处理 sh -c "复杂命令" 的特殊情况
+	if command == "sh" && len(args) >= 2 && args[0] == "-c" {
+		// 如果需要 sudo 并且不是 root 用户
+		if withSudo && !isRoot() {
+			cmdArgs = append(cmdArgs, "sudo", "sh", "-c", args[1])
+		} else {
+			cmdArgs = append(cmdArgs, "sh", "-c", args[1])
+		}
+	} else {
+		// 常规命令处理
+		if withSudo && !isRoot() {
+			cmdArgs = append(cmdArgs, "sudo")
+		}
+		cmdArgs = append(cmdArgs, command)
+		cmdArgs = append(cmdArgs, args...)
 	}
-	cmdArgs = append(cmdArgs, command)
-	cmdArgs = append(cmdArgs, args...)
 
 	// 创建命令对象
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+	var cmd *exec.Cmd
+	if command == "sh" && len(args) >= 2 && args[0] == "-c" {
+		// 对于 sh -c "复杂命令"，我们需要特殊处理
+		if withSudo && !isRoot() {
+			cmd = exec.Command("sudo", "sh", "-c", args[1])
+		} else {
+			cmd = exec.Command("sh", "-c", args[1])
+		}
+	} else {
+		cmd = exec.Command(cmdArgs[0], cmdArgs[1:]...)
+	}
 
 	// 设置工作目录（如果指定）
 	if dir != "" {

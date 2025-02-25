@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
 import { useConfirm } from '../../composables/useConfirm'
 import { useToast } from '../../composables/useToast'
 import { useError } from '../../composables/useError'
 import type { LogEntry, LogFile, LogStats } from '../../types/log'
 import * as logApi from '../../api/logs_api'
-import IconButton from '../IconButton.vue'
 import TableLogView from './TableLogView.vue'
 import TerminalLogView from './TerminalLogView.vue'
 import ViewModeSelector from './ViewModeSelector.vue'
 import FieldSelector from './FieldSelector.vue'
 import LevelSelector from './LevelSelector.vue'
+import LogFileList from './LogFileList.vue'
+import LogToolbar from './LogToolbar.vue'
 
 const props = defineProps<{
     currentDir: string
+}>()
+
+const emit = defineEmits<{
+    'update:currentDir': [value: string]
 }>()
 
 const confirm = useConfirm()
@@ -24,11 +29,44 @@ const logFiles = ref<LogFile[]>([])
 const selectedFile = ref<string>('')
 const logEntries = ref<LogEntry[]>([])
 const logStats = ref<LogStats | null>(null)
-const searchKeyword = ref('')
 const loading = ref(false)
 const selectedLevels = ref<string[]>(['error', 'warn', 'info', 'debug'])
 const viewMode = ref<'table' | 'terminal'>('table')
 const visibleFields = ref<string[]>(['time', 'level', 'caller', 'message'])
+
+// 添加一个状态来控制左侧面板的显示
+const showSidebar = ref(true)
+
+// 切换左侧面板显示
+function toggleSidebar() {
+    showSidebar.value = !showSidebar.value
+}
+
+// 添加一个计算属性来检测容器宽度
+const isNarrow = ref(false)
+
+// 监听窗口大小变化
+onMounted(() => {
+    // 初始检查
+    checkContainerWidth()
+
+    // 添加resize事件监听
+    window.addEventListener('resize', checkContainerWidth)
+})
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+    window.removeEventListener('resize', checkContainerWidth)
+})
+
+// 检查容器宽度
+function checkContainerWidth() {
+    // 获取组件容器宽度
+    const container = document.querySelector('.log-view-container')
+    if (container) {
+        isNarrow.value = container.clientWidth < 768
+    }
+}
 
 // 基础加载函数，不显示提示
 async function loadLogFiles(showToast = false) {
@@ -135,6 +173,31 @@ async function handleClearCurrentLog() {
     }
 }
 
+// 搜索日志
+async function handleSearch(keyword: string) {
+    if (!keyword) return
+
+    try {
+        loading.value = true
+        logEntries.value = await logApi.searchLogs(props.currentDir, keyword)
+    } catch (err: any) {
+        error('搜索日志失败: ' + (err.response?.data?.error || err.message || '未知错误'))
+    } finally {
+        loading.value = false
+    }
+}
+
+// 处理文件选择
+function handleFileSelect(filePath: string) {
+    selectedFile.value = filePath
+    loadLogEntries()
+}
+
+// 更新目录
+function updateCurrentDir(dir: string) {
+    emit('update:currentDir', dir)
+}
+
 // 过滤日志条目
 const filteredLogEntries = computed(() => {
     return logEntries.value.filter(entry =>
@@ -154,58 +217,20 @@ onMounted(() => {
     loadLogFiles()  // 初始加载不显示提示
     loadStats()
 })
-
-// 搜索日志
-async function handleSearch() {
-    if (!searchKeyword.value) return
-
-    try {
-        loading.value = true
-        logEntries.value = await logApi.searchLogs(props.currentDir, searchKeyword.value)
-    } catch (err: any) {
-        error('搜索日志失败: ' + (err.response?.data?.error || err.message || '未知错误'))
-    } finally {
-        loading.value = false
-    }
-}
 </script>
 
 <template>
     <!-- 使用 h-full 和 overflow-hidden 确保组件占满所有可用空间 -->
-    <div class="h-full flex flex-col overflow-hidden">
+    <div class="h-full flex flex-col overflow-hidden log-view-container">
         <!-- 固定的操作栏和统计信息 -->
         <div class="flex-none space-y-4">
             <!-- 操作栏 -->
-            <div class="flex justify-between items-center gap-4">
-                <div class="flex gap-2 items-center">
-                    <input type="text" v-model="props.currentDir" placeholder="日志目录"
-                        class="input input-bordered input-sm" />
-                    <IconButton icon="ri-refresh-line" size="sm" @click="handleRefresh">刷新</IconButton>
-                </div>
-                <div class="flex gap-2">
-                    <div class="join">
-                        <input type="text" v-model="searchKeyword" placeholder="搜索日志"
-                            class="input input-bordered input-sm join-item" @keyup.enter="handleSearch" />
-                        <IconButton icon="ri-search-line" size="sm" class="join-item" @click="handleSearch">搜索
-                        </IconButton>
-                    </div>
-                    <IconButton icon="ri-delete-bin-line" variant="error" size="sm" @click="handleDeleteCurrentLog"
-                        :disabled="!selectedFile" title="删除当前日志文件">
-                        删除日志
-                    </IconButton>
-                    <IconButton icon="ri-delete-bin-line" variant="error" size="sm" @click="handleCleanLogs"
-                        title="清理30天前的日志">
-                        清理旧日志
-                    </IconButton>
-                    <IconButton icon="ri-eraser-line" variant="error" size="sm" @click="handleClearCurrentLog"
-                        :disabled="!selectedFile" title="清空当前日志内容">
-                        清空日志
-                    </IconButton>
-                </div>
-            </div>
+            <LogToolbar :currentDir="props.currentDir" :selectedFile="selectedFile"
+                @update:currentDir="updateCurrentDir" @refresh="handleRefresh" @search="handleSearch"
+                @delete-log="handleDeleteCurrentLog" @clean-logs="handleCleanLogs" @clear-log="handleClearCurrentLog" />
 
             <!-- 日志统计 -->
-            <div v-if="logStats" class="stats shadow w-full">
+            <div v-if="logStats" class="stats shadow w-full overflow-x-auto">
                 <div class="stat">
                     <div class="stat-title">错误</div>
                     <div class="stat-value text-error">{{ logStats.error }}</div>
@@ -229,51 +254,47 @@ async function handleSearch() {
             </div>
         </div>
 
-        <!-- 可滚动的内容区域 - 使用 flex-1 和 min-h-0 确保正确的滚动行为 -->
-        <div class="flex-1 min-h-0 grid grid-cols-12 gap-4 mt-4">
+        <!-- 侧边栏切换按钮 -->
+        <div class="flex justify-end mb-2">
+            <button @click="toggleSidebar" class="btn btn-sm btn-ghost">
+                <i :class="showSidebar ? (isNarrow ? 'ri-arrow-up-s-line' : 'ri-arrow-left-s-line') : (isNarrow ? 'ri-arrow-down-s-line' : 'ri-arrow-right-s-line')"
+                    class="mr-1"></i>
+                {{ showSidebar ? '收起控制面板' : '展开控制面板' }}
+            </button>
+        </div>
+
+        <!-- 可滚动的内容区域 - 根据宽度切换布局 -->
+        <div class="flex-1 min-h-0" :class="isNarrow ? 'flex flex-col gap-4' : 'flex gap-4'">
             <!-- 左侧区域：视图切换、日志级别筛选和文件列表 -->
-            <div class="col-span-3 flex flex-col gap-4">
-                <!-- 视图切换卡片 -->
-                <ViewModeSelector v-model="viewMode" />
+            <div v-show="showSidebar" class="transition-all duration-300 overflow-hidden" :class="{
+                'flex-none': true,
+                'h-0': !showSidebar,
+                'w-0': !showSidebar && !isNarrow,
+                'w-80': showSidebar && !isNarrow
+            }">
+                <div :class="isNarrow ? 'flex flex-col lg:flex-row gap-4' : 'flex flex-col gap-4'">
+                    <!-- 控制面板 -->
+                    <div :class="isNarrow ? 'space-y-4 lg:w-1/3' : 'space-y-4'">
+                        <!-- 视图切换卡片 -->
+                        <ViewModeSelector v-model="viewMode" />
 
-                <!-- 字段显示控制卡片 -->
-                <FieldSelector v-model="visibleFields" />
+                        <!-- 字段显示控制卡片 -->
+                        <FieldSelector v-model="visibleFields" />
 
-                <!-- 日志级别筛选卡片 -->
-                <LevelSelector v-model="selectedLevels" />
+                        <!-- 日志级别筛选卡片 -->
+                        <LevelSelector v-model="selectedLevels" />
+                    </div>
 
-                <!-- 日志文件列表卡片 -->
-                <div class="card bg-base-200 overflow-hidden flex-1">
-                    <div class="h-full flex flex-col">
-                        <!-- 文件列表头部 -->
-                        <div class="flex-none p-3">
-                            <span class="text-sm font-medium">日志文件列表</span>
-                        </div>
-
-                        <!-- 可滚动的文件列表 -->
-                        <div class="flex-1 min-h-0 overflow-y-auto p-2">
-                            <ul class="menu bg-base-200 w-full">
-                                <li v-for="file in logFiles" :key="file.path">
-                                    <a class="flex items-center gap-2 transition-colors duration-200 hover:bg-base-300"
-                                        :class="{
-                                            'bg-primary/10 text-primary border-l-4 border-primary': selectedFile === file.path,
-                                            'border-l-4 border-transparent': selectedFile !== file.path
-                                        }" @click="selectedFile = file.path; loadLogEntries()">
-                                        <i class="ri-file-text-line" />
-                                        <span class="truncate">{{ file.path }}</span>
-                                    </a>
-                                </li>
-                                <li v-if="logFiles.length === 0" class="p-4 text-center text-base-content/50">
-                                    暂无日志文件
-                                </li>
-                            </ul>
-                        </div>
+                    <!-- 日志文件列表卡片 -->
+                    <div :class="isNarrow ? 'lg:w-2/3 h-64 lg:h-auto' : 'h-80'">
+                        <LogFileList :logFiles="logFiles" :selectedFile="selectedFile"
+                            @update:selectedFile="handleFileSelect" @refresh="loadLogFiles(true)" />
                     </div>
                 </div>
             </div>
 
             <!-- 日志内容 - 使用 overflow-hidden 和 flex 布局 -->
-            <div class="col-span-9 card bg-base-200 overflow-hidden">
+            <div class="flex-1 card bg-base-200 overflow-hidden">
                 <div class="h-full flex flex-col">
                     <div v-if="loading" class="flex-1 flex justify-center items-center">
                         <span class="loading loading-spinner loading-lg"></span>

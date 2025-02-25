@@ -15,8 +15,11 @@ type Manager struct {
 	Gateways  map[string]contract.SuperGateway
 	LogDir    string
 	LogUtil   *utils.LogUtil
+	ShellUtil *utils.ShellUtil
 	*ProxyManager
 	*GatewayManager
+	*AptManager
+	*DpkgManager
 }
 
 // NewManager 创建新的软件管理器
@@ -26,11 +29,13 @@ func NewManager(logDir string) *Manager {
 		Gateways:  make(map[string]contract.SuperGateway),
 		LogDir:    logDir,
 		LogUtil:   utils.NewTopicLogUtil(logDir, "soft"),
+		ShellUtil: utils.NewShellUtil(),
 	}
 
 	sm.ProxyManager = &ProxyManager{Manager: sm}
 	sm.GatewayManager = &GatewayManager{Manager: sm}
-
+	sm.AptManager = &AptManager{Manager: sm}
+	sm.DpkgManager = &DpkgManager{Manager: sm}
 	sm.LogUtil.Info("初始化软件管理器")
 	return sm
 }
@@ -104,7 +109,6 @@ func (c *Manager) GetSoftwareStatus(name string) (map[string]string, error) {
 
 // RegisterSoftware 注册普通软件
 func (s *Manager) RegisterSoftware(name string, software contract.Software) error {
-	s.LogUtil.Info("注册软件: " + name)
 	if _, exists := s.Softwares[name]; exists {
 		return fmt.Errorf("软件 %s 已注册", name)
 	}
@@ -114,7 +118,6 @@ func (s *Manager) RegisterSoftware(name string, software contract.Software) erro
 
 // GetAllSoftware 获取所有软件
 func (c *Manager) GetAllSoftware() []string {
-	c.LogUtil.Info("获取所有软件...")
 	softwareNames := make([]string, 0, len(c.Softwares))
 	for name := range c.Softwares {
 		softwareNames = append(softwareNames, name)

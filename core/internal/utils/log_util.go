@@ -186,7 +186,18 @@ func (lu *LogUtil) Warn(message string) {
 	lu.logger.Warn().Msg(message)
 }
 
+// Warning 记录警告日志
+func (lu *LogUtil) Warning(message string) {
+	lu.logger.Warn().Msg(message)
+}
+
+// Warnf 记录警告日志
 func (lu *LogUtil) Warnf(format string, args ...interface{}) {
+	lu.logger.Warn().Msgf(format, args...)
+}
+
+// Warningf 记录警告日志
+func (lu *LogUtil) Warningf(format string, args ...interface{}) {
 	lu.logger.Warn().Msgf(format, args...)
 }
 

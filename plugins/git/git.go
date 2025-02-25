@@ -38,7 +38,9 @@ func (g *Git) Install() error {
 	switch osType {
 	case core.Ubuntu, core.Debian:
 		// 更新软件包索引
-		if err := g.AptUpdate(); err != nil {
+		output, err := g.AptUpdate()
+		g.SoftwareLogger.Infof("更新软件包索引输出: \n%s", output)
+		if err != nil {
 			errMsg := fmt.Sprintf("更新软件包索引失败: %v", err)
 			return g.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
 		}

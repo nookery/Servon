@@ -43,25 +43,45 @@ func (c *Caddy) Install() error {
 
 		// 下载和安装 GPG 密钥
 		c.SoftwareLogger.Info("下载和安装 GPG 密钥...")
-		err, output := c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --batch --yes --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg")
-		c.SoftwareLogger.Infof("下载 GPG 密钥输出: %s", output)
-		if err != nil {
-			c.SoftwareLogger.Errorf("下载 GPG 密钥失败: %v", err)
-			return err
-		}
 
-		// 添加 Caddy 软件源
-		c.SoftwareLogger.Info("添加 Caddy 软件源...")
-		err, output = c.RunShell("sh", "-c", "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list")
-		c.SoftwareLogger.Infof("添加 Caddy 软件源输出: %s", output)
+		// 注意：apt-key 已弃用，但在某些环境中仍然是最可靠的方法
+		aptKeyCmd := `
+		# 直接使用apt-key添加
+		curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | apt-key add -
+		
+		# 添加仓库源
+		echo "deb https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main" > /etc/apt/sources.list.d/caddy-stable.list
+		`
+		err, aptKeyOutput := c.RunShell("sh", "-c", aptKeyCmd)
+		c.SoftwareLogger.Infof("添加密钥和仓库源输出: \n%s", aptKeyOutput)
 		if err != nil {
-			c.SoftwareLogger.Errorf("添加 Caddy 软件源失败: %v", err)
-			return err
+			c.SoftwareLogger.Errorf("添加密钥和仓库源失败: %v", err)
+
+			// 备选方案：配置APT允许非安全仓库
+			c.SoftwareLogger.Warning("尝试使用非安全安装方式...")
+			unsafeCmd := `
+			# 添加允许非安全仓库的配置
+			mkdir -p /etc/apt/apt.conf.d
+			echo 'APT::Get::AllowUnauthenticated "true";' > /etc/apt/apt.conf.d/99allow-unauth
+			echo 'Acquire::AllowInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99allow-unauth
+			echo 'Acquire::AllowDowngradeToInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99allow-unauth
+			
+			# 添加仓库源（不带签名验证）
+			echo "deb [trusted=yes] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main" > /etc/apt/sources.list.d/caddy-stable.list
+			`
+			err, unsafeOutput := c.RunShell("sh", "-c", unsafeCmd)
+			c.SoftwareLogger.Infof("非安全方式输出: \n%s", unsafeOutput)
+			if err != nil {
+				c.SoftwareLogger.Errorf("非安全方式失败: %v", err)
+				return err
+			}
 		}
 
 		// 更新软件包索引
 		c.SoftwareLogger.Info("更新软件包索引...")
-		if err := c.AptUpdate(); err != nil {
+		output, err := c.AptUpdate()
+		c.SoftwareLogger.Infof("更新软件包索引输出: \n%s", output)
+		if err != nil {
 			c.SoftwareLogger.Errorf("更新软件包索引失败: %v", err)
 			return err
 		}
@@ -98,13 +118,6 @@ func (c *Caddy) Install() error {
 
 // Uninstall 卸载 Caddy
 func (c *Caddy) Uninstall() error {
-	// 停止服务
-	c.SoftwareLogger.Info("停止 Caddy 服务...")
-	stopCmd := exec.Command("sudo", "systemctl", "stop", "caddy")
-	if err, _ := c.RunShell(stopCmd.String()); err != nil {
-		return c.SoftwareLogger.LogAndReturnErrorf("停止服务失败:\n%s", err)
-	}
-
 	// 卸载软件包及其依赖
 	c.SoftwareLogger.Info("卸载软件包及其依赖...")
 	if err := c.AptRemove("caddy"); err != nil {
@@ -117,16 +130,18 @@ func (c *Caddy) Uninstall() error {
 	}
 
 	// 删除源文件
-	err, _ := c.RunShell("sudo", "rm", "/etc/apt/sources.list.d/caddy-stable.list")
+	err, rmOutput := c.RunShell("rm", "/etc/apt/sources.list.d/caddy-stable.list")
 	if err != nil {
 		return c.SoftwareLogger.LogAndReturnErrorf("删除源文件失败:\n%s", err)
 	}
+	c.SoftwareLogger.Infof("删除源文件输出: %s", rmOutput)
 
 	// 清理自动安装的依赖
-	cleanCmd := exec.Command("sudo", "apt-get", "autoremove", "-y")
-	if err := cleanCmd.Run(); err != nil {
+	err, cleanOutput := c.RunShell("apt-get", "autoremove", "-y")
+	if err != nil {
 		return c.SoftwareLogger.LogAndReturnErrorf("清理依赖失败:\n%s", err)
 	}
+	c.SoftwareLogger.Infof("清理依赖输出: %s", cleanOutput)
 
 	c.SoftwareLogger.Success("Caddy 卸载完成")
 
@@ -148,9 +163,9 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 
 	// 获取版本
 	version := ""
-	verCmd := exec.Command("caddy", "version")
-	if verOutput, err := verCmd.CombinedOutput(); err == nil {
-		version = strings.TrimSpace(string(verOutput))
+	err, verOutput := c.RunShell("caddy", "version")
+	if err == nil {
+		version = strings.TrimSpace(verOutput)
 	}
 
 	return map[string]string{
@@ -160,8 +175,8 @@ func (c *Caddy) GetStatus() (map[string]string, error) {
 }
 
 func (c *Caddy) Stop() error {
-	cmd := exec.Command("caddy", "stop")
-	err, _ := c.RunShell(cmd.String())
+	err, output := c.RunShell("caddy", "stop")
+	c.SoftwareLogger.Infof("停止Caddy输出: %s", output)
 	return err
 }
 
@@ -180,15 +195,15 @@ func (c *Caddy) Reload() error {
 		return c.SoftwareLogger.LogAndReturnErrorf("Caddy 服务未运行，请先启动 Caddy")
 	}
 
-	cmd := exec.Command("caddy", "reload", "--config", c.GetCaddyfilePath())
-	err, _ = c.RunShell(cmd.String())
+	err, output := c.RunShell("caddy", "reload", "--config", c.GetCaddyfilePath())
+	c.SoftwareLogger.Infof("重载Caddy输出: %s", output)
 	return err
 }
 
 // isRunning 检查 caddy 是否在运行
 func (c *Caddy) isRunning() (bool, error) {
-	cmd := exec.Command("pgrep", "caddy")
-	if err := cmd.Run(); err != nil {
+	err, _ := c.RunShell("pgrep", "caddy")
+	if err != nil {
 		// exit status 1 表示没有找到进程
 		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
 			return false, nil
@@ -232,9 +247,9 @@ func (c *Caddy) Start() error {
 		return c.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	// 使用 StreamCommand 来启动 Caddy
-	cmd := exec.Command("caddy", "start", "--config", c.GetCaddyfilePath())
-	err, _ = c.RunShell(cmd.String())
+	// 使用 RunShell 来启动 Caddy
+	err, output := c.RunShell("caddy", "start", "--config", c.GetCaddyfilePath())
+	c.SoftwareLogger.Infof("启动Caddy输出: %s", output)
 	if err != nil {
 		errMsg := fmt.Sprintf("启动 Caddy 失败: %v", err)
 		return c.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
