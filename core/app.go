@@ -6,6 +6,7 @@ import (
 	"servon/core/internal/events"
 	"servon/core/internal/managers"
 	"servon/core/internal/providers"
+	"servon/core/internal/utils"
 )
 
 type App struct {
@@ -15,6 +16,9 @@ type App struct {
 	*providers.ManagerProvider
 	*providers.CommandProvider
 	*providers.UtilProvider
+
+	SoftwareLogger *utils.LogUtil
+	AppLogger      *utils.LogUtil
 }
 
 // New 创建App实例
@@ -33,9 +37,11 @@ func New() *App {
 		ManagerProvider: providers.NewManagerProvider(eventBus, manager),
 		CommandProvider: providers.NewCommandProvider(manager, webProvider.Server),
 		UtilProvider:    providers.NewUtilProvider(),
+		SoftwareLogger:  manager.SoftManager.LogUtil,
+		AppLogger:       utils.NewLogUtil(filepath.Join(DataRootFolder, "logs")),
 	}
 
-	app.Success("App 初始化完成")
+	app.AppLogger.Success("App 初始化完成")
 
 	return app
 }

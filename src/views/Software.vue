@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useToast } from '../composables/useToast'
 import PageContainer from '../layouts/PageContainer.vue'
 import IconButton from '../components/IconButton.vue'
-import SimpleLogView from '../components/logs/SimpleLogView.vue'
+import LogView from '../components/logs/LogView.vue'
 import { systemAPI, type Software } from '../api/info'
 import { RiAppsLine, RiListSettingsLine, RiFileListLine } from '@remixicon/vue'
 
@@ -136,19 +136,19 @@ onMounted(() => {
                             }">{{ item.status }}</td>
                             <td>
                                 <div class="flex gap-2">
-                                    <IconButton v-if="item.status !== 'running'"
+                                    <IconButton v-if="item.status !== 'running'" tooltip-position="none"
                                         :icon="item.status === 'not_installed' ? 'ri-download-line' : 'ri-delete-bin-line'"
                                         :variant="item.status === 'not_installed' ? 'primary' : 'error'"
                                         :disabled="installing && currentSoftware === item.name"
                                         @click="handleAction(item)">
                                         {{ item.status === 'not_installed' ? '安装' : '卸载' }}
                                     </IconButton>
-                                    <IconButton v-if="item.status === 'stopped'" icon="ri-play-line" variant="primary"
-                                        @click="handleStart(item.name)">
+                                    <IconButton v-if="item.status === 'stopped'" tooltip-position="none"
+                                        icon="ri-play-line" variant="primary" @click="handleStart(item.name)">
                                         启动
                                     </IconButton>
-                                    <IconButton v-if="item.status === 'running'" icon="ri-stop-line" variant="secondary"
-                                        @click="handleStop(item.name)">
+                                    <IconButton v-if="item.status === 'running'" tooltip-position="none"
+                                        icon="ri-stop-line" variant="secondary" @click="handleStop(item.name)">
                                         停止
                                     </IconButton>
                                 </div>
@@ -161,7 +161,7 @@ onMounted(() => {
 
         <!-- 日志查看标签页 -->
         <template #logs>
-            <SimpleLogView current-dir="" />
+            <LogView current-dir="" />
         </template>
 
     </PageContainer>

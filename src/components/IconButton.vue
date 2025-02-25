@@ -11,7 +11,7 @@ interface Props {
     disabled?: boolean              // Whether button is disabled
     loading?: boolean               // Loading state
     customClass?: string           // Additional custom classes
-    tooltipPosition?: 'top' | 'bottom' | 'left' | 'right'  // 新增 tooltip 位置配置
+    tooltipPosition?: 'top' | 'bottom' | 'left' | 'right' | 'none'  // tooltip 位置配置，none表示不显示
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -21,16 +21,21 @@ const props = withDefaults(defineProps<Props>(), {
     active: false,
     disabled: false,
     loading: false,
-    tooltipPosition: 'top'  // 默认显示在上方
+    tooltipPosition: 'none'  // 默认不显示
 })
 
 // Compute button classes
 const buttonClass = computed(() => {
-    const classes = ['btn', 'transition-all', 'duration-200', 'tooltip']
+    const classes = ['btn', 'transition-all', 'duration-200']
 
-    // Add tooltip position class
-    if (props.tooltipPosition !== 'top') {
-        classes.push(`tooltip-${props.tooltipPosition}`)
+    // Only add tooltip class if tooltipPosition is not 'none'
+    if (props.tooltipPosition !== 'none') {
+        classes.push('tooltip')
+
+        // Add tooltip position class
+        if (props.tooltipPosition !== 'top') {
+            classes.push(`tooltip-${props.tooltipPosition}`)
+        }
     }
 
     // Add variant classes
@@ -64,7 +69,8 @@ const buttonClass = computed(() => {
 </script>
 
 <template>
-    <button :class="buttonClass" :data-tip="title" :title="title" :disabled="disabled" v-bind="$attrs"
+    <button :class="buttonClass" :data-tip="tooltipPosition !== 'none' ? title : undefined"
+        :title="tooltipPosition !== 'none' ? title : undefined" :disabled="disabled" v-bind="$attrs"
         class="flex items-center justify-center">
         <i v-if="icon" :class="[icon, loading ? 'hidden' : '']"></i>
         <slot v-if="$slots.default" :class="icon ? 'ml-2' : ''"></slot>

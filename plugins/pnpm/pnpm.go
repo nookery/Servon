@@ -28,44 +28,44 @@ func NewPnpm(app *core.App) core.SuperSoft {
 
 // 从原来的 pnpm.go 复制所有方法实现...
 func (p *Pnpm) Install() error {
-	p.Infof("正在安装 pnpm...")
+	p.SoftwareLogger.Infof("正在安装 pnpm...")
 
 	// 检查 nodejs 是否已安装
 	err, _ := p.RunShell("node", "--version")
 	if err != nil {
 		errMsg := "请先安装 NodeJS"
-		return p.LogAndReturnErrorf("%s", errMsg)
+		return p.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	// 检查 npm 是否已安装
 	err, _ = p.RunShell("npm", "--version")
 	if err != nil {
 		errMsg := "请先安装 npm"
-		return p.LogAndReturnErrorf("%s", errMsg)
+		return p.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	// 使用 StreamCommand 来执行安装并输出详细日志
 	err, _ = p.RunShell("npm", "install", "-g", "pnpm")
 	if err != nil {
 		errMsg := fmt.Sprintf("安装 pnpm 失败: %v", err)
-		return p.LogAndReturnErrorf("%s", errMsg)
+		return p.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	p.Success("pnpm 安装完成")
+	p.SoftwareLogger.Success("pnpm 安装完成")
 	return nil
 }
 
 // Uninstall 卸载 pnpm
 func (p *Pnpm) Uninstall() error {
-	p.Infof("正在卸载 pnpm...")
+	p.SoftwareLogger.Infof("正在卸载 pnpm...")
 
 	err, _ := p.RunShell("npm", "uninstall", "-g", "pnpm")
 	if err != nil {
 		errMsg := fmt.Sprintf("卸载 pnpm 失败: %v", err)
-		return p.LogAndReturnErrorf("%s", errMsg)
+		return p.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	p.Success("pnpm 卸载完成")
+	p.SoftwareLogger.Success("pnpm 卸载完成")
 	return nil
 }
 
@@ -109,11 +109,11 @@ func (p *Pnpm) GetInfo() core.SoftwareInfo {
 }
 
 func (p *Pnpm) Start() error {
-	p.Infof("pnpm 是包管理工具，无需启动服务")
+	p.SoftwareLogger.Infof("pnpm 是包管理工具，无需启动服务")
 	return nil
 }
 
 func (p *Pnpm) Stop() error {
-	p.Infof("pnpm 是包管理工具，无需停止服务")
+	p.SoftwareLogger.Infof("pnpm 是包管理工具，无需停止服务")
 	return nil
 }

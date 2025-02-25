@@ -34,7 +34,7 @@ func (s *SupervisorPlugin) Install() error {
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		s.Infof("使用 APT 包管理器安装...")
+		s.SoftwareLogger.Infof("使用 APT 包管理器安装...")
 
 		// 安装 supervisor
 		if err := s.AptInstall("supervisor"); err != nil {
@@ -43,20 +43,20 @@ func (s *SupervisorPlugin) Install() error {
 
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Supervisor"
-		return s.LogAndReturnErrorf("%s", errMsg)
+		return s.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		return s.LogAndReturnErrorf("%s", errMsg)
+		return s.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
 	}
 
 	// 验证安装结果
 	if !s.IsInstalled("supervisor") {
 		errMsg := "Supervisor 安装验证失败，未检测到已安装的包"
-		return s.LogAndReturnErrorf("%s", errMsg)
+		return s.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
 	}
 
-	s.Success("Supervisor 安装完成")
+	s.SoftwareLogger.Success("Supervisor 安装完成")
 
 	s.Start()
 
@@ -81,7 +81,7 @@ func (s *SupervisorPlugin) Uninstall() error {
 		return fmt.Errorf("清理依赖失败:\n%s", err)
 	}
 
-	s.Success("Supervisor 卸载完成")
+	s.SoftwareLogger.Success("Supervisor 卸载完成")
 	return nil
 }
 
@@ -94,7 +94,7 @@ const (
 )
 
 func (s *SupervisorPlugin) GetStatus() (map[string]string, error) {
-	s.Infof("获取 Supervisor 状态")
+	s.SoftwareLogger.Infof("获取 Supervisor 状态")
 
 	// 1. 检查是否安装
 	if !s.IsInstalled("supervisor") {
@@ -230,25 +230,25 @@ func (s *SupervisorPlugin) GetInfo() core.SoftwareInfo {
 }
 
 func (s *SupervisorPlugin) Start() error {
-	s.Infof("Supervisor 开始启动")
+	s.SoftwareLogger.Infof("Supervisor 开始启动")
 
 	err, _ := s.RunShellWithSudo("supervisord", "-c", "/etc/supervisor/supervisord.conf")
 	if err != nil {
 		return err
 	}
 
-	s.Success("Supervisor 启动成功")
+	s.SoftwareLogger.Success("Supervisor 启动成功")
 	return nil
 }
 
 func (s *SupervisorPlugin) Stop() error {
-	s.Infof("Supervisor 开始停止")
+	s.SoftwareLogger.Infof("Supervisor 开始停止")
 
 	err, _ := s.RunShellWithSudo("supervisorctl", "shutdown")
 	if err != nil {
 		return err
 	}
 
-	s.Success("Supervisor 停止成功")
+	s.SoftwareLogger.Success("Supervisor 停止成功")
 	return nil
 }

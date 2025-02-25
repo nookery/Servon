@@ -29,7 +29,7 @@ type LogEntry struct {
 // LogManager 负责管理系统日志
 type LogManager struct {
 	baseLogDir string
-	*utils.LogUtil
+	logger     *utils.LogUtil
 }
 
 // NewLogManager 创建日志管理器实例
@@ -45,7 +45,7 @@ func NewLogManager(baseLogDir string) (*LogManager, error) {
 
 	return &LogManager{
 		baseLogDir: baseLogDir,
-		LogUtil:    utils.NewLogUtil(baseLogDir),
+		logger:     utils.NewLogUtil(baseLogDir),
 	}, nil
 }
 
@@ -97,14 +97,14 @@ func (m *LogManager) ReadLogEntries(logFile string, limit int) ([]LogEntry, erro
 		}
 
 		if err := json.Unmarshal(scanner.Bytes(), &tempEntry); err != nil {
-			m.WarnfConsole("解析日志行失败: %v", err)
+			m.logger.Warnf("解析日志行失败: %v", err)
 			continue
 		}
 
 		// 解析时间字符串
 		t, err := time.Parse("2006-01-02 15:04:05.000", tempEntry.Time)
 		if err != nil {
-			m.WarnfConsole("解析时间失败: %v", err)
+			m.logger.Warnf("解析时间失败: %v", err)
 			continue
 		}
 
@@ -133,7 +133,7 @@ func (m *LogManager) SearchLogs(subDir, keyword string) ([]LogEntry, error) {
 	for _, file := range files {
 		entries, err := m.ReadLogEntries(file, 0)
 		if err != nil {
-			m.Warnf("读取日志文件 %s 失败: %v", file, err)
+			m.logger.Warnf("读取日志文件 %s 失败: %v", file, err)
 			continue
 		}
 
@@ -170,10 +170,10 @@ func (m *LogManager) CleanOldLogs(days int) error {
 
 		if !info.IsDir() && filepath.Ext(path) == ".log" && info.ModTime().Before(cutoff) {
 			if err := os.Remove(path); err != nil {
-				m.Warnf("删除旧日志文件失败 %s: %v", path, err)
+				m.logger.Warnf("删除旧日志文件失败 %s: %v", path, err)
 				return err
 			}
-			m.Infof("已删除旧日志文件: %s", path)
+			m.logger.Infof("已删除旧日志文件: %s", path)
 		}
 		return nil
 	})
@@ -231,7 +231,7 @@ func (m *LogManager) DeleteLogFile(logPath string) error {
 		return fmt.Errorf("删除日志文件失败: %v", err)
 	}
 
-	m.Infof("已删除日志文件: %s", logPath)
+	m.logger.Infof("已删除日志文件: %s", logPath)
 	return nil
 }
 

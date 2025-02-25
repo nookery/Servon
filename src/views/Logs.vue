@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import PageContainer from '../layouts/PageContainer.vue'
 import FileManager from '../components/files/FileManager.vue'
-import SimpleLogView from '../components/logs/SimpleLogView.vue'
+import LogView from '../components/logs/LogView.vue'
 import { RiListCheck, RiFolderOpenLine } from '@remixicon/vue'
 
 const currentDir = ref('')
@@ -19,7 +19,7 @@ const tabs = [
 <template>
     <PageContainer title="日志管理" :error="error" :tabs="tabs" v-model="activeTab" :full-height="true">
         <template #simple>
-            <SimpleLogView :current-dir="currentDir" />
+            <LogView :current-dir="currentDir" />
         </template>
 
         <template #explorer>

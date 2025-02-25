@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import SimpleLogView from '../logs/SimpleLogView.vue';
+import LogView from '../logs/LogView.vue';
 
 </script>
 
 <template>
-    <SimpleLogView current-dir="" />
+    <LogView current-dir="" />
 </template>

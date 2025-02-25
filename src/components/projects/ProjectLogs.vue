@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import FileManager from '../files/FileManager.vue'
-import SimpleLogView from '../logs/SimpleLogView.vue'
+import LogView from '../logs/LogView.vue'
 import type { SortBy, SortOrder } from '../../types/FileInfo'
 
 // 默认日志路径
@@ -15,5 +15,5 @@ onMounted(() => {
 </script>
 
 <template>
-    <SimpleLogView current-dir="" />
+    <LogView current-dir="" />
 </template>

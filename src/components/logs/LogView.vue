@@ -6,7 +6,11 @@ import { useError } from '../../composables/useError'
 import type { LogEntry, LogFile, LogStats } from '../../types/log'
 import * as logApi from '../../api/logs_api'
 import IconButton from '../IconButton.vue'
-import { RiEmotionHappyLine } from '@remixicon/vue'
+import TableLogView from './TableLogView.vue'
+import TerminalLogView from './TerminalLogView.vue'
+import ViewModeSelector from './ViewModeSelector.vue'
+import FieldSelector from './FieldSelector.vue'
+import LevelSelector from './LevelSelector.vue'
 
 const props = defineProps<{
     currentDir: string
@@ -23,6 +27,8 @@ const logStats = ref<LogStats | null>(null)
 const searchKeyword = ref('')
 const loading = ref(false)
 const selectedLevels = ref<string[]>(['error', 'warn', 'info', 'debug'])
+const viewMode = ref<'table' | 'terminal'>('table')
+const visibleFields = ref<string[]>(['time', 'level', 'caller', 'message'])
 
 // 基础加载函数，不显示提示
 async function loadLogFiles(showToast = false) {
@@ -136,17 +142,6 @@ const filteredLogEntries = computed(() => {
     )
 })
 
-// 格式化日志级别样式
-function getLevelClass(level: string): string {
-    const levelMap: Record<string, string> = {
-        error: 'badge-error',
-        warn: 'badge-warning',
-        info: 'badge-info',
-        debug: 'badge-neutral'
-    }
-    return `badge ${levelMap[level.toLowerCase()] || 'badge-ghost'}`
-}
-
 // 监听文件列表变化，自动加载不显示提示
 watch(logFiles, (newFiles) => {
     if (newFiles.length > 0 && !selectedFile.value) {
@@ -194,29 +189,6 @@ async function handleSearch() {
                         <IconButton icon="ri-search-line" size="sm" class="join-item" @click="handleSearch">搜索
                         </IconButton>
                     </div>
-                    <div class="join">
-                        <label class="join-item btn btn-sm" :class="{ 'btn-error': selectedLevels.includes('error') }">
-                            <input type="checkbox" class="hidden" v-model="selectedLevels" value="error" />
-                            <i class="ri-error-warning-fill mr-1"></i>
-                            错误
-                        </label>
-                        <label class="join-item btn btn-sm" :class="{ 'btn-warning': selectedLevels.includes('warn') }">
-                            <input type="checkbox" class="hidden" v-model="selectedLevels" value="warn" />
-                            <i class="ri-alert-fill mr-1"></i>
-                            警告
-                        </label>
-                        <label class="join-item btn btn-sm" :class="{ 'btn-info': selectedLevels.includes('info') }">
-                            <input type="checkbox" class="hidden" v-model="selectedLevels" value="info" />
-                            <i class="ri-information-fill mr-1"></i>
-                            信息
-                        </label>
-                        <label class="join-item btn btn-sm"
-                            :class="{ 'btn-neutral': selectedLevels.includes('debug') }">
-                            <input type="checkbox" class="hidden" v-model="selectedLevels" value="debug" />
-                            <i class="ri-bug-fill mr-1"></i>
-                            调试
-                        </label>
-                    </div>
                     <IconButton icon="ri-delete-bin-line" variant="error" size="sm" @click="handleDeleteCurrentLog"
                         :disabled="!selectedFile" title="删除当前日志文件">
                         删除日志
@@ -259,30 +231,43 @@ async function handleSearch() {
 
         <!-- 可滚动的内容区域 - 使用 flex-1 和 min-h-0 确保正确的滚动行为 -->
         <div class="flex-1 min-h-0 grid grid-cols-12 gap-4 mt-4">
-            <!-- 日志文件列表 - 使用 overflow-hidden 和 flex 布局 -->
-            <div class="col-span-3 card bg-base-200 overflow-hidden">
-                <div class="h-full flex flex-col">
-                    <!-- 文件列表头部 -->
-                    <div class="flex-none p-2 flex items-center justify-between">
-                        <span class="text-sm font-medium">日志文件列表</span>
-                    </div>
-                    <!-- 可滚动的文件列表 -->
-                    <div class="flex-1 min-h-0 overflow-y-auto p-2">
-                        <ul class="menu bg-base-200 w-full">
-                            <li v-for="file in logFiles" :key="file.path">
-                                <a class="flex items-center gap-2 transition-colors duration-200 hover:bg-base-300"
-                                    :class="{
-                                        'bg-primary/10 text-primary border-l-4 border-primary': selectedFile === file.path,
-                                        'border-l-4 border-transparent': selectedFile !== file.path
-                                    }" @click="selectedFile = file.path; loadLogEntries()">
-                                    <i class="ri-file-text-line" />
-                                    <span class="truncate">{{ file.path }}</span>
-                                </a>
-                            </li>
-                            <li v-if="logFiles.length === 0" class="p-4 text-center text-base-content/50">
-                                暂无日志文件
-                            </li>
-                        </ul>
+            <!-- 左侧区域：视图切换、日志级别筛选和文件列表 -->
+            <div class="col-span-3 flex flex-col gap-4">
+                <!-- 视图切换卡片 -->
+                <ViewModeSelector v-model="viewMode" />
+
+                <!-- 字段显示控制卡片 -->
+                <FieldSelector v-model="visibleFields" />
+
+                <!-- 日志级别筛选卡片 -->
+                <LevelSelector v-model="selectedLevels" />
+
+                <!-- 日志文件列表卡片 -->
+                <div class="card bg-base-200 overflow-hidden flex-1">
+                    <div class="h-full flex flex-col">
+                        <!-- 文件列表头部 -->
+                        <div class="flex-none p-3">
+                            <span class="text-sm font-medium">日志文件列表</span>
+                        </div>
+
+                        <!-- 可滚动的文件列表 -->
+                        <div class="flex-1 min-h-0 overflow-y-auto p-2">
+                            <ul class="menu bg-base-200 w-full">
+                                <li v-for="file in logFiles" :key="file.path">
+                                    <a class="flex items-center gap-2 transition-colors duration-200 hover:bg-base-300"
+                                        :class="{
+                                            'bg-primary/10 text-primary border-l-4 border-primary': selectedFile === file.path,
+                                            'border-l-4 border-transparent': selectedFile !== file.path
+                                        }" @click="selectedFile = file.path; loadLogEntries()">
+                                        <i class="ri-file-text-line" />
+                                        <span class="truncate">{{ file.path }}</span>
+                                    </a>
+                                </li>
+                                <li v-if="logFiles.length === 0" class="p-4 text-center text-base-content/50">
+                                    暂无日志文件
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -294,37 +279,10 @@ async function handleSearch() {
                         <span class="loading loading-spinner loading-lg"></span>
                     </div>
                     <div v-else class="flex-1 min-h-0 overflow-auto">
-                        <table class="table table-xs w-full">
-                            <thead class="sticky top-0 bg-base-200 z-10">
-                                <tr>
-                                    <th>时间</th>
-                                    <th>级别</th>
-                                    <th>调用位置</th>
-                                    <th>消息</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="entry in filteredLogEntries" :key="entry.time">
-                                    <td class="whitespace-nowrap">{{ entry.time }}</td>
-                                    <td>
-                                        <span :class="getLevelClass(entry.level)">
-                                            {{ entry.level }}
-                                        </span>
-                                    </td>
-                                    <td class="text-xs">{{ entry.caller }}</td>
-                                    <td class="whitespace-pre-wrap">{{ entry.message }}</td>
-                                </tr>
-                                <tr v-if="filteredLogEntries.length === 0">
-                                    <td colspan="4" class="text-center text-base-content/50 py-8">
-                                        <div class="flex flex-col items-center gap-2">
-                                            <RiEmotionHappyLine class="w-8 h-8 text-success" />
-                                            <span>暂无符合条件的日志 </span>
-                                            <span class="text-xs opacity-50">这说明系统运行得很顺利呢！</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <!-- 根据视图模式切换组件 -->
+                        <TableLogView v-if="viewMode === 'table'" :logEntries="filteredLogEntries"
+                            :visibleFields="visibleFields" />
+                        <TerminalLogView v-else :logEntries="filteredLogEntries" :visibleFields="visibleFields" />
                     </div>
                 </div>
             </div>
