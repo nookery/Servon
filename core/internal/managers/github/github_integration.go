@@ -77,7 +77,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"servon/core/internal/events"
+	"servon/components/events"
 	"servon/core/internal/utils"
 	"strings"
 	"time"

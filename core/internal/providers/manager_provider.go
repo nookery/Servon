@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"servon/core/internal/events"
+	"servon/components/events"
 	"servon/core/internal/managers"
 )
 

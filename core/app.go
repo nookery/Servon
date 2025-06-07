@@ -3,7 +3,7 @@ package core
 import (
 	"fmt"
 	"path/filepath"
-	"servon/core/internal/events"
+	"servon/components/events"
 	"servon/core/internal/managers"
 	"servon/core/internal/providers"
 	"servon/core/internal/utils"

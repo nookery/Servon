@@ -46,6 +46,7 @@ import (
 //	    Type: RequestTypeGetUser,
 //	    Data: map[string]interface{}{"userId": "123"},
 //	})
+//
 // IEventBus 定义事件总线接口
 type IEventBus interface {
 	Subscribe(eventType EventType, handler Handler)
@@ -104,12 +105,6 @@ func GetEventBusInstance(logDir string) (IEventBus, error) {
 	}
 
 	return instance, nil
-}
-
-// NewEventBus 已弃用的构造函数，禁止外部直接创建实例
-// 已弃用：请使用 GetEventBusInstance 方法获取单例实例
-func NewEventBus(logDir string) (IEventBus, error) {
-	return nil, fmt.Errorf("direct instantiation is not allowed, use GetEventBusInstance instead")
 }
 
 // Subscribe 订阅特定类型的事件

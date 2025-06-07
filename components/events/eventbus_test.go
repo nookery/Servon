@@ -35,28 +35,6 @@ func TestSingletonPattern(t *testing.T) {
 	}
 }
 
-// TestDirectInstantiationBlocked 测试直接实例化被阻止
-func TestDirectInstantiationBlocked(t *testing.T) {
-	tempDir := filepath.Join(os.TempDir(), "test_events_blocked")
-	defer os.RemoveAll(tempDir)
-
-	// 尝试直接使用NewEventBus创建实例
-	instance, err := NewEventBus(tempDir)
-	if err == nil {
-		t.Error("Expected error when using NewEventBus, got nil")
-	}
-
-	if instance != nil {
-		t.Error("Expected nil instance when using NewEventBus")
-	}
-
-	// 验证错误消息
-	expectedError := "direct instantiation is not allowed, use GetEventBusInstance instead"
-	if err.Error() != expectedError {
-		t.Errorf("Expected error message '%s', got '%s'", expectedError, err.Error())
-	}
-}
-
 // TestEventBusBasicFunctionality 测试EventBus基本功能
 func TestEventBusBasicFunctionality(t *testing.T) {
 	tempDir := filepath.Join(os.TempDir(), "test_events_func")

@@ -2,7 +2,7 @@ package managers
 
 import (
 	"fmt"
-	"servon/core/internal/events"
+	"servon/components/events"
 	"servon/core/internal/managers/github"
 )
 

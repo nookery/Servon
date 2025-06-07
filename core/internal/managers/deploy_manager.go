@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"servon/core/internal/events"
+	"servon/components/events"
 	"servon/core/internal/managers/deployers"
 	"servon/core/internal/managers/github"
 	"servon/core/internal/utils"
