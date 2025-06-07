@@ -4,6 +4,7 @@
 [![Maintainer](https://img.shields.io/badge/Maintainer-blue)](https://github.com/nookery)
 [![MAKEFILE](https://img.shields.io/badge/MAKEFILE-gray)](README-MAKEFILE.md)
 [![Plugins](https://img.shields.io/badge/Plugins-red)](README-PLUGINS.md)
+[![Update](https://img.shields.io/badge/Update-orange)](README-UPDATE.md)
 
 Servon 是一个多功能的服务器管理工具，提供项目部署、软件安装以及可视化管理面板等功能。
 
