@@ -12,8 +12,10 @@ import (
 	"servon/plugins/clash"
 	"servon/plugins/git"
 	"servon/plugins/github_runner"
+	"servon/plugins/joke"
 	"servon/plugins/nodejs"
 	"servon/plugins/npm"
+	"servon/plugins/ping"
 	"servon/plugins/pm2"
 	"servon/plugins/pnpm"
 	"servon/plugins/supervisor"
@@ -34,6 +36,8 @@ func main() {
 	github_runner.Setup(app)
 	pm2.Setup(app)
 	supervisor.Setup(app)
+	joke.Setup(app)
+	ping.Setup(app)
 
 	if err := app.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)

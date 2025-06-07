@@ -16,7 +16,9 @@
 				"github.vscode-github-actions",
 				"matthewpi.caddyfile-support",
 				"golang.go",
-				"ms-vscode.makefile-tools"
+				"ms-vscode.makefile-tools",
+				"CodebuddyAI.codebuddy-ai",
+				"Tencent-Cloud.coding-copilot"
 			]
 		}
 	},
