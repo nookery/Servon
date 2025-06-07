@@ -1,0 +1,116 @@
+package events
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+)
+
+// TestSingletonPattern 测试单例模式
+func TestSingletonPattern(t *testing.T) {
+	tempDir := filepath.Join(os.TempDir(), "test_events")
+	defer os.RemoveAll(tempDir)
+
+	// 获取第一个实例
+	instance1, err := GetEventBusInstance(tempDir)
+	if err != nil {
+		t.Fatalf("Failed to get first instance: %v", err)
+	}
+
+	// 获取第二个实例
+	instance2, err := GetEventBusInstance(tempDir)
+	if err != nil {
+		t.Fatalf("Failed to get second instance: %v", err)
+	}
+
+	// 验证两个实例是同一个对象
+	if instance1 != instance2 {
+		t.Error("Expected same instance, got different instances")
+	}
+
+	// 验证实例不为nil
+	if instance1 == nil {
+		t.Error("Instance should not be nil")
+	}
+}
+
+// TestDirectInstantiationBlocked 测试直接实例化被阻止
+func TestDirectInstantiationBlocked(t *testing.T) {
+	tempDir := filepath.Join(os.TempDir(), "test_events_blocked")
+	defer os.RemoveAll(tempDir)
+
+	// 尝试直接使用NewEventBus创建实例
+	instance, err := NewEventBus(tempDir)
+	if err == nil {
+		t.Error("Expected error when using NewEventBus, got nil")
+	}
+
+	if instance != nil {
+		t.Error("Expected nil instance when using NewEventBus")
+	}
+
+	// 验证错误消息
+	expectedError := "direct instantiation is not allowed, use GetEventBusInstance instead"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error message '%s', got '%s'", expectedError, err.Error())
+	}
+}
+
+// TestEventBusBasicFunctionality 测试EventBus基本功能
+func TestEventBusBasicFunctionality(t *testing.T) {
+	tempDir := filepath.Join(os.TempDir(), "test_events_func")
+	defer os.RemoveAll(tempDir)
+
+	// 获取EventBus实例
+	eventBus, err := GetEventBusInstance(tempDir)
+	if err != nil {
+		t.Fatalf("Failed to get EventBus instance: %v", err)
+	}
+
+	// 测试事件订阅和发布
+	eventReceived := false
+	eventBus.Subscribe(GitPush, func(e Event) {
+		eventReceived = true
+	})
+
+	// 发布事件
+	err = eventBus.Publish(Event{
+		Type: GitPush,
+		Data: map[string]interface{}{"repo": "test-repo"},
+	})
+	if err != nil {
+		t.Fatalf("Failed to publish event: %v", err)
+	}
+
+	// 等待事件处理（异步）
+	time.Sleep(100 * time.Millisecond)
+
+	if !eventReceived {
+		t.Error("Event was not received")
+	}
+
+	// 测试请求处理
+	err = eventBus.RegisterRequestHandler(SoftwareInfoRequest, func(req Request) Response {
+		return Response{
+			Data: map[string]interface{}{"software": "test"},
+		}
+	})
+	if err != nil {
+		t.Fatalf("Failed to register request handler: %v", err)
+	}
+
+	// 发送请求
+	response := eventBus.Request(Request{
+		Type: SoftwareInfoRequest,
+		Data: map[string]interface{}{"name": "test-software"},
+	})
+
+	if response.Error != "" {
+		t.Errorf("Unexpected error in response: %s", response.Error)
+	}
+
+	if response.Data == nil {
+		t.Error("Expected response data, got nil")
+	}
+}

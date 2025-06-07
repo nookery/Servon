@@ -18,8 +18,8 @@ import (
 //
 // 使用示例：
 //
-//	// 创建 EventBus 实例
-//	eventBus, err := NewEventBus("/path/to/logs")
+//	// 获取 EventBus 单例实例
+//	eventBus, err := GetEventBusInstance("/path/to/logs")
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
@@ -46,29 +46,74 @@ import (
 //	    Type: RequestTypeGetUser,
 //	    Data: map[string]interface{}{"userId": "123"},
 //	})
-type EventBus struct {
+// IEventBus 定义事件总线接口
+type IEventBus interface {
+	Subscribe(eventType EventType, handler Handler)
+	Unsubscribe(eventType EventType, handler Handler)
+	Publish(event Event) error
+	GetEventHistory(date time.Time) ([]Event, error)
+	RegisterRequestHandler(requestType RequestType, handler RequestHandler) error
+	Request(request Request) Response
+}
+
+// eventBus 私有结构体，实现IEventBus接口
+type eventBus struct {
 	subscribers     map[EventType][]Handler
 	requestHandlers map[RequestType]RequestHandler
 	mutex           sync.RWMutex
 	logDir          string
 }
 
-// NewEventBus 创建新的事件总线实例
-func NewEventBus(logDir string) (*EventBus, error) {
-	// 确保日志目录存在
-	if err := os.MkdirAll(logDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create event log directory: %w", err)
+// 单例相关变量
+var (
+	instance IEventBus
+	once     sync.Once
+)
+
+// GetEventBusInstance 获取EventBus的单例实例
+// 这是获取EventBus实例的唯一公开方法
+func GetEventBusInstance(logDir string) (IEventBus, error) {
+	var err error
+	once.Do(func() {
+		// 确保日志目录存在
+		if mkdirErr := os.MkdirAll(logDir, 0755); mkdirErr != nil {
+			err = fmt.Errorf("failed to create event log directory: %w", mkdirErr)
+			return
+		}
+
+		instance = &eventBus{
+			subscribers:     make(map[EventType][]Handler),
+			requestHandlers: make(map[RequestType]RequestHandler),
+			logDir:          logDir,
+		}
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	return &EventBus{
-		subscribers:     make(map[EventType][]Handler),
-		requestHandlers: make(map[RequestType]RequestHandler),
-		logDir:          logDir,
-	}, nil
+	// 如果实例已存在但logDir不同，更新logDir
+	if eb, ok := instance.(*eventBus); ok && eb.logDir != logDir {
+		eb.mutex.Lock()
+		eb.logDir = logDir
+		eb.mutex.Unlock()
+		// 确保新的日志目录存在
+		if mkdirErr := os.MkdirAll(logDir, 0755); mkdirErr != nil {
+			return nil, fmt.Errorf("failed to create event log directory: %w", mkdirErr)
+		}
+	}
+
+	return instance, nil
+}
+
+// NewEventBus 已弃用的构造函数，禁止外部直接创建实例
+// 已弃用：请使用 GetEventBusInstance 方法获取单例实例
+func NewEventBus(logDir string) (IEventBus, error) {
+	return nil, fmt.Errorf("direct instantiation is not allowed, use GetEventBusInstance instead")
 }
 
 // Subscribe 订阅特定类型的事件
-func (eb *EventBus) Subscribe(eventType EventType, handler Handler) {
+func (eb *eventBus) Subscribe(eventType EventType, handler Handler) {
 	eb.mutex.Lock()
 	defer eb.mutex.Unlock()
 
@@ -76,7 +121,7 @@ func (eb *EventBus) Subscribe(eventType EventType, handler Handler) {
 }
 
 // Unsubscribe 取消订阅特定类型的事件
-func (eb *EventBus) Unsubscribe(eventType EventType, handler Handler) {
+func (eb *eventBus) Unsubscribe(eventType EventType, handler Handler) {
 	eb.mutex.Lock()
 	defer eb.mutex.Unlock()
 
@@ -91,7 +136,7 @@ func (eb *EventBus) Unsubscribe(eventType EventType, handler Handler) {
 }
 
 // Publish 发布事件
-func (eb *EventBus) Publish(event Event) error {
+func (eb *eventBus) Publish(event Event) error {
 	// 记录事件到日志文件
 	if err := eb.logEvent(event); err != nil {
 		return fmt.Errorf("failed to log event: %w", err)
@@ -121,7 +166,7 @@ func (eb *EventBus) Publish(event Event) error {
 }
 
 // logEvent 将事件记录到日志文件
-func (eb *EventBus) logEvent(event Event) error {
+func (eb *eventBus) logEvent(event Event) error {
 	// 创建日志文件名（按日期分割）
 	logFile := filepath.Join(eb.logDir, fmt.Sprintf("events_%s.log", time.Now().Format("2006-01-02")))
 
@@ -155,7 +200,7 @@ func (eb *EventBus) logEvent(event Event) error {
 }
 
 // GetEventHistory 获取指定日期的事件历史
-func (eb *EventBus) GetEventHistory(date time.Time) ([]Event, error) {
+func (eb *eventBus) GetEventHistory(date time.Time) ([]Event, error) {
 	logFile := filepath.Join(eb.logDir, fmt.Sprintf("events_%s.log", date.Format("2006-01-02")))
 
 	data, err := os.ReadFile(logFile)
@@ -188,7 +233,7 @@ func (eb *EventBus) GetEventHistory(date time.Time) ([]Event, error) {
 }
 
 // RegisterRequestHandler 注册请求处理器
-func (eb *EventBus) RegisterRequestHandler(requestType RequestType, handler RequestHandler) error {
+func (eb *eventBus) RegisterRequestHandler(requestType RequestType, handler RequestHandler) error {
 	eb.mutex.Lock()
 	defer eb.mutex.Unlock()
 
@@ -201,7 +246,7 @@ func (eb *EventBus) RegisterRequestHandler(requestType RequestType, handler Requ
 }
 
 // Request 发送同步请求并等待响应
-func (eb *EventBus) Request(request Request) Response {
+func (eb *eventBus) Request(request Request) Response {
 	eb.mutex.RLock()
 	handler, exists := eb.requestHandlers[request.Type]
 	eb.mutex.RUnlock()

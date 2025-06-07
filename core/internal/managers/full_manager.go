@@ -29,7 +29,7 @@ type FullManager struct {
 	*github.GitHubIntegration
 }
 
-func NewManager(eventBus *events.EventBus) *FullManager {
+func NewManager(eventBus events.IEventBus) *FullManager {
 	dataManager := DefaultDataManager
 	githubIntegration := github.NewGitHubIntegration(eventBus, dataManager.GetLogsRootFolder())
 	softManager := NewSoftManager(dataManager.GetLogsRootFolder())

@@ -93,7 +93,7 @@ import (
 //  3. 管理访问令牌
 //  4. 提供仓库访问接口
 type GitHubIntegration struct {
-	eventBus   *events.EventBus
+	eventBus   events.IEventBus
 	tokenCache *TokenCacheManager
 	logDir     string
 	logger     *utils.LogUtil
@@ -101,7 +101,7 @@ type GitHubIntegration struct {
 
 // NewGitHubIntegration 创建一个新的GitHub集成实例
 // eventBus: 用于发布集成相关的事件
-func NewGitHubIntegration(eventBus *events.EventBus, logDir string) *GitHubIntegration {
+func NewGitHubIntegration(eventBus events.IEventBus, logDir string) *GitHubIntegration {
 	logger := utils.NewTopicLogUtil(logDir, "github")
 	return &GitHubIntegration{
 		eventBus:   eventBus,
@@ -449,7 +449,7 @@ func validateWebhook(c *gin.Context) error {
 	return nil
 }
 
-func (g *GitHubIntegration) handleEvent(event string, payload []byte, eventBus *events.EventBus) error {
+func (g *GitHubIntegration) handleEvent(event string, payload []byte, eventBus events.IEventBus) error {
 	switch event {
 	case "installation", "installation_repositories":
 		return g.handleInstallationEvent(payload)
@@ -533,7 +533,7 @@ func (g *GitHubIntegration) handleInstallationEvent(payload []byte) error {
 }
 
 // handlePushEvent 处理代码推送事件
-func (g *GitHubIntegration) handlePushEvent(payload []byte, eventBus *events.EventBus) error {
+func (g *GitHubIntegration) handlePushEvent(payload []byte, eventBus events.IEventBus) error {
 	// TODO: 解析 payload 并发布事件
 	return eventBus.Publish(events.Event{
 		Type: events.GitPush,

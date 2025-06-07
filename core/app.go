@@ -10,7 +10,7 @@ import (
 )
 
 type App struct {
-	eventBus *events.EventBus
+	eventBus events.IEventBus
 
 	*providers.WebProvider
 	*providers.ManagerProvider
@@ -23,7 +23,7 @@ type App struct {
 
 // New 创建App实例
 func New() *App {
-	eventBus, err := events.NewEventBus(filepath.Join(DataRootFolder, "events"))
+	eventBus, err := events.GetEventBusInstance(filepath.Join(DataRootFolder, "events"))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create event bus: %v", err))
 	}

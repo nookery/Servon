@@ -23,7 +23,7 @@ import (
 // - 发布部署相关的事件通知
 type DeployManager struct {
 	// eventBus 用于处理事件的发布与订阅
-	eventBus *events.EventBus
+	eventBus events.IEventBus
 	// logger 用于记录部署过程的日志
 	logger *utils.LogUtil
 	// gitUtil 用于处理Git操作
@@ -37,7 +37,7 @@ type DeployManager struct {
 	deployers   []deployers.Deployer
 }
 
-func NewDeployManager(eventBus *events.EventBus, github *github.GitHubIntegration, logsDir string, tempDir string, projectsDir string) (*DeployManager, error) {
+func NewDeployManager(eventBus events.IEventBus, github *github.GitHubIntegration, logsDir string, tempDir string, projectsDir string) (*DeployManager, error) {
 	dm := &DeployManager{
 		eventBus:    eventBus,
 		logger:      utils.NewTopicLogUtil(logsDir, "deploy"),
