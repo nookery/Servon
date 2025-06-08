@@ -1,28 +1,17 @@
 package events
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 )
 
 // TestSingletonPattern 测试单例模式
 func TestSingletonPattern(t *testing.T) {
-	tempDir := filepath.Join(os.TempDir(), "test_events")
-	defer os.RemoveAll(tempDir)
-
 	// 获取第一个实例
-	instance1, err := GetEventBusInstance(tempDir)
-	if err != nil {
-		t.Fatalf("Failed to get first instance: %v", err)
-	}
+	instance1 := GetEventBusInstance()
 
 	// 获取第二个实例
-	instance2, err := GetEventBusInstance(tempDir)
-	if err != nil {
-		t.Fatalf("Failed to get second instance: %v", err)
-	}
+	instance2 := GetEventBusInstance()
 
 	// 验证两个实例是同一个对象
 	if instance1 != instance2 {
@@ -37,14 +26,8 @@ func TestSingletonPattern(t *testing.T) {
 
 // TestEventBusBasicFunctionality 测试EventBus基本功能
 func TestEventBusBasicFunctionality(t *testing.T) {
-	tempDir := filepath.Join(os.TempDir(), "test_events_func")
-	defer os.RemoveAll(tempDir)
-
 	// 获取EventBus实例
-	eventBus, err := GetEventBusInstance(tempDir)
-	if err != nil {
-		t.Fatalf("Failed to get EventBus instance: %v", err)
-	}
+	eventBus := GetEventBusInstance()
 
 	// 测试事件订阅和发布
 	eventReceived := false
@@ -53,7 +36,7 @@ func TestEventBusBasicFunctionality(t *testing.T) {
 	})
 
 	// 发布事件
-	err = eventBus.Publish(Event{
+	err := eventBus.Publish(Event{
 		Type: GitPush,
 		Data: map[string]interface{}{"repo": "test-repo"},
 	})

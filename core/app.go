@@ -1,8 +1,9 @@
 package core
 
 import (
-	"fmt"
 	"path/filepath"
+
+	"servon/components"
 	"servon/components/events"
 	"servon/core/internal/managers"
 	"servon/core/internal/providers"
@@ -23,10 +24,7 @@ type App struct {
 
 // New 创建App实例
 func New() *App {
-	eventBus, err := events.GetEventBusInstance(filepath.Join(DataRootFolder, "events"))
-	if err != nil {
-		panic(fmt.Sprintf("Failed to create event bus: %v", err))
-	}
+	eventBus := components.EventBus
 
 	manager := managers.NewManager(eventBus)
 	webProvider := providers.NewWebProvider(manager, DefaultHost, DefaultPort)
