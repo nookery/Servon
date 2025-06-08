@@ -1,4 +1,4 @@
-package soft
+package soft_util
 
 import (
 	"fmt"
@@ -7,9 +7,7 @@ import (
 )
 
 // Dpkg 提供dpkg包管理器的基本操作
-type DpkgManager struct {
-	*Manager
-}
+type DpkgManager struct{}
 
 // IsInstalled 检查软件包是否已安装
 // 返回 true 表示已安装，false 表示未安装

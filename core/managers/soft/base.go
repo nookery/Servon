@@ -23,7 +23,7 @@ type Manager struct {
 	*ProxyManager
 	*GatewayManager
 	*soft_util.AptManager
-	*DpkgManager
+	*soft_util.DpkgManager
 	*ServiceManager
 }
 
@@ -40,7 +40,7 @@ func NewManager(logDir string) *Manager {
 	sm.ProxyManager = &ProxyManager{Manager: sm}
 	sm.GatewayManager = &GatewayManager{Manager: sm}
 	sm.AptManager = &soft_util.AptManager{}
-	sm.DpkgManager = &DpkgManager{Manager: sm}
+	sm.DpkgManager = &soft_util.DpkgManager{}
 	sm.ServiceManager = &ServiceManager{Manager: sm}
 	sm.LogUtil.Info("初始化软件管理器")
 	return sm
