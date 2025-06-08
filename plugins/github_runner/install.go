@@ -23,14 +23,14 @@ func (g *GitHubRunner) Install() error {
 	}
 
 	osType := g.GetOSType()
-	g.SoftwareLogger.Infof("检测到操作系统: %s", osType)
+	fmt.Printf("检测到操作系统: %s\n", osType)
 
 	if g.IsProxyOn() {
-		g.SoftwareLogger.Infof("检测到代理")
+		fmt.Println("检测到代理")
 	}
 
 	// 创建 runner 专用用户
-	g.SoftwareLogger.Infof("创建 GitHub Runner 专用用户...")
+	fmt.Println("创建 GitHub Runner 专用用户...")
 	runnerUser := "github-runner"
 	runnerPassword := "runner" + fmt.Sprint(time.Now().Unix()) // 生成随机密码
 
@@ -43,12 +43,12 @@ func (g *GitHubRunner) Install() error {
 		if err := g.CreateUser(runnerUser, runnerPassword); err != nil {
 			return fmt.Errorf("创建用户失败: %s", err)
 		}
-		g.SoftwareLogger.Successf("已创建专用用户: %s", runnerUser)
+		fmt.Printf("已创建专用用户: %s\n", runnerUser)
 	}
 
 	switch osType {
 	case core.Ubuntu, core.Debian, core.CentOS, core.RedHat:
-		g.SoftwareLogger.Infof("开始安装 GitHub Runner...")
+		fmt.Println("开始安装 GitHub Runner...")
 
 		// 获取最新版本号
 		resp, err := http.Get("https://api.github.com/repos/actions/runner/releases/latest")
@@ -88,17 +88,17 @@ func (g *GitHubRunner) Install() error {
 			return fmt.Errorf("获取版本号失败：无效的版本号格式")
 		}
 
-		g.SoftwareLogger.Infof("最新版本: %s", version)
+		fmt.Printf("最新版本: %s\n", version)
 
 		// 清理本地文件夹
-		g.SoftwareLogger.Infof("清理本地文件夹...")
+		fmt.Println("清理本地文件夹...")
 		err = os.RemoveAll(g.targetDir)
 		if err != nil {
 			return fmt.Errorf("清理本地文件夹失败: %s", err)
 		}
 
 		// 创建目标目录
-		g.SoftwareLogger.Infof("创建目标目录...")
+		fmt.Println("创建目标目录...")
 		err = os.MkdirAll(g.targetDir, 0755)
 		if err != nil {
 			return fmt.Errorf("创建目录失败: %s", err)
@@ -122,8 +122,8 @@ func (g *GitHubRunner) Install() error {
 			return fmt.Errorf("不支持的系统架构: %s", arch)
 		}
 
-		g.SoftwareLogger.Infof("检测到系统架构: %s", arch)
-		g.SoftwareLogger.Infof("开始下载 GitHub Runner...")
+		fmt.Printf("检测到系统架构: %s\n", arch)
+		fmt.Println("开始下载 GitHub Runner...")
 		downloadUrl := fmt.Sprintf("https://github.com/actions/runner/releases/download/v%s/actions-runner-linux-%s-%s.tar.gz", version, archInUrl, version)
 
 		err = g.Download(downloadUrl, g.targetDir+"/actions-runner-linux.tar.gz")
@@ -132,38 +132,39 @@ func (g *GitHubRunner) Install() error {
 		}
 
 		// 解压
-		g.SoftwareLogger.Infof("开始解压 GitHub Runner...")
+		fmt.Println("开始解压 GitHub Runner...")
 		err, _ = g.RunShell("tar", "xzf", g.targetDir+"/actions-runner-linux.tar.gz", "-C", g.targetDir)
 		if err != nil {
 			return fmt.Errorf("解压失败: %s", err)
 		}
 
 		// 删除压缩包
-		g.SoftwareLogger.Infof("删除压缩包，因为已解压到 " + g.targetDir)
+		fmt.Println("删除压缩包，因为已解压到 " + g.targetDir)
 		err = os.Remove(g.targetDir + "/actions-runner-linux.tar.gz")
 		if err != nil {
 			return fmt.Errorf("删除压缩包失败: %s", err)
 		}
 
 		// 安装依赖
-		g.SoftwareLogger.Infof("开始安装依赖...")
+		fmt.Println("开始安装依赖...")
 		err, _ = g.RunShell("/bin/bash", g.targetDir+"/bin/installdependencies.sh")
 		if err != nil {
 			return fmt.Errorf("安装依赖失败: %s", err)
 		}
 
 		// 修改目录所有权
-		g.SoftwareLogger.Infof("修改目录所有权...")
+		fmt.Println("修改目录所有权...")
 		err, _ = g.RunShell("chown", "-R", runnerUser+":"+runnerUser, g.targetDir)
 		if err != nil {
 			return fmt.Errorf("修改目录所有权失败: %s", err)
 		}
 
-		g.SoftwareLogger.Success("GitHub Runner 安装完成")
+		fmt.Println("GitHub Runner 安装完成")
 		return nil
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		return g.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 }

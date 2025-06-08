@@ -29,29 +29,22 @@ func NewNpm(app *core.App) core.SuperSoft {
 }
 
 func (n *Npm) Install() error {
-	n.SoftwareLogger.Infof("正在检查 npm...")
-
 	// 检查 nodejs 是否已安装
 	nodeCmd := exec.Command("node", "--version")
 	if err := nodeCmd.Run(); err != nil {
-		errMsg := "请先安装 NodeJS"
-		return n.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		return err
 	}
 
 	// 检查 npm 是否已安装
 	err, _ := n.RunShellWithOutput("npm", "--version")
 	if err != nil {
-		n.SoftwareLogger.Infof("npm 未安装，正在通过 apt 安装...")
-
 		// 使用 apt 安装 npm
 		err, _ := n.RunShell("apt", "install", "-y", "npm")
 		if err != nil {
-			errMsg := "npm 安装失败"
-			return n.SoftwareLogger.LogAndReturnErrorf("%s: %v", errMsg, err)
+			return err
 		}
 	}
 
-	n.SoftwareLogger.Success("npm 已安装")
 	return nil
 }
 

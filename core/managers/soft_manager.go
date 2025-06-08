@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	logger1 "servon/components/logger"
 	"servon/components/shell_util"
 	"servon/components/soft_util"
 
 	"servon/core/contract"
-	"strconv"
 )
 
 // SoftManager 基础软件管理功能
@@ -17,8 +15,6 @@ type SoftManager struct {
 	Softwares map[string]contract.Software
 	Gateways  map[string]contract.SuperGateway
 	Services  map[string]contract.SuperService
-	LogDir    string
-	LogUtil   *logger1.LogUtil
 	ShellUtil *shell_util.ShellUtil
 	*ProxyManager
 	*GatewayManager
@@ -28,12 +24,10 @@ type SoftManager struct {
 }
 
 // NewManager 创建新的软件管理器
-func NewSoftManager(logDir string) *SoftManager {
+func NewSoftManager() *SoftManager {
 	sm := &SoftManager{
 		Softwares: make(map[string]contract.Software),
 		Gateways:  make(map[string]contract.SuperGateway),
-		LogDir:    logDir,
-		LogUtil:   logger1.NewTopicLogUtil(logDir, "soft"),
 		ShellUtil: shell_util.NewShellUtil(),
 	}
 
@@ -42,7 +36,6 @@ func NewSoftManager(logDir string) *SoftManager {
 	sm.AptManager = &soft_util.AptManager{}
 	sm.DpkgManager = &soft_util.DpkgManager{}
 	sm.ServiceSoftManager = &ServiceSoftManager{SoftManager: sm}
-	sm.LogUtil.Info("初始化软件管理器")
 	return sm
 }
 
@@ -129,7 +122,6 @@ func (c *SoftManager) GetAllSoftware() []string {
 		softwareNames = append(softwareNames, name)
 	}
 
-	c.LogUtil.Success("获取所有软件成功，共 " + strconv.Itoa(len(softwareNames)) + " 个")
 	return softwareNames
 }
 

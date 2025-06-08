@@ -32,14 +32,14 @@ func (n *NodeJSPlugin) Install() error {
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		n.SoftwareLogger.Infof("使用 APT 包管理器安装...")
-		n.SoftwareLogger.Infof("添加 NodeJS 官方源...")
+		fmt.Println("使用 APT 包管理器安装...")
+		fmt.Println("添加 NodeJS 官方源...")
 
 		// 首先检查sudo是否可用
 		hasSudo := n.checkSudoAvailable()
-		n.SoftwareLogger.Infof("系统sudo可用性: %v", hasSudo)
+		fmt.Printf("系统sudo可用性: %v\n", hasSudo)
 
-		n.SoftwareLogger.Infof("开始下载 NodeSource 设置脚本...")
+		fmt.Println("开始下载 NodeSource 设置脚本...")
 		var err error
 		var output string
 
@@ -51,13 +51,14 @@ func (n *NodeJSPlugin) Install() error {
 			err, output = n.RunShell("sh", "-c", "curl -m 60 -fsSL https://deb.nodesource.com/setup_lts.x | bash -")
 		}
 
-		n.SoftwareLogger.Infof("NodeSource 脚本执行输出: %s", output)
+		fmt.Printf("NodeSource 脚本执行输出: %s\n", output)
 		if err != nil {
-			return n.SoftwareLogger.LogAndReturnErrorf("下载或执行 NodeSource 脚本失败: %v", err)
+			fmt.Printf("下载或执行 NodeSource 脚本失败: %v\n", err)
+			return fmt.Errorf("下载或执行 NodeSource 脚本失败: %v", err)
 		}
 
 		// 更新软件包列表
-		n.SoftwareLogger.Infof("更新软件包列表...")
+		fmt.Println("更新软件包列表...")
 		if hasSudo {
 			err, output = n.RunShell("sudo", "apt-get", "update", "-y")
 		} else {
@@ -65,36 +66,40 @@ func (n *NodeJSPlugin) Install() error {
 		}
 
 		if err != nil {
-			n.SoftwareLogger.Errorf("更新软件包列表失败: %v, 输出: %s", err, output)
+			fmt.Printf("更新软件包列表失败: %v, 输出: %s\n", err, output)
 			return err
 		}
 
 		// 安装 NodeJS (使用-y参数确保非交互式)
-		n.SoftwareLogger.Infof("开始安装 NodeJS...")
+		fmt.Println("开始安装 NodeJS...")
 		err = n.AptInstall("nodejs")
 
 		if err != nil {
-			return n.SoftwareLogger.LogAndReturnErrorf("安装 NodeJS 失败: %v", err)
+			fmt.Printf("安装 NodeJS 失败: %v\n", err)
+			return fmt.Errorf("安装 NodeJS 失败: %v", err)
 		}
 
-		n.SoftwareLogger.Infof("NodeJS 安装完成，正在验证...")
+		fmt.Println("NodeJS 安装完成，正在验证...")
 
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 NodeJS"
-		return n.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		return n.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 验证安装结果
 	if !n.IsInstalled("nodejs") {
 		errMsg := "NodeJS 安装验证失败，未检测到已安装的包"
-		return n.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
-	n.SoftwareLogger.Success("NodeJS 安装完成")
+	fmt.Println("NodeJS 安装完成")
 	return nil
 }
 
@@ -102,12 +107,12 @@ func (n *NodeJSPlugin) Install() error {
 func (n *NodeJSPlugin) Uninstall() error {
 	// 卸载软件包及其依赖
 	if err := n.AptRemove("nodejs"); err != nil {
-		return n.SoftwareLogger.LogAndReturnError(err.Error())
+		return fmt.Errorf(err.Error())
 	}
 
 	// 清理配置文件
 	if err := n.AptPurge("nodejs"); err != nil {
-		return n.SoftwareLogger.LogAndReturnError(err.Error())
+		return fmt.Errorf(err.Error())
 	}
 
 	// 删除 NodeSource 源文件
@@ -122,7 +127,7 @@ func (n *NodeJSPlugin) Uninstall() error {
 		return fmt.Errorf("清理依赖失败:\n%s", err)
 	}
 
-	n.SoftwareLogger.Success("NodeJS 卸载完成")
+	fmt.Println("NodeJS 卸载完成")
 	return nil
 }
 
@@ -152,12 +157,12 @@ func (n *NodeJSPlugin) GetInfo() core.SoftwareInfo {
 }
 
 func (n *NodeJSPlugin) Start() error {
-	n.SoftwareLogger.Infof("NodeJS 是运行时环境，无需启动服务")
+	fmt.Println("NodeJS 是运行时环境，无需启动服务")
 	return nil
 }
 
 func (n *NodeJSPlugin) Stop() error {
-	n.SoftwareLogger.Infof("NodeJS 是运行时环境，无需停止服务")
+	fmt.Println("NodeJS 是运行时环境，无需停止服务")
 	return nil
 }
 

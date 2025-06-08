@@ -37,14 +37,12 @@ type LogUtil interface {
 // AptManager 管理APT包操作
 type AptManager struct {
 	ShellUtil ShellUtil
-	LogUtil   LogUtil
 }
 
 // NewAptManager 创建一个新的APT管理器实例
-func NewAptManager(shellUtil ShellUtil, logUtil LogUtil) *AptManager {
+func NewAptManager(shellUtil ShellUtil) *AptManager {
 	return &AptManager{
 		ShellUtil: shellUtil,
-		LogUtil:   logUtil,
 	}
 }
 
@@ -52,61 +50,68 @@ func NewAptManager(shellUtil ShellUtil, logUtil LogUtil) *AptManager {
 func (p *AptManager) AptUpdate() (string, error) {
 	err, output := p.ShellUtil.RunShellWithSudo("apt-get", "update")
 	if err != nil {
-		return output, p.LogUtil.LogAndReturnErrorf("更新索引失败: %v", err)
+		fmt.Printf("更新索引失败: %v\n", err)
+		return output, fmt.Errorf("更新索引失败: %v", err)
 	}
 
-	p.LogUtil.Info("Apt 索引更新成功")
+	fmt.Println("Apt 索引更新成功")
 	return output, nil
 }
 
 // AptInstall 安装指定的软件包
 func (p *AptManager) AptInstall(packages ...string) error {
 	if len(packages) == 0 {
-		return p.LogUtil.LogAndReturnErrorf("未指定要安装的软件包")
+		fmt.Printf("未指定要安装的软件包\n")
+		return fmt.Errorf("未指定要安装的软件包")
 	}
 
 	// 使用数组传递参数，避免命令注入
 	args := append([]string{"install", "-y"}, packages...)
 	err, output := p.ShellUtil.RunShellWithSudo("apt-get", args...)
 	if err != nil {
-		return p.LogUtil.LogAndReturnErrorf("安装失败: %v, 输出: %s", err, output)
+		fmt.Printf("安装失败: %v, 输出: %s\n", err, output)
+		return fmt.Errorf("安装失败: %v, 输出: %s", err, output)
 	}
 
-	p.LogUtil.Info(fmt.Sprintf("Apt 安装成功: %v", packages))
+	fmt.Println(fmt.Sprintf("Apt 安装成功: %v", packages))
 	return nil
 }
 
 // AptRemove 移除指定的软件包
 func (p *AptManager) AptRemove(packages ...string) error {
 	if len(packages) == 0 {
-		return p.LogUtil.LogAndReturnErrorf("未指定要移除的软件包")
+		fmt.Printf("未指定要移除的软件包\n")
+		return fmt.Errorf("未指定要移除的软件包")
 	}
 
 	// 使用数组传递参数，避免命令注入
 	args := append([]string{"remove", "-y"}, packages...)
 	err, output := p.ShellUtil.RunShellWithSudo("apt-get", args...)
 	if err != nil {
-		return p.LogUtil.LogAndReturnErrorf("移除失败: %v, 输出: %s", err, output)
+		fmt.Printf("移除失败: %v, 输出: %s\n", err, output)
+		return fmt.Errorf("移除失败: %v, 输出: %s", err, output)
 	}
 
-	p.LogUtil.Info(fmt.Sprintf("Apt 移除成功: %v", packages))
+	fmt.Println(fmt.Sprintf("Apt 移除成功: %v", packages))
 	return nil
 }
 
 // AptPurge 完全移除软件包及其配置文件
 func (p *AptManager) AptPurge(packages ...string) error {
 	if len(packages) == 0 {
-		return p.LogUtil.LogAndReturnErrorf("未指定要清理的软件包")
+		fmt.Printf("未指定要清理的软件包\n")
+		return fmt.Errorf("未指定要清理的软件包")
 	}
 
 	// 使用数组传递参数，避免命令注入
 	args := append([]string{"purge", "-y"}, packages...)
 	err, output := p.ShellUtil.RunShellWithSudo("apt-get", args...)
 	if err != nil {
-		return p.LogUtil.LogAndReturnErrorf("清理失败: %v, 输出: %s", err, output)
+		fmt.Printf("清理失败: %v, 输出: %s\n", err, output)
+		return fmt.Errorf("清理失败: %v, 输出: %s", err, output)
 	}
 
-	p.LogUtil.Info(fmt.Sprintf("Apt 清理成功: %v", packages))
+	fmt.Println(fmt.Sprintf("Apt 清理成功: %v", packages))
 	return nil
 }
 
@@ -129,7 +134,8 @@ func (p *AptManager) AptGetPackageInfo(packageName string) (*AptPackage, error) 
 	// 获取包信息
 	err, output := p.ShellUtil.RunShell("dpkg-query", "-W", "-f=${Package}|${Version}|${Architecture}|${Status}|${Installed-Size}|${Description}\\n", packageName)
 	if err != nil {
-		return nil, p.LogUtil.LogAndReturnErrorf("获取软件包信息失败: %v", err)
+		fmt.Printf("获取软件包信息失败: %v\n", err)
+		return nil, fmt.Errorf("获取软件包信息失败: %v", err)
 	}
 
 	parts := strings.Split(strings.TrimSpace(output), "|")
@@ -167,7 +173,8 @@ func (p *AptManager) AptGetPackageInfo(packageName string) (*AptPackage, error) 
 func (p *AptManager) AptListInstalled() ([]AptPackage, error) {
 	err, output := p.ShellUtil.RunShell("dpkg-query", "-W", "-f=${Package}\\n")
 	if err != nil {
-		return nil, p.LogUtil.LogAndReturnErrorf("获取已安装软件包列表失败: %v", err)
+		fmt.Printf("获取已安装软件包列表失败: %v\n", err)
+		return nil, fmt.Errorf("获取已安装软件包列表失败: %v", err)
 	}
 
 	packages := []AptPackage{}
@@ -180,7 +187,7 @@ func (p *AptManager) AptListInstalled() ([]AptPackage, error) {
 
 		info, err := p.AptGetPackageInfo(name)
 		if err != nil {
-			p.LogUtil.Warn(fmt.Sprintf("获取软件包 %s 信息失败: %v", name, err))
+			fmt.Printf("获取软件包 %s 信息失败: %v\n", name, err)
 			continue
 		}
 
@@ -194,7 +201,8 @@ func (p *AptManager) AptListInstalled() ([]AptPackage, error) {
 func (p *AptManager) AptSearch(keyword string) ([]AptPackage, error) {
 	err, output := p.ShellUtil.RunShell("apt-cache", "search", keyword)
 	if err != nil {
-		return nil, p.LogUtil.LogAndReturnErrorf("搜索软件包失败: %v", err)
+		fmt.Printf("搜索软件包失败: %v\n", err)
+		return nil, fmt.Errorf("搜索软件包失败: %v", err)
 	}
 
 	results := []AptPackage{}
@@ -247,10 +255,11 @@ func (p *AptManager) AptUpgrade(distUpgrade bool) (string, error) {
 
 	err, output := p.ShellUtil.RunShellWithSudo("apt-get", command, "-y")
 	if err != nil {
-		return "", p.LogUtil.LogAndReturnErrorf("升级失败: %v", err)
+		fmt.Printf("升级失败: %v\n", err)
+		return "", fmt.Errorf("升级失败: %v", err)
 	}
 
-	p.LogUtil.Info("Apt 升级成功")
+	fmt.Println("Apt 升级成功")
 	return output, nil
 }
 
@@ -258,10 +267,11 @@ func (p *AptManager) AptUpgrade(distUpgrade bool) (string, error) {
 func (p *AptManager) AptAutoRemove() error {
 	err, _ := p.ShellUtil.RunShellWithSudo("apt-get", "autoremove", "-y")
 	if err != nil {
-		return p.LogUtil.LogAndReturnErrorf("自动移除失败: %v", err)
+		fmt.Printf("自动移除失败: %v\n", err)
+		return fmt.Errorf("自动移除失败: %v", err)
 	}
 
-	p.LogUtil.Info("Apt 自动移除成功")
+	fmt.Println("Apt 自动移除成功")
 	return nil
 }
 
@@ -269,10 +279,11 @@ func (p *AptManager) AptAutoRemove() error {
 func (p *AptManager) AptClean() error {
 	err, _ := p.ShellUtil.RunShellWithSudo("apt-get", "clean")
 	if err != nil {
-		return p.LogUtil.LogAndReturnErrorf("清理缓存失败: %v", err)
+		fmt.Printf("清理缓存失败: %v\n", err)
+		return fmt.Errorf("清理缓存失败: %v", err)
 	}
 
-	p.LogUtil.Info("Apt 缓存清理成功")
+	fmt.Println("Apt 缓存清理成功")
 	return nil
 }
 
@@ -280,7 +291,8 @@ func (p *AptManager) AptClean() error {
 func (p *AptManager) AptGetUpgradable() ([]AptPackage, error) {
 	err, output := p.ShellUtil.RunShell("apt", "list", "--upgradable")
 	if err != nil {
-		return nil, p.LogUtil.LogAndReturnErrorf("获取可升级软件包列表失败: %v", err)
+		fmt.Printf("获取可升级软件包列表失败: %v\n", err)
+		return nil, fmt.Errorf("获取可升级软件包列表失败: %v", err)
 	}
 
 	upgradable := []AptPackage{}
@@ -330,7 +342,8 @@ func (p *AptManager) AptGetUpgradable() ([]AptPackage, error) {
 func (p *AptManager) AptGetDependencies(packageName string) ([]string, error) {
 	err, output := p.ShellUtil.RunShell("apt-cache", "depends", packageName)
 	if err != nil {
-		return nil, p.LogUtil.LogAndReturnErrorf("获取依赖关系失败: %v", err)
+		fmt.Printf("获取依赖关系失败: %v\n", err)
+		return nil, fmt.Errorf("获取依赖关系失败: %v", err)
 	}
 
 	dependencies := []string{}
@@ -353,7 +366,8 @@ func (p *AptManager) AptGetDependencies(packageName string) ([]string, error) {
 func (p *AptManager) AptGetReverseDependencies(packageName string) ([]string, error) {
 	err, output := p.ShellUtil.RunShell("apt-cache", "rdepends", packageName)
 	if err != nil {
-		return nil, p.LogUtil.LogAndReturnErrorf("获取反向依赖关系失败: %v", err)
+		fmt.Printf("获取反向依赖关系失败: %v\n", err)
+		return nil, fmt.Errorf("获取反向依赖关系失败: %v", err)
 	}
 
 	dependencies := []string{}

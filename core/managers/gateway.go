@@ -12,8 +12,6 @@ type GatewayManager struct {
 
 // RegisterGateway 注册网关软件
 func (g *GatewayManager) RegisterGateway(name string, gateway contract.SuperGateway) error {
-	g.LogUtil.Info("注册网关软件: " + name)
-
 	if _, exists := g.Softwares[name]; exists {
 		return fmt.Errorf("软件 %s 已注册为普通软件", name)
 	}
@@ -37,7 +35,6 @@ func (g *GatewayManager) GetGateway(name string) (contract.SuperGateway, error) 
 
 // GetAllGateways 获取所有网关软件
 func (g *GatewayManager) GetAllGateways() []string {
-	g.LogUtil.Info("获取所有网关软件...")
 	gatewayNames := make([]string, 0, len(g.Gateways))
 	for name := range g.Gateways {
 		gatewayNames = append(gatewayNames, name)

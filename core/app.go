@@ -18,8 +18,7 @@ type App struct {
 	*providers.CommandProvider
 	*providers.UtilProvider
 
-	SoftwareLogger *logger.LogUtil
-	AppLogger      *logger.LogUtil
+	AppLogger *logger.LogUtil
 }
 
 // New 创建App实例
@@ -35,7 +34,6 @@ func New() *App {
 		ManagerProvider: providers.NewManagerProvider(eventBus, manager),
 		CommandProvider: providers.NewCommandProvider(manager, webProvider.Server),
 		UtilProvider:    providers.NewUtilProvider(),
-		SoftwareLogger:  manager.SoftManager.LogUtil,
 		AppLogger:       logger.NewLogUtil(filepath.Join(DataRootFolder, "logs")),
 	}
 

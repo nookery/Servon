@@ -40,7 +40,7 @@ func (s *SupervisorPlugin) Install() error {
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		s.SoftwareLogger.Infof("使用 APT 包管理器安装...")
+		fmt.Println("使用 APT 包管理器安装...")
 
 		// 安装 supervisor
 		if err := s.AptInstall("supervisor"); err != nil {
@@ -49,20 +49,23 @@ func (s *SupervisorPlugin) Install() error {
 
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Supervisor"
-		return s.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		return s.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 验证安装结果
 	if !s.IsInstalled("supervisor") {
 		errMsg := "Supervisor 安装验证失败，未检测到已安装的包"
-		return s.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
-	s.SoftwareLogger.Success("Supervisor 安装完成")
+	fmt.Println("Supervisor 安装完成")
 
 	s.Start()
 
@@ -87,7 +90,7 @@ func (s *SupervisorPlugin) Uninstall() error {
 		return fmt.Errorf("清理依赖失败:\n%s", err)
 	}
 
-	s.SoftwareLogger.Success("Supervisor 卸载完成")
+	fmt.Println("Supervisor 卸载完成")
 	return nil
 }
 
@@ -100,7 +103,7 @@ const (
 )
 
 func (s *SupervisorPlugin) GetStatus() (map[string]string, error) {
-	s.SoftwareLogger.Infof("获取 Supervisor 状态")
+	fmt.Println("获取 Supervisor 状态")
 
 	// 1. 检查是否安装
 	if !s.IsInstalled("supervisor") {
@@ -236,57 +239,57 @@ func (s *SupervisorPlugin) GetInfo() core.SoftwareInfo {
 }
 
 func (s *SupervisorPlugin) Start() error {
-	s.SoftwareLogger.Infof("Supervisor 开始启动")
+	fmt.Println("Supervisor 开始启动")
 
 	err, _ := s.RunShellWithSudo("supervisord", "-c", "/etc/supervisor/supervisord.conf")
 	if err != nil {
 		return err
 	}
 
-	s.SoftwareLogger.Success("Supervisor 启动成功")
+	fmt.Println("Supervisor 启动成功")
 	return nil
 }
 
 func (s *SupervisorPlugin) Stop() error {
-	s.SoftwareLogger.Infof("Supervisor 开始停止")
+	fmt.Println("Supervisor 开始停止")
 
 	err, _ := s.RunShellWithSudo("supervisorctl", "shutdown")
 	if err != nil {
 		return err
 	}
 
-	s.SoftwareLogger.Success("Supervisor 停止成功")
+	fmt.Println("Supervisor 停止成功")
 	return nil
 }
 
 // 实现 Service 接口的方法
 
 func (s *SupervisorPlugin) StartService(serviceName string) error {
-	s.SoftwareLogger.Infof("启动服务: %s", serviceName)
+	fmt.Printf("启动服务: %s\n", serviceName)
 
 	err, output := s.RunShellWithSudo("supervisorctl", "start", serviceName)
 	if err != nil {
 		return fmt.Errorf("启动服务 %s 失败: %v\n%s", serviceName, err, output)
 	}
 
-	s.SoftwareLogger.Successf("服务 %s 启动成功", serviceName)
+	fmt.Printf("服务 %s 启动成功\n", serviceName)
 	return nil
 }
 
 func (s *SupervisorPlugin) StopService(serviceName string) error {
-	s.SoftwareLogger.Infof("停止服务: %s", serviceName)
+	fmt.Printf("停止服务: %s\n", serviceName)
 
 	err, output := s.RunShellWithSudo("supervisorctl", "stop", serviceName)
 	if err != nil {
 		return fmt.Errorf("停止服务 %s 失败: %v\n%s", serviceName, err, output)
 	}
 
-	s.SoftwareLogger.Successf("服务 %s 停止成功", serviceName)
+	fmt.Printf("服务 %s 停止成功\n", serviceName)
 	return nil
 }
 
 func (s *SupervisorPlugin) AddBackgroundService(serviceName string, command string, args []string, env []string) (string, error) {
-	s.SoftwareLogger.Infof("添加后台服务: %s", serviceName)
+	fmt.Printf("添加后台服务: %s\n", serviceName)
 
 	// 确保配置目录存在
 	if err := s.ensureConfigDir(); err != nil {
@@ -345,7 +348,7 @@ stdout_logfile=/var/log/supervisor/%s.out.log
 }
 
 func (s *SupervisorPlugin) StopBackgroundService(serviceName string) error {
-	s.SoftwareLogger.Infof("停止后台服务: %s", serviceName)
+	fmt.Printf("停止后台服务: %s\n", serviceName)
 
 	// 先停止服务
 	if err := s.StopService(serviceName); err != nil {
@@ -363,12 +366,11 @@ func (s *SupervisorPlugin) StopBackgroundService(serviceName string) error {
 		return err
 	}
 
-	s.SoftwareLogger.Successf("后台服务 %s 已停止并移除", serviceName)
 	return nil
 }
 
 func (s *SupervisorPlugin) Restart() error {
-	s.SoftwareLogger.Infof("重启 Supervisor")
+	fmt.Println("重启 Supervisor")
 
 	if err := s.Stop(); err != nil {
 		return err
@@ -381,19 +383,19 @@ func (s *SupervisorPlugin) Restart() error {
 }
 
 func (s *SupervisorPlugin) RestartService(serviceName string) error {
-	s.SoftwareLogger.Infof("重启服务: %s", serviceName)
+	fmt.Printf("重启服务: %s\n", serviceName)
 
 	err, output := s.RunShellWithSudo("supervisorctl", "restart", serviceName)
 	if err != nil {
 		return fmt.Errorf("重启服务 %s 失败: %v\n%s", serviceName, err, output)
 	}
 
-	s.SoftwareLogger.Successf("服务 %s 重启成功", serviceName)
+	fmt.Printf("服务 %s 重启成功\n", serviceName)
 	return nil
 }
 
 func (s *SupervisorPlugin) GetLogs(serviceName string, lines int) (string, error) {
-	s.SoftwareLogger.Infof("获取服务 %s 的日志", serviceName)
+	fmt.Printf("获取服务 %s 的日志\n", serviceName)
 
 	if lines <= 0 {
 		lines = 100 // 默认获取100行
@@ -432,7 +434,7 @@ func (s *SupervisorPlugin) GetLogs(serviceName string, lines int) (string, error
 }
 
 func (s *SupervisorPlugin) IsRunning(serviceName string) (bool, error) {
-	s.SoftwareLogger.Infof("检查服务 %s 是否运行中", serviceName)
+	fmt.Printf("检查服务 %s 是否运行中\n", serviceName)
 
 	err, output := s.RunShell("supervisorctl", "status", serviceName)
 	if err != nil {
@@ -446,7 +448,7 @@ func (s *SupervisorPlugin) IsRunning(serviceName string) (bool, error) {
 }
 
 func (s *SupervisorPlugin) GetServiceConfig(serviceName string) (map[string]interface{}, error) {
-	s.SoftwareLogger.Infof("获取服务 %s 的配置", serviceName)
+	fmt.Printf("获取服务 %s 的配置\n", serviceName)
 
 	configPath := filepath.Join(s.configDir, serviceName+".conf")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
@@ -482,7 +484,7 @@ func (s *SupervisorPlugin) GetServiceConfig(serviceName string) (map[string]inte
 }
 
 func (s *SupervisorPlugin) UpdateServiceConfig(serviceName string, config map[string]interface{}) error {
-	s.SoftwareLogger.Infof("更新服务 %s 的配置", serviceName)
+	fmt.Printf("更新服务 %s 的配置\n", serviceName)
 
 	// 获取当前配置
 	currentConfig, err := s.GetServiceConfig(serviceName)
@@ -534,7 +536,7 @@ func (s *SupervisorPlugin) UpdateServiceConfig(serviceName string, config map[st
 }
 
 func (s *SupervisorPlugin) GetResourceUsage(serviceName string) (map[string]interface{}, error) {
-	s.SoftwareLogger.Infof("获取服务 %s 的资源使用情况", serviceName)
+	fmt.Printf("获取服务 %s 的资源使用情况\n", serviceName)
 
 	// 检查服务是否存在
 	running, err := s.IsRunning(serviceName)
@@ -592,7 +594,7 @@ func (s *SupervisorPlugin) GetResourceUsage(serviceName string) (map[string]inte
 }
 
 func (s *SupervisorPlugin) GetServiceDetails(serviceName string) (map[string]interface{}, error) {
-	s.SoftwareLogger.Infof("获取服务 %s 的详细信息", serviceName)
+	fmt.Printf("获取服务 %s 的详细信息\n", serviceName)
 
 	// 获取服务状态
 	err, output := s.RunShell("supervisorctl", "status", serviceName)

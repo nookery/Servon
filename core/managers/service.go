@@ -12,8 +12,6 @@ type ServiceSoftManager struct {
 
 // RegisterService 注册后台服务软件
 func (s *ServiceSoftManager) RegisterService(name string, service contract.SuperService) error {
-	s.LogUtil.Info("注册后台服务软件: " + name)
-
 	if _, exists := s.Softwares[name]; exists {
 		return fmt.Errorf("软件 %s 已注册为普通软件", name)
 	}
@@ -37,7 +35,6 @@ func (s *ServiceSoftManager) GetService(name string) (contract.SuperService, err
 
 // GetAllServices 获取所有后台服务软件
 func (s *ServiceSoftManager) GetAllServices() []string {
-	s.LogUtil.Info("获取所有后台服务软件...")
 	serviceNames := make([]string, 0, len(s.Services))
 	for name := range s.Services {
 		serviceNames = append(serviceNames, name)

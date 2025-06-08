@@ -38,39 +38,39 @@ func NewClash(app *core.App) core.SuperSoft {
 func (c *Clash) Install() error {
 	osType := c.GetOSType()
 
-	c.SoftwareLogger.Infof("安装 Clash，检测到操作系统: %s", osType)
+	fmt.Printf("安装 Clash，检测到操作系统: %s\n", osType)
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
-		c.SoftwareLogger.Infof("清理目标文件夹 - %s", c.targetDir)
+		fmt.Printf("清理目标文件夹 - %s\n", c.targetDir)
 		err := os.RemoveAll(c.targetDir)
 		if err != nil {
 			return fmt.Errorf("清理目标文件夹失败: %s", err)
 		}
-		c.SoftwareLogger.Infof("目标文件夹清理完成 - %s", c.targetDir)
+		fmt.Printf("目标文件夹清理完成 - %s\n", c.targetDir)
 
 		// 使用 go-git 克隆仓库
-		c.SoftwareLogger.Infof("克隆 clash-for-linux 仓库 -> %s", repoUrl)
+		fmt.Printf("克隆 clash-for-linux 仓库 -> %s\n", repoUrl)
 		err = c.GitClone(repoUrl, "master", c.targetDir)
 		if err != nil {
-			c.SoftwareLogger.Errorf(err.Error())
+			fmt.Printf("%s\n", err.Error())
 			return fmt.Errorf("克隆仓库失败: %s", err)
 		}
 
-		c.SoftwareLogger.Success("克隆仓库成功")
+		fmt.Println("克隆仓库成功")
 	case core.CentOS, core.RedHat:
 		errMsg := "暂不支持在 RHEL 系统上安装 Clash"
-		c.SoftwareLogger.Errorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
 		return fmt.Errorf("%s", errMsg)
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		c.SoftwareLogger.Errorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 确保在返回前发送完成消息
-	c.SoftwareLogger.Success("Clash 安装完成")
+	fmt.Println("Clash 安装完成")
 	return nil
 }
 
@@ -100,7 +100,7 @@ func (c *Clash) Uninstall() error {
 		return fmt.Errorf("删除配置目录失败: %s", err)
 	}
 
-	c.SoftwareLogger.Success("Clash 卸载完成")
+	fmt.Println("Clash 卸载完成")
 	return nil
 }
 
@@ -142,8 +142,8 @@ func (c *Clash) Start() error {
 		return fmt.Errorf("env文件不存在，请先配置env文件")
 	}
 
-	c.SoftwareLogger.Infof("开始启动 Clash")
-	c.SoftwareLogger.Infof("配置文件 %s", envFile)
+	fmt.Println("开始启动 Clash")
+	fmt.Printf("配置文件 %s\n", envFile)
 
 	// 读取配置文件
 	envContent, err := os.ReadFile(envFile)
@@ -156,7 +156,7 @@ func (c *Clash) Start() error {
 		strings.Contains(string(envContent), "CLASH_URL=your_subscription_url_here") ||
 		!strings.Contains(string(envContent), "CLASH_URL") {
 
-		c.SoftwareLogger.Infof("请输入你的 Clash 订阅地址：")
+		fmt.Println("请输入你的 Clash 订阅地址：")
 		var subscriptionURL string
 		fmt.Scanln(&subscriptionURL)
 
@@ -177,7 +177,7 @@ func (c *Clash) Start() error {
 			return fmt.Errorf("更新配置文件失败: %s", err)
 		}
 
-		c.SoftwareLogger.Success("订阅地址已更新")
+		fmt.Println("订阅地址已更新")
 	}
 
 	// 启动服务

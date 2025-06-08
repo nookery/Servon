@@ -29,26 +29,28 @@ func NewGit(app *core.App) core.SuperSoft {
 
 // Install 安装 Git
 func (g *Git) Install() error {
-	g.SoftwareLogger.Infof("正在安装 Git...")
+	fmt.Println("正在安装 Git...")
 
 	// 检查操作系统类型
 	osType := g.GetOSType()
-	g.SoftwareLogger.Infof("检测到操作系统: %s", osType)
+	fmt.Printf("检测到操作系统: %s\n", osType)
 
 	switch osType {
 	case core.Ubuntu, core.Debian:
 		// 更新软件包索引
 		output, err := g.AptUpdate()
-		g.SoftwareLogger.Infof("更新软件包索引输出: \n%s", output)
+		fmt.Printf("更新软件包索引输出: \n%s\n", output)
 		if err != nil {
 			errMsg := fmt.Sprintf("更新软件包索引失败: %v", err)
-			return g.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+			fmt.Printf("%s\n", errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 
 		// 安装 Git
 		if err := g.AptInstall("git"); err != nil {
 			errMsg := fmt.Sprintf("安装 Git 失败: %v", err)
-			return g.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+			fmt.Printf("%s\n", errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 
 	case core.CentOS, core.RedHat:
@@ -57,12 +59,14 @@ func (g *Git) Install() error {
 		err, _ := g.RunShell(cmd.String())
 		if err != nil {
 			errMsg := fmt.Sprintf("安装 Git 失败: %v", err)
-			return g.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+			fmt.Printf("%s\n", errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		return g.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
 	return nil
@@ -70,14 +74,15 @@ func (g *Git) Install() error {
 
 // Uninstall 卸载 Git
 func (g *Git) Uninstall() error {
-	g.SoftwareLogger.Infof("正在卸载 Git...")
+	fmt.Println("正在卸载 Git...")
 
 	osType := g.GetOSType()
 	switch osType {
 	case core.Ubuntu, core.Debian:
 		if err := g.AptRemove("git"); err != nil {
 			errMsg := fmt.Sprintf("卸载 Git 失败: %v", err)
-			return g.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+			fmt.Printf("%s\n", errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 
 	case core.CentOS, core.RedHat:
@@ -85,15 +90,17 @@ func (g *Git) Uninstall() error {
 		err, _ := g.RunShell(cmd.String())
 		if err != nil {
 			errMsg := fmt.Sprintf("卸载 Git 失败: %v", err)
-			return g.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+			fmt.Printf("%s\n", errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 
 	default:
 		errMsg := fmt.Sprintf("不支持的操作系统: %s", osType)
-		return g.SoftwareLogger.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
-	g.SoftwareLogger.Success("Git 卸载完成")
+	fmt.Println("Git 卸载完成")
 	return nil
 }
 
@@ -121,11 +128,11 @@ func (g *Git) GetInfo() core.SoftwareInfo {
 }
 
 func (g *Git) Start() error {
-	g.SoftwareLogger.Infof("Git 是版本控制工具，无需启动服务")
+	fmt.Println("Git 是版本控制工具，无需启动服务")
 	return nil
 }
 
 func (g *Git) Stop() error {
-	g.SoftwareLogger.Infof("Git 是版本控制工具，无需停止服务")
+	fmt.Println("Git 是版本控制工具，无需停止服务")
 	return nil
 }

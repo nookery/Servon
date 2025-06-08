@@ -33,7 +33,7 @@ type FullManager struct {
 func NewManager(eventBus events.IEventBus) *FullManager {
 	dataManager := DefaultDataManager
 	githubIntegration := github.NewGitHubIntegration(eventBus)
-	softManager := NewSoftManager(dataManager.GetLogsRootFolder())
+	softManager := NewSoftManager()
 	gitManager := NewGitManager(softManager)
 	downloadManager := NewDownloadManager(softManager)
 
