@@ -1,47 +1,34 @@
 package managers
 
 import (
-	"fmt"
-	"os"
-	"runtime"
+	"servon/components/system_info"
 	"time"
 )
 
 type BasicInfoManager struct {
-	BasicInfo *BasicInfo
+	provider *system_info.BasicInfoProvider
 }
 
 func NewBasicInfoManager() *BasicInfoManager {
-	return &BasicInfoManager{}
+	return &BasicInfoManager{
+		provider: system_info.NewBasicInfoProvider(),
+	}
 }
 
-type BasicInfo struct {
-	Hostname     string    `json:"hostname"`
-	Platform     string    `json:"platform"`
-	Architecture string    `json:"architecture"`
-	GoVersion    string    `json:"goVersion"`
-	NumCPU       int       `json:"numCPU"`
-	Uptime       string    `json:"uptime"`
-	StartTime    time.Time `json:"startTime"`
-}
+// BasicInfo 为了保持向后兼容，重新导出类型
+type BasicInfo = system_info.BasicInfo
 
-var startTime = time.Now()
-
+// GetBasicSystemInfo 获取基本系统信息
 func (p *BasicInfoManager) GetBasicSystemInfo() (*BasicInfo, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return nil, fmt.Errorf("获取主机名失败: %v", err)
-	}
+	return p.provider.GetBasicSystemInfo()
+}
 
-	info := &BasicInfo{
-		Hostname:     hostname,
-		Platform:     runtime.GOOS,
-		Architecture: runtime.GOARCH,
-		GoVersion:    runtime.Version(),
-		NumCPU:       runtime.NumCPU(),
-		Uptime:       time.Since(startTime).Round(time.Second).String(),
-		StartTime:    startTime,
-	}
+// GetUptime 获取运行时间
+func (p *BasicInfoManager) GetUptime() time.Duration {
+	return p.provider.GetUptime()
+}
 
-	return info, nil
+// GetStartTime 获取启动时间
+func (p *BasicInfoManager) GetStartTime() time.Time {
+	return p.provider.GetStartTime()
 }
