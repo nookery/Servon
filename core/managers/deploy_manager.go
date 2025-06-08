@@ -11,8 +11,8 @@ import (
 	"servon/components/git_util"
 	"servon/components/github"
 	"servon/components/log_util"
+	"servon/components/utils"
 	"servon/core/managers/deployers"
-	"servon/core/utils"
 
 	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 )

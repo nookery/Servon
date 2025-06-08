@@ -2,7 +2,7 @@ package providers
 
 import (
 	"servon/components/command_util"
-	"servon/core/utils"
+	"servon/components/utils"
 )
 
 type UtilProvider struct {

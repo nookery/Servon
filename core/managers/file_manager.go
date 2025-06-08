@@ -3,7 +3,7 @@ package managers
 import (
 	"fmt"
 	"os"
-	"servon/core/utils"
+	"servon/components/utils"
 )
 
 type FileManager struct {

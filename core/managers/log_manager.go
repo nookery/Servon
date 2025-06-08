@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"servon/core/utils"
+	"servon/components/utils"
 )
 
 var DefaultLogDir = "/data/logs"

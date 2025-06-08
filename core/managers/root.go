@@ -1,7 +1,7 @@
 package managers
 
 import (
-	"servon/core/utils"
+	"servon/components/utils"
 )
 
 var logger = utils.DefaultLogUtil

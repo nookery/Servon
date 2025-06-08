@@ -1,5 +1,5 @@
 package controllers
 
-import "servon/core/utils"
+import "servon/components/utils"
 
 var logger = utils.NewConsoleUtil()

@@ -2,7 +2,7 @@ package managers
 
 import (
 	"fmt"
-	"servon/core/utils"
+	"servon/components/utils"
 	"time"
 )
 
