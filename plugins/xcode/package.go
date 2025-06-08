@@ -33,7 +33,7 @@ var packageCmd = &cobra.Command{
 			scheme = detectScheme()
 			if scheme == "" {
 				color.Error.Println("❌ 错误: 未设置 SCHEME 且无法自动检测")
-				showAvailableSchemes()
+				showAvailableSchemes("", verbose)
 				os.Exit(1)
 			}
 		}
@@ -169,7 +169,7 @@ func checkApplication(buildPath, scheme string) (string, error) {
 	}
 
 	// 显示应用信息
-	showAppInfo(appPath, scheme)
+	showAppInfo(appPath, scheme, "universal")
 
 	// 检测架构
 	detectArchitecture(appPath)

@@ -16,22 +16,23 @@ import (
 var codesignCmd = &cobra.Command{
 	Use:   "codesign",
 	Short: "对 macOS 应用进行代码签名",
-	Long:  color.Success.Render("\r\n对 macOS 应用程序进行代码签名，包括 Sparkle 框架的各个组件"),
+	Long:  color.Success.Render("\r\n对 macOS 应用程序进行代码签名，支持多架构应用和 Sparkle 框架的各个组件"),
 	Run: func(cmd *cobra.Command, args []string) {
 		scheme, _ := cmd.Flags().GetString("scheme")
 		buildPath, _ := cmd.Flags().GetString("build-path")
+		arch, _ := cmd.Flags().GetString("arch")
 		signingIdentity, _ := cmd.Flags().GetString("identity")
 		verbose, _ := cmd.Flags().GetBool("verbose")
 
 		// 显示环境信息
-		showCodesignEnvironmentInfo(scheme, buildPath, signingIdentity, verbose)
+		showCodesignEnvironmentInfo(scheme, buildPath, arch, signingIdentity, verbose)
 
 		// 检查必需的参数
 		if scheme == "" {
 			scheme = detectScheme()
 			if scheme == "" {
 				color.Error.Println("❌ 错误: 未设置 SCHEME 且无法自动检测")
-				showAvailableSchemes()
+				showAvailableSchemes("", verbose)
 				os.Exit(1)
 			}
 		}
@@ -47,27 +48,53 @@ var codesignCmd = &cobra.Command{
 			buildPath = "./temp"
 		}
 
-		// 构建应用路径
-		appPath := buildAppPath(buildPath, scheme)
+		// 如果未指定架构，签名所有架构
+		var architectures []string
+		if arch == "" {
+			architectures = []string{"x86_64", "arm64"}
+			color.Info.Println("🔐 未指定架构，将对所有支持的架构进行签名: x86_64, arm64")
+		} else {
+			architectures = []string{arch}
+		}
 
-		// 检查应用是否存在
-		if _, err := os.Stat(appPath); os.IsNotExist(err) {
-			color.Error.Printf("❌ 应用程序不存在: %s\n", appPath)
+		// 为每个架构执行代码签名
+		var signedApps []string
+		for _, currentArch := range architectures {
+			// 构建应用路径
+			appPath := buildAppPathWithArch(buildPath, scheme, currentArch)
+
+			// 检查应用是否存在
+			if _, err := os.Stat(appPath); os.IsNotExist(err) {
+				color.Warn.Printf("⚠️  应用程序不存在 (%s): %s\n", currentArch, appPath)
+				continue
+			}
+
+			// 显示应用信息
+			showAppInfo(appPath, scheme, currentArch)
+
+			// 执行代码签名
+			err := performCodesign(appPath, signingIdentity, verbose, currentArch)
+			if err != nil {
+				color.Error.Printf("❌ 代码签名失败 (%s): %s\n", currentArch, err.Error())
+				os.Exit(1)
+			}
+
+			color.Success.Printf("✅ %s 架构代码签名成功完成！\n", currentArch)
+			signedApps = append(signedApps, fmt.Sprintf("%s (%s)", appPath, currentArch))
+		}
+
+		if len(signedApps) == 0 {
+			color.Warnln("❌ 未找到任何可签名的应用程序")
 			searchAndSuggestAppPaths(scheme)
-			os.Exit(1)
+			os.Exit(0)
 		}
 
-		// 显示应用信息
-		showAppInfo(appPath, scheme)
-
-		// 执行代码签名
-		err := performCodesign(appPath, signingIdentity, verbose)
-		if err != nil {
-			color.Error.Printf("❌ 代码签名失败: %s\n", err.Error())
-			os.Exit(1)
+		// 显示签名结果
+		color.Success.Println("🎉 所有架构代码签名成功完成！")
+		color.Green.Println("📦 已签名的应用程序:")
+		for _, app := range signedApps {
+			color.Green.Printf("   %s\n", app)
 		}
-
-		color.Success.Println("✅ 代码签名成功完成！")
 
 		// 显示开发路线图
 		showDevelopmentRoadmap("codesign")
@@ -77,12 +104,13 @@ var codesignCmd = &cobra.Command{
 func init() {
 	codesignCmd.Flags().StringP("scheme", "s", "", "应用方案名称")
 	codesignCmd.Flags().StringP("build-path", "b", "./temp", "构建输出路径")
+	codesignCmd.Flags().StringP("arch", "a", "", "目标架构 (不指定则签名所有架构: x86_64, arm64; 可选: universal, x86_64, arm64)")
 	codesignCmd.Flags().StringP("identity", "i", "", "代码签名身份")
 	codesignCmd.Flags().BoolP("verbose", "v", false, "显示详细签名日志")
 }
 
 // showCodesignEnvironmentInfo 显示代码签名环境信息
-func showCodesignEnvironmentInfo(scheme, buildPath, signingIdentity string, verbose bool) {
+func showCodesignEnvironmentInfo(scheme, buildPath, arch, signingIdentity string, verbose bool) {
 	color.Blue.Println("===========================================")
 	color.Blue.Println("         代码签名环境信息                ")
 	color.Blue.Println("===========================================")
@@ -146,6 +174,7 @@ func showCodesignEnvironmentInfo(scheme, buildPath, signingIdentity string, verb
 	color.Green.Println("🌍 签名环境变量:")
 	fmt.Printf("   应用方案: %s\n", scheme)
 	fmt.Printf("   构建路径: %s\n", buildPath)
+	fmt.Printf("   目标架构: %s\n", arch)
 	fmt.Printf("   签名身份: %s\n", signingIdentity)
 	fmt.Printf("   详细日志: %t\n", verbose)
 	if cwd, err := os.Getwd(); err == nil {
@@ -219,6 +248,18 @@ func buildAppPath(buildPath, scheme string) string {
 	} else {
 		// 如果不包含，添加标准路径
 		return filepath.Join(buildPath, "Build/Products/Release", scheme+".app")
+	}
+}
+
+// buildAppPathWithArch 构建带架构的应用路径
+func buildAppPathWithArch(buildPath, scheme, arch string) string {
+	// 检查 BuildPath 是否已经包含 Build/Products 路径
+	if strings.Contains(buildPath, "/Build/Products/") {
+		// 如果已经包含，直接使用
+		return filepath.Join(buildPath, scheme+".app")
+	} else {
+		// 如果不包含，添加架构特定路径
+		return filepath.Join(buildPath, arch, "Build/Products/Release", scheme+".app")
 	}
 }
 
@@ -296,9 +337,10 @@ func searchAndSuggestAppPaths(scheme string) {
 }
 
 // showAppInfo 显示应用信息
-func showAppInfo(appPath, scheme string) {
+func showAppInfo(appPath, scheme, arch string) {
 	color.Green.Println("🎯 应用程序信息:")
 	fmt.Printf("   应用路径: %s\n", appPath)
+	fmt.Printf("   目标架构: %s\n", arch)
 
 	// 读取 Info.plist
 	infoPath := filepath.Join(appPath, "Contents/Info.plist")
@@ -332,9 +374,9 @@ func showAppInfo(appPath, scheme string) {
 }
 
 // performCodesign 执行代码签名
-func performCodesign(appPath, signingIdentity string, verbose bool) error {
+func performCodesign(appPath, signingIdentity string, verbose bool, arch string) error {
 	color.Blue.Println("===========================================")
-	color.Yellow.Println("🔐 开始代码签名过程...")
+	color.Yellow.Printf("🔐 开始代码签名过程 (%s)...\n", arch)
 	color.Blue.Println("===========================================")
 	fmt.Println()
 
