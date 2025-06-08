@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"servon/components/events"
-	"servon/components/git_util"
+	"servon/components/git"
 	"servon/components/github"
 	"servon/components/utils"
 	"servon/core/contract"
@@ -26,7 +26,7 @@ type DeployManager struct {
 	// eventBus 用于处理事件的发布与订阅
 	eventBus events.IEventBus
 	// gitUtil 用于处理Git操作
-	gitUtil     *git_util.GitUtil
+	gitUtil     *git.GitUtil
 	fileUtil    *utils.FileUtil
 	stringUtil  *utils.StringUtil
 	github      *github.GitHubIntegration
@@ -39,7 +39,7 @@ type DeployManager struct {
 func NewDeployManager(eventBus events.IEventBus, github *github.GitHubIntegration, logsDir string, tempDir string, projectsDir string) (*DeployManager, error) {
 	dm := &DeployManager{
 		eventBus:    eventBus,
-		gitUtil:     git_util.NewGitUtil(),
+		gitUtil:     git.NewGitUtil(),
 		fileUtil:    utils.DefaultFileUtil,
 		github:      github,
 		logsDir:     logsDir,

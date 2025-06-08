@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"servon/components/xcode_util"
 	"strings"
 
 	"github.com/gookit/color"
@@ -21,17 +22,17 @@ var setupCmd = &cobra.Command{
 		showProfiles, _ := cmd.Flags().GetBool("show-profiles")
 		showAll, _ := cmd.Flags().GetBool("all")
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		
+
 		// 显示标题
 		showSetupHeader()
-		
+
 		// 如果指定了 --all，则显示所有信息
 		if showAll {
 			showCertificates = true
 			showKeychain = true
 			showProfiles = true
 		}
-		
+
 		// 如果没有指定任何选项，显示基本信息
 		if !showCertificates && !showKeychain && !showProfiles {
 			showBasicSetupInfo(verbose)
@@ -40,16 +41,16 @@ var setupCmd = &cobra.Command{
 			if showCertificates {
 				showCertificateInfo(verbose)
 			}
-			
+
 			if showKeychain {
 				showKeychainInfo(verbose)
 			}
-			
+
 			if showProfiles {
 				showProvisioningProfiles(verbose)
 			}
 		}
-		
+
 		// 显示开发路线图
 		showDevelopmentRoadmap("setup")
 	},
@@ -74,33 +75,33 @@ func showSetupHeader() {
 // showBasicSetupInfo 显示基本设置信息
 func showBasicSetupInfo(verbose bool) {
 	color.Blue.Println("📋 基本环境信息")
-	
+
 	// 检查 Xcode
 	checkXcodeInstallation(verbose)
-	
+
 	// 检查命令行工具
 	checkCommandLineTools(verbose)
-	
+
 	// 检查代码签名证书
 	checkSigningCertificates(verbose)
-	
+
 	// 检查密钥链
 	checkKeychain(verbose)
-	
+
 	fmt.Println()
 }
 
 // checkXcodeInstallation 检查 Xcode 安装
 func checkXcodeInstallation(verbose bool) {
 	color.Info.Println("🔍 检查 Xcode 安装")
-	
+
 	// 检查 Xcode 路径
-	xcodePath := getCommandOutput("xcode-select", "-p")
+	xcodePath := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcode-select", "-p")
 	if xcodePath != "" {
 		color.Success.Printf("✅ Xcode 路径: %s\n", xcodePath)
-		
+
 		// 获取 Xcode 版本
-		if xcodeVersion := getCommandOutput("xcodebuild", "-version"); xcodeVersion != "" {
+		if xcodeVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcodebuild", "-version"); xcodeVersion != "" {
 			lines := strings.Split(xcodeVersion, "\n")
 			if len(lines) > 0 {
 				color.Info.Printf("版本: %s\n", lines[0])
@@ -113,14 +114,14 @@ func checkXcodeInstallation(verbose bool) {
 		color.Error.Println("❌ 未找到 Xcode 安装")
 		color.Info.Println("💡 请从 App Store 安装 Xcode")
 	}
-	
+
 	fmt.Println()
 }
 
 // checkCommandLineTools 检查命令行工具
 func checkCommandLineTools(verbose bool) {
 	color.Info.Println("🛠️  检查命令行工具")
-	
+
 	// 检查是否安装了命令行工具
 	cmd := exec.Command("xcode-select", "--install")
 	err := cmd.Run()
@@ -130,7 +131,7 @@ func checkCommandLineTools(verbose bool) {
 	} else {
 		color.Yellow.Println("⚠️  命令行工具可能需要安装或更新")
 	}
-	
+
 	// 检查关键工具
 	tools := []string{"codesign", "security", "hdiutil", "plutil", "lipo"}
 	for _, tool := range tools {
@@ -140,27 +141,27 @@ func checkCommandLineTools(verbose bool) {
 			color.Error.Printf("❌ %s 不可用\n", tool)
 		}
 	}
-	
+
 	fmt.Println()
 }
 
 // checkSigningCertificates 检查代码签名证书
 func checkSigningCertificates(verbose bool) {
 	color.Info.Println("🔐 检查代码签名证书")
-	
+
 	// 查找开发证书
-	devCerts := getCommandOutput("security", "find-identity", "-v", "-p", "codesigning")
+	devCerts := xcode_util.DefaultXcodeUtil.GetCommandOutput("security", "find-identity", "-v", "-p", "codesigning")
 	if devCerts != "" {
 		lines := strings.Split(devCerts, "\n")
 		devCount := 0
 		distCount := 0
-		
+
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
 			if line == "" || strings.Contains(line, "valid identities found") {
 				continue
 			}
-			
+
 			if strings.Contains(line, "Developer ID Application") {
 				distCount++
 				if verbose {
@@ -173,10 +174,10 @@ func checkSigningCertificates(verbose bool) {
 				}
 			}
 		}
-		
+
 		color.Info.Printf("开发证书: %d 个\n", devCount)
 		color.Info.Printf("分发证书: %d 个\n", distCount)
-		
+
 		if devCount == 0 && distCount == 0 {
 			color.Yellow.Println("⚠️  未找到有效的代码签名证书")
 			color.Info.Println("💡 请在 Xcode 中登录 Apple ID 或导入证书")
@@ -184,23 +185,23 @@ func checkSigningCertificates(verbose bool) {
 	} else {
 		color.Error.Println("❌ 无法获取证书信息")
 	}
-	
+
 	fmt.Println()
 }
 
 // checkKeychain 检查密钥链
 func checkKeychain(verbose bool) {
 	color.Info.Println("🔑 检查密钥链")
-	
+
 	// 获取默认密钥链
-	defaultKeychain := getCommandOutput("security", "default-keychain")
+	defaultKeychain := xcode_util.DefaultXcodeUtil.GetCommandOutput("security", "default-keychain")
 	if defaultKeychain != "" {
 		defaultKeychain = strings.Trim(defaultKeychain, `"`)
 		color.Info.Printf("默认密钥链: %s\n", defaultKeychain)
 	}
-	
+
 	// 列出密钥链搜索列表
-	keychainList := getCommandOutput("security", "list-keychains")
+	keychainList := xcode_util.DefaultXcodeUtil.GetCommandOutput("security", "list-keychains")
 	if keychainList != "" && verbose {
 		color.Info.Println("密钥链搜索列表:")
 		lines := strings.Split(keychainList, "\n")
@@ -212,28 +213,28 @@ func checkKeychain(verbose bool) {
 			}
 		}
 	}
-	
+
 	fmt.Println()
 }
 
 // showCertificateInfo 显示证书详细信息
 func showCertificateInfo(verbose bool) {
 	color.Blue.Println("🔐 代码签名证书详情")
-	
+
 	// 获取所有代码签名证书
-	certOutput := getCommandOutput("security", "find-identity", "-v", "-p", "codesigning")
+	certOutput := xcode_util.DefaultXcodeUtil.GetCommandOutput("security", "find-identity", "-v", "-p", "codesigning")
 	if certOutput == "" {
 		color.Error.Println("❌ 未找到代码签名证书")
 		return
 	}
-	
+
 	lines := strings.Split(certOutput, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.Contains(line, "valid identities found") {
 			continue
 		}
-		
+
 		// 提取证书信息
 		if strings.Contains(line, ")") {
 			parts := strings.Split(line, ")")
@@ -242,9 +243,9 @@ func showCertificateInfo(verbose bool) {
 				hash = strings.TrimPrefix(hash, "1)")
 				hash = strings.TrimPrefix(hash, "2)")
 				hash = strings.TrimSpace(hash)
-				
+
 				certName := strings.TrimSpace(parts[1])
-				
+
 				if strings.Contains(certName, "Developer ID Application") {
 					color.Success.Printf("📦 分发证书: %s\n", certName)
 				} else if strings.Contains(certName, "Mac Developer") || strings.Contains(certName, "Apple Development") {
@@ -252,27 +253,27 @@ func showCertificateInfo(verbose bool) {
 				} else {
 					color.Cyan.Printf("🔐 其他证书: %s\n", certName)
 				}
-				
+
 				if verbose {
 					color.Gray.Printf("   SHA-1: %s\n", hash)
 				}
 			}
 		}
 	}
-	
+
 	fmt.Println()
 }
 
 // showKeychainInfo 显示密钥链详细信息
 func showKeychainInfo(verbose bool) {
 	color.Blue.Println("🔑 密钥链详细信息")
-	
+
 	// 显示默认密钥链
-	defaultKeychain := getCommandOutput("security", "default-keychain")
+	defaultKeychain := xcode_util.DefaultXcodeUtil.GetCommandOutput("security", "default-keychain")
 	if defaultKeychain != "" {
 		defaultKeychain = strings.Trim(defaultKeychain, `"`)
 		color.Info.Printf("默认密钥链: %s\n", defaultKeychain)
-		
+
 		// 检查密钥链状态
 		if _, err := os.Stat(defaultKeychain); err == nil {
 			color.Success.Println("✅ 密钥链文件存在")
@@ -280,10 +281,10 @@ func showKeychainInfo(verbose bool) {
 			color.Error.Println("❌ 密钥链文件不存在")
 		}
 	}
-	
+
 	// 显示密钥链搜索列表
 	color.Info.Println("\n密钥链搜索列表:")
-	keychainList := getCommandOutput("security", "list-keychains")
+	keychainList := xcode_util.DefaultXcodeUtil.GetCommandOutput("security", "list-keychains")
 	if keychainList != "" {
 		lines := strings.Split(keychainList, "\n")
 		for i, line := range lines {
@@ -295,7 +296,7 @@ func showKeychainInfo(verbose bool) {
 				} else {
 					color.Info.Printf("  %d. %s\n", i+1, line)
 				}
-				
+
 				// 检查密钥链状态
 				if verbose {
 					if _, err := os.Stat(line); err == nil {
@@ -309,30 +310,30 @@ func showKeychainInfo(verbose bool) {
 	} else {
 		color.Error.Println("❌ 无法获取密钥链列表")
 	}
-	
+
 	fmt.Println()
 }
 
 // showProvisioningProfiles 显示配置文件
 func showProvisioningProfiles(verbose bool) {
 	color.Blue.Println("📄 配置文件信息")
-	
+
 	// 配置文件路径
 	profileDir := os.ExpandEnv("$HOME/Library/MobileDevice/Provisioning Profiles")
-	
+
 	if _, err := os.Stat(profileDir); os.IsNotExist(err) {
 		color.Yellow.Println("⚠️  配置文件目录不存在")
 		color.Info.Printf("路径: %s\n", profileDir)
 		return
 	}
-	
+
 	// 列出配置文件
 	files, err := os.ReadDir(profileDir)
 	if err != nil {
 		color.Error.Printf("❌ 无法读取配置文件目录: %v\n", err)
 		return
 	}
-	
+
 	profileCount := 0
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".mobileprovision") {
@@ -343,31 +344,31 @@ func showProvisioningProfiles(verbose bool) {
 			}
 		}
 	}
-	
+
 	color.Info.Printf("配置文件总数: %d\n", profileCount)
-	
+
 	if profileCount == 0 {
 		color.Yellow.Println("⚠️  未找到配置文件")
 		color.Info.Println("💡 请在 Xcode 中下载配置文件")
 	}
-	
+
 	fmt.Println()
 }
 
 // showProvisioningProfileDetails 显示配置文件详情
 func showProvisioningProfileDetails(profilePath string) {
 	// 使用 security 命令解析配置文件
-	profileInfo := getCommandOutput("security", "cms", "-D", "-i", profilePath)
+	profileInfo := xcode_util.DefaultXcodeUtil.GetCommandOutput("security", "cms", "-D", "-i", profilePath)
 	if profileInfo == "" {
 		return
 	}
-	
+
 	// 提取基本信息
 	lines := strings.Split(profileInfo, "\n")
 	profileName := ""
 	teamName := ""
 	appID := ""
-	
+
 	for _, line := range lines {
 		if strings.Contains(line, "<key>Name</key>") {
 			// 下一行包含名称
@@ -385,7 +386,7 @@ func showProvisioningProfileDetails(profilePath string) {
 			continue
 		}
 	}
-	
+
 	filename := filepath.Base(profilePath)
 	color.Cyan.Printf("📄 %s\n", filename)
 	if profileName != "" {

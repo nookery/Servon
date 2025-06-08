@@ -1,5 +1,5 @@
-// Package git_util 提供Git操作功能
-package git_util
+// Package git 提供Git操作功能
+package git
 
 import (
 	"fmt"

@@ -3,7 +3,7 @@ package xcode
 import (
 	"fmt"
 	"os"
-	"os/exec"
+	"servon/components/xcode_util"
 	"strconv"
 	"strings"
 
@@ -18,10 +18,10 @@ var bumpCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		projectFile, _ := cmd.Flags().GetString("project")
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
-		
+
 		// 显示环境信息
 		showBumpEnvironmentInfo()
-		
+
 		// 如果没有指定项目文件，自动查找
 		if projectFile == "" {
 			var err error
@@ -31,44 +31,44 @@ var bumpCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		}
-		
+
 		color.Info.Printf("📁 项目文件: %s\n", projectFile)
-		
+
 		// 获取当前版本号
 		currentVersion, err := getVersionFromProject(projectFile)
 		if err != nil {
 			color.Error.Printf("❌ %s\n", err.Error())
 			os.Exit(2)
 		}
-		
+
 		color.Info.Printf("📱 当前版本: %s\n", currentVersion)
-		
+
 		// 计算新版本号
 		newVersion, err := incrementVersion(currentVersion)
 		if err != nil {
 			color.Error.Printf("❌ %s\n", err.Error())
 			os.Exit(3)
 		}
-		
+
 		color.Success.Printf("🚀 新版本: %s\n", newVersion)
-		
+
 		if dryRun {
 			color.Yellow.Println("🔍 预览模式，不会实际修改文件")
 			return
 		}
-		
+
 		// 更新项目文件
 		err = updateVersionInProject(projectFile, currentVersion, newVersion)
 		if err != nil {
 			color.Error.Printf("❌ 更新版本失败: %s\n", err.Error())
 			os.Exit(4)
 		}
-		
+
 		color.Success.Println("✅ 版本号更新成功！")
-		
+
 		// 显示 Git 状态
 		showGitStatus()
-		
+
 		// 显示开发路线图
 		showDevelopmentRoadmap("version")
 	},
@@ -85,7 +85,7 @@ func showBumpEnvironmentInfo() {
 	color.Blue.Println("         版本管理环境信息                ")
 	color.Blue.Println("===========================================")
 	fmt.Println()
-	
+
 	// 系统信息
 	color.Green.Println("📱 系统信息:")
 	if hostname, err := os.Hostname(); err == nil {
@@ -95,16 +95,16 @@ func showBumpEnvironmentInfo() {
 		fmt.Printf("   工作目录: %s\n", cwd)
 	}
 	fmt.Println()
-	
+
 	// Git 信息
 	color.Green.Println("📝 Git 版本控制:")
-	if gitVersion := getCommandOutput("git", "--version"); gitVersion != "" {
+	if gitVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("git", "--version"); gitVersion != "" {
 		fmt.Printf("   Git 版本: %s\n", gitVersion)
 	}
-	if branch := getCommandOutput("git", "branch", "--show-current"); branch != "" {
+	if branch := xcode_util.DefaultXcodeUtil.GetCommandOutput("git", "branch", "--show-current"); branch != "" {
 		fmt.Printf("   当前分支: %s\n", branch)
 	}
-	if commit := getCommandOutput("git", "log", "-1", "--pretty=format:%h - %s (%an, %ar)"); commit != "" {
+	if commit := xcode_util.DefaultXcodeUtil.GetCommandOutput("git", "log", "-1", "--pretty=format:%h - %s (%an, %ar)"); commit != "" {
 		fmt.Printf("   最新提交: %s\n", commit)
 	}
 	fmt.Println()
@@ -116,17 +116,17 @@ func incrementVersion(version string) (string, error) {
 	if len(parts) != 3 {
 		return "", fmt.Errorf("版本号格式不正确，期望格式: x.y.z")
 	}
-	
+
 	// 解析最后一位数字
 	patch, err := strconv.Atoi(parts[2])
 	if err != nil {
 		return "", fmt.Errorf("无法解析版本号的修订版本: %v", err)
 	}
-	
+
 	// 递增
 	patch++
 	parts[2] = strconv.Itoa(patch)
-	
+
 	return strings.Join(parts, "."), nil
 }
 
@@ -136,26 +136,26 @@ func updateVersionInProject(projectFile, oldVersion, newVersion string) error {
 	if err != nil {
 		return fmt.Errorf("无法读取项目文件: %v", err)
 	}
-	
+
 	// 替换版本号
 	oldPattern := fmt.Sprintf("MARKETING_VERSION = %s", oldVersion)
 	newPattern := fmt.Sprintf("MARKETING_VERSION = %s", newVersion)
 	newContent := strings.ReplaceAll(string(content), oldPattern, newPattern)
-	
+
 	// 写回文件
 	err = os.WriteFile(projectFile, []byte(newContent), 0644)
 	if err != nil {
 		return fmt.Errorf("无法写入项目文件: %v", err)
 	}
-	
+
 	return nil
 }
 
 // showGitStatus 显示 Git 状态
 func showGitStatus() {
 	color.Green.Println("📝 Git 状态变更:")
-	
-	if status := getCommandOutput("git", "status", "--porcelain"); status != "" {
+
+	if status := xcode_util.DefaultXcodeUtil.GetCommandOutput("git", "status", "--porcelain"); status != "" {
 		lines := strings.Split(strings.TrimSpace(status), "\n")
 		for _, line := range lines {
 			if strings.TrimSpace(line) != "" {
@@ -166,21 +166,11 @@ func showGitStatus() {
 		fmt.Println("   无变更")
 	}
 	fmt.Println()
-	
+
 	color.Yellow.Println("💡 提示: 请手动提交 Git 变更")
 	color.Cyan.Println("   git add .")
 	color.Cyan.Printf("   git commit -m \"Bump version to %s\"\n", "新版本")
 	fmt.Println()
-}
-
-// getCommandOutput 执行命令并返回输出
-func getCommandOutput(name string, args ...string) string {
-	cmd := exec.Command(name, args...)
-	output, err := cmd.Output()
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(output))
 }
 
 // showDevelopmentRoadmap 显示开发路线图
@@ -190,7 +180,7 @@ func showDevelopmentRoadmap(currentStep string) {
 	color.Blue.Println("         🗺️  开发分发路线图                ")
 	color.Blue.Println("===========================================")
 	fmt.Println()
-	
+
 	steps := []string{
 		"setup:⚙️ 环境设置:配置代码签名环境",
 		"version:📝 版本管理:查看或更新应用版本号",
@@ -200,7 +190,7 @@ func showDevelopmentRoadmap(currentStep string) {
 		"notarize:✅ 公证验证:Apple 官方验证（可选）",
 		"distribute:🚀 发布分发:上传到分发平台或直接分发",
 	}
-	
+
 	color.Cyan.Print("📍 当前位置: ")
 	switch currentStep {
 	case "setup":
@@ -221,21 +211,21 @@ func showDevelopmentRoadmap(currentStep string) {
 		color.Yellow.Println("未知步骤")
 	}
 	fmt.Println()
-	
+
 	// 显示路线图
 	for _, step := range steps {
 		parts := strings.Split(step, ":")
 		stepId := parts[0]
 		stepIcon := parts[1]
 		stepDesc := parts[2]
-		
+
 		if stepId == currentStep {
 			color.Green.Printf("▶ %s %s\n", stepIcon, stepDesc)
 		} else {
 			fmt.Printf("  %s %s\n", stepIcon, stepDesc)
 		}
 	}
-	
+
 	fmt.Println()
 	color.Yellow.Println("💡 下一步建议:")
 	switch currentStep {
@@ -255,7 +245,7 @@ func showDevelopmentRoadmap(currentStep string) {
 	case "distribute":
 		fmt.Println("   🎉 开发分发流程已完成！")
 	}
-	
+
 	fmt.Println()
 	color.Blue.Println("===========================================")
 }

@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
+	"servon/components/xcode_util"
 	"strings"
 
 	"github.com/gookit/color"
@@ -24,7 +24,7 @@ var buildCmd = &cobra.Command{
 		clean, _ := cmd.Flags().GetBool("clean")
 		
 		// 显示环境信息
-		showBuildEnvironmentInfo(scheme, buildPath, arch, verbose)
+		xcode_util.DefaultXcodeUtil.ShowBuildEnvironmentInfo(scheme, buildPath, arch, verbose)
 		
 		// 检查必需的环境变量
 		if scheme == "" {
@@ -77,75 +77,7 @@ func init() {
 	buildCmd.Flags().Bool("clean", true, "构建前清理")
 }
 
-// showBuildEnvironmentInfo 显示构建环境信息
-func showBuildEnvironmentInfo(scheme, buildPath, arch string, verbose bool) {
-	color.Blue.Println("===========================================")
-	color.Blue.Println("         应用构建环境信息                ")
-	color.Blue.Println("===========================================")
-	fmt.Println()
-	
-	// 系统信息
-	color.Green.Println("📱 系统信息:")
-	fmt.Printf("   操作系统: %s %s\n", runtime.GOOS, runtime.GOARCH)
-	if hostname, err := os.Hostname(); err == nil {
-		fmt.Printf("   主机名称: %s\n", hostname)
-	}
-	fmt.Println()
-	
-	// Xcode 信息
-	color.Green.Println("🔨 Xcode 开发环境:")
-	if xcodeVersion := getCommandOutput("xcodebuild", "-version"); xcodeVersion != "" {
-		lines := strings.Split(xcodeVersion, "\n")
-		if len(lines) >= 1 {
-			fmt.Printf("   Xcode 版本: %s\n", lines[0])
-		}
-		if len(lines) >= 2 {
-			fmt.Printf("   构建版本: %s\n", lines[1])
-		}
-	}
-	if sdkPath := getCommandOutput("xcrun", "--show-sdk-path"); sdkPath != "" {
-		fmt.Printf("   SDK 路径: %s\n", sdkPath)
-	}
-	if devDir := getCommandOutput("xcode-select", "-p"); devDir != "" {
-		fmt.Printf("   开发者目录: %s\n", devDir)
-	}
-	fmt.Println()
-	
-	// Swift 信息
-	color.Green.Println("🚀 Swift 编译器:")
-	if swiftVersion := getCommandOutput("swift", "--version"); swiftVersion != "" {
-		lines := strings.Split(swiftVersion, "\n")
-		if len(lines) >= 1 {
-			fmt.Printf("   Swift 版本: %s\n", lines[0])
-		}
-	}
-	fmt.Println()
-	
-	// Git 信息
-	color.Green.Println("📝 Git 版本控制:")
-	if gitVersion := getCommandOutput("git", "--version"); gitVersion != "" {
-		fmt.Printf("   Git 版本: %s\n", gitVersion)
-	}
-	if branch := getCommandOutput("git", "branch", "--show-current"); branch != "" {
-		fmt.Printf("   当前分支: %s\n", branch)
-	}
-	if commit := getCommandOutput("git", "log", "-1", "--pretty=format:%h - %s (%an, %ar)"); commit != "" {
-		fmt.Printf("   最新提交: %s\n", commit)
-	}
-	fmt.Println()
-	
-	// 构建环境变量
-	color.Green.Println("🌍 构建环境变量:")
-	fmt.Printf("   构建方案: %s\n", scheme)
-	fmt.Printf("   构建路径: %s\n", buildPath)
-	fmt.Printf("   目标架构: %s\n", arch)
-	fmt.Printf("   构建配置: Release\n")
-	fmt.Printf("   详细日志: %t\n", verbose)
-	if cwd, err := os.Getwd(); err == nil {
-		fmt.Printf("   工作目录: %s\n", cwd)
-	}
-	fmt.Println()
-}
+
 
 // detectScheme 自动检测可用的 scheme
 func detectScheme() string {

@@ -3,6 +3,7 @@ package xcode
 import (
 	"fmt"
 	"os/exec"
+	"servon/components/xcode_util"
 	"strings"
 
 	"github.com/gookit/color"
@@ -15,10 +16,10 @@ var infoCmd = &cobra.Command{
 	Long:  color.Success.Render("\r\n显示当前系统中安装的 Xcode 版本信息，包括版本号、构建号和安装路径"),
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		
+
 		// 显示标题
 		showXcodeInfoHeader()
-		
+
 		// 显示 Xcode 信息
 		showXcodeInfo(verbose)
 	},
@@ -39,21 +40,21 @@ func showXcodeInfoHeader() {
 // showXcodeInfo 显示 Xcode 详细信息
 func showXcodeInfo(verbose bool) {
 	color.Blue.Println("🔍 检查 Xcode 安装")
-	
+
 	// 检查 Xcode 路径
-	xcodePath := getCommandOutput("xcode-select", "-p")
+	xcodePath := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcode-select", "-p")
 	if xcodePath == "" {
 		color.Error.Println("❌ 未找到 Xcode 安装")
 		color.Info.Println("💡 请从 App Store 安装 Xcode")
 		return
 	}
-	
+
 	color.Success.Printf("✅ Xcode 路径: %s\n", xcodePath)
 	fmt.Println()
-	
+
 	// 获取 Xcode 版本信息
 	color.Blue.Println("📋 版本信息")
-	xcodeVersion := getCommandOutput("xcodebuild", "-version")
+	xcodeVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcodebuild", "-version")
 	if xcodeVersion != "" {
 		lines := strings.Split(xcodeVersion, "\n")
 		for _, line := range lines {
@@ -72,18 +73,18 @@ func showXcodeInfo(verbose bool) {
 		color.Error.Println("❌ 无法获取 Xcode 版本信息")
 	}
 	fmt.Println()
-	
+
 	// 显示 SDK 信息
 	if verbose {
 		showSDKInfo()
 	}
-	
+
 	// 显示命令行工具信息
 	showCommandLineToolsInfo(verbose)
-	
+
 	// 显示 Swift 版本
 	showSwiftInfo()
-	
+
 	// 显示模拟器信息
 	if verbose {
 		showSimulatorInfo()
@@ -93,46 +94,46 @@ func showXcodeInfo(verbose bool) {
 // showSDKInfo 显示 SDK 信息
 func showSDKInfo() {
 	color.Blue.Println("📦 可用 SDK")
-	
+
 	// 获取 macOS SDK
-	macosSDK := getCommandOutput("xcrun", "--show-sdk-path", "--sdk", "macosx")
+	macosSDK := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcrun", "--show-sdk-path", "--sdk", "macosx")
 	if macosSDK != "" {
-		sdkVersion := getCommandOutput("xcrun", "--show-sdk-version", "--sdk", "macosx")
+		sdkVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcrun", "--show-sdk-version", "--sdk", "macosx")
 		color.Info.Printf("🖥️  macOS SDK: %s\n", sdkVersion)
 		if strings.Contains(macosSDK, "/") {
 			color.Gray.Printf("   路径: %s\n", macosSDK)
 		}
 	}
-	
+
 	// 获取 iOS SDK
-	iosSDK := getCommandOutput("xcrun", "--show-sdk-path", "--sdk", "iphoneos")
+	iosSDK := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcrun", "--show-sdk-path", "--sdk", "iphoneos")
 	if iosSDK != "" {
-		sdkVersion := getCommandOutput("xcrun", "--show-sdk-version", "--sdk", "iphoneos")
+		sdkVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcrun", "--show-sdk-version", "--sdk", "iphoneos")
 		color.Info.Printf("📱 iOS SDK: %s\n", sdkVersion)
 		if strings.Contains(iosSDK, "/") {
 			color.Gray.Printf("   路径: %s\n", iosSDK)
 		}
 	}
-	
+
 	// 获取 iOS 模拟器 SDK
-	iosSimSDK := getCommandOutput("xcrun", "--show-sdk-path", "--sdk", "iphonesimulator")
+	iosSimSDK := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcrun", "--show-sdk-path", "--sdk", "iphonesimulator")
 	if iosSimSDK != "" {
-		sdkVersion := getCommandOutput("xcrun", "--show-sdk-version", "--sdk", "iphonesimulator")
+		sdkVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcrun", "--show-sdk-version", "--sdk", "iphonesimulator")
 		color.Info.Printf("📲 iOS 模拟器 SDK: %s\n", sdkVersion)
 		if strings.Contains(iosSimSDK, "/") {
 			color.Gray.Printf("   路径: %s\n", iosSimSDK)
 		}
 	}
-	
+
 	fmt.Println()
 }
 
 // showCommandLineToolsInfo 显示命令行工具信息
 func showCommandLineToolsInfo(verbose bool) {
 	color.Blue.Println("🛠️  命令行工具")
-	
+
 	// 检查命令行工具版本
-	clangVersion := getCommandOutput("clang", "--version")
+	clangVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("clang", "--version")
 	if clangVersion != "" {
 		lines := strings.Split(clangVersion, "\n")
 		if len(lines) > 0 {
@@ -142,7 +143,7 @@ func showCommandLineToolsInfo(verbose bool) {
 			}
 		}
 	}
-	
+
 	// 检查关键工具
 	tools := []struct {
 		name string
@@ -156,7 +157,7 @@ func showCommandLineToolsInfo(verbose bool) {
 		{"plutil", "属性列表工具"},
 		{"lipo", "架构工具"},
 	}
-	
+
 	if verbose {
 		for _, tool := range tools {
 			if _, err := exec.LookPath(tool.name); err == nil {
@@ -174,15 +175,15 @@ func showCommandLineToolsInfo(verbose bool) {
 		}
 		color.Info.Printf("可用工具: %d/%d\n", availableCount, len(tools))
 	}
-	
+
 	fmt.Println()
 }
 
 // showSwiftInfo 显示 Swift 信息
 func showSwiftInfo() {
 	color.Blue.Println("🚀 Swift 编译器")
-	
-	swiftVersion := getCommandOutput("swift", "--version")
+
+	swiftVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("swift", "--version")
 	if swiftVersion != "" {
 		lines := strings.Split(swiftVersion, "\n")
 		for _, line := range lines {
@@ -198,16 +199,16 @@ func showSwiftInfo() {
 	} else {
 		color.Error.Println("❌ 无法获取 Swift 版本信息")
 	}
-	
+
 	fmt.Println()
 }
 
 // showSimulatorInfo 显示模拟器信息
 func showSimulatorInfo() {
 	color.Blue.Println("📲 iOS 模拟器")
-	
+
 	// 获取可用的模拟器
-	simulators := getCommandOutput("xcrun", "simctl", "list", "devices", "available")
+	simulators := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcrun", "simctl", "list", "devices", "available")
 	if simulators != "" {
 		lines := strings.Split(simulators, "\n")
 		iosCount := 0
@@ -229,6 +230,6 @@ func showSimulatorInfo() {
 	} else {
 		color.Error.Println("❌ 无法获取模拟器信息")
 	}
-	
+
 	fmt.Println()
 }
