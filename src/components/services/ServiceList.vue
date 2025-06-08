@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { RiPlayCircleLine, RiStopCircleLine, RiRefreshLine } from '@remixicon/vue'
 import IconButton from '../IconButton.vue'
 import { getServiceList, startService, stopService, restartService } from '../../api/services'

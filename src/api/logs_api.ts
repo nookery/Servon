@@ -1,6 +1,5 @@
 import { request } from './request'
 import type { LogEntry, LogStats, LogFile } from '../types/log'
-import axios from 'axios'
 
 export async function getLogFiles(dir: string = ''): Promise<LogFile[]> {
     const { files } = await request.get<{ files: string[] }>('/logs/files', { params: { dir } })

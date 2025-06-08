@@ -51,11 +51,6 @@ const saveServiceConfig = async () => {
     }
 }
 
-// 切换配置视图模式
-const toggleConfigView = () => {
-    showRawConfig.value = !showRawConfig.value
-}
-
 // 当服务名称变化时重新加载配置
 watch(() => props.serviceName, (newServiceName) => {
     if (newServiceName) {

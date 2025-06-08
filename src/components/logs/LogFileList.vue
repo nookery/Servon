@@ -2,7 +2,7 @@
 import { defineProps, defineEmits } from 'vue'
 import type { LogFile } from '../../types/log'
 
-const props = defineProps<{
+defineProps<{
     logFiles: LogFile[]
     selectedFile: string
 }>()

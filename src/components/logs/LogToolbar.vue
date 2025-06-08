@@ -2,7 +2,7 @@
 import { defineProps, defineEmits, ref } from 'vue'
 import IconButton from '../IconButton.vue'
 
-const props = defineProps<{
+defineProps<{
     currentDir: string
     selectedFile: string | null
 }>()
