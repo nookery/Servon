@@ -3,21 +3,22 @@ package providers
 import (
 	"servon/core/internal/commands"
 	"servon/core/internal/managers"
-	"servon/core/internal/utils"
+	"servon/components/shell_util"
+	"servon/components/web_server_util"
 
 	"github.com/spf13/cobra"
 )
 
 type CommandProvider struct {
 	root *cobra.Command
-	*utils.ShellUtil
+	*shell_util.ShellUtil
 	fullManager *managers.FullManager
-	webServer   *utils.WebServer
+	webServer   *web_server_util.WebServer
 }
 
-func NewCommandProvider(fullManager *managers.FullManager, webServer *utils.WebServer) *CommandProvider {
+func NewCommandProvider(fullManager *managers.FullManager, webServer *web_server_util.WebServer) *CommandProvider {
 	p := &CommandProvider{
-		ShellUtil:   &utils.DefaultShellUtil,
+		ShellUtil:   &shell_util.DefaultShellUtil,
 		fullManager: fullManager,
 		webServer:   webServer,
 		root:        commands.RootCmd,

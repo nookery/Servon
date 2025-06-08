@@ -1,12 +1,13 @@
 package caddy
 
 import (
+	"servon/components/command_util"
 	"servon/core"
 
 	"github.com/spf13/cobra"
 )
 
-type CommandOptions = core.CommandOptions
+type CommandOptions = command_util.CommandOptions
 
 func Setup(app *core.App) {
 	caddy := Caddy{
@@ -19,7 +20,7 @@ func Setup(app *core.App) {
 }
 
 func (c *Caddy) NewCaddyCommand(app *core.App) *cobra.Command {
-	rootCmd := app.NewCommand(core.CommandOptions{
+	rootCmd := app.NewCommand(command_util.CommandOptions{
 		Use:   "caddy",
 		Short: "Caddy 管理命令",
 	})

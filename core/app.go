@@ -5,9 +5,9 @@ import (
 
 	"servon/components"
 	"servon/components/events"
+	"servon/components/log_util"
 	"servon/core/internal/managers"
 	"servon/core/internal/providers"
-	"servon/core/internal/utils"
 )
 
 type App struct {
@@ -18,8 +18,8 @@ type App struct {
 	*providers.CommandProvider
 	*providers.UtilProvider
 
-	SoftwareLogger *utils.LogUtil
-	AppLogger      *utils.LogUtil
+	SoftwareLogger *log_util.LogUtil
+	AppLogger      *log_util.LogUtil
 }
 
 // New 创建App实例
@@ -36,7 +36,7 @@ func New() *App {
 		CommandProvider: providers.NewCommandProvider(manager, webProvider.Server),
 		UtilProvider:    providers.NewUtilProvider(),
 		SoftwareLogger:  manager.SoftManager.LogUtil,
-		AppLogger:       utils.NewLogUtil(filepath.Join(DataRootFolder, "logs")),
+		AppLogger:       log_util.NewLogUtil(filepath.Join(DataRootFolder, "logs")),
 	}
 
 	app.AppLogger.Success("App 初始化完成")

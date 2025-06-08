@@ -34,21 +34,17 @@ func (g *GitHubIntegration) SaveWebhookPayload(dataDir string, eventType, eventI
 // GetWebhooks 从指定目录获取所有保存的 webhook 事件数据
 // 返回 WebhookPayload 数组，包含所有成功解析的事件数据
 func (g *GitHubIntegration) GetWebhooks(dataDir string) ([]WebhookPayload, error) {
-	g.logger.Infof("GetWebhooks: %s", dataDir)
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		g.logger.Errorf("failed to create webhooks directory: %v", err)
 		return nil, fmt.Errorf("failed to create webhooks directory: %v", err)
 	}
 
 	files, err := os.ReadDir(dataDir)
 	if err != nil {
-		g.logger.Errorf("failed to read webhooks directory: %v", err)
 		return nil, fmt.Errorf("failed to read webhooks directory: %v", err)
 	}
 
 	var webhooks []WebhookPayload
 	for _, file := range files {
-		g.logger.Infof("GetWebhooks: %s", file.Name())
 		if filepath.Ext(file.Name()) != ".json" {
 			continue
 		}
@@ -66,7 +62,6 @@ func (g *GitHubIntegration) GetWebhooks(dataDir string) ([]WebhookPayload, error
 		webhooks = append(webhooks, webhook)
 	}
 
-	g.logger.Infof("GetWebhooks: %d", len(webhooks))
 	return webhooks, nil
 }
 
@@ -83,7 +78,6 @@ func (g *GitHubIntegration) readWebhookFile(dataDir, filename string) (WebhookPa
 	secondUnderscore := strings.Index(basename[firstUnderscore+1:], "_") + firstUnderscore + 1
 
 	if firstUnderscore == -1 || secondUnderscore == -1 {
-		g.logger.Errorf("readWebhookFile: invalid filename format: %s", filename)
 		return webhook, fmt.Errorf("invalid filename format")
 	}
 
@@ -94,13 +88,11 @@ func (g *GitHubIntegration) readWebhookFile(dataDir, filename string) (WebhookPa
 
 	data, err := os.ReadFile(filepath.Join(dataDir, filename))
 	if err != nil {
-		g.logger.Errorf("readWebhookFile: failed to read file: %v", err)
 		return webhook, err
 	}
 
 	var payload interface{}
 	if err := json.Unmarshal(data, &payload); err != nil {
-		g.logger.Errorf("readWebhookFile: failed to unmarshal file: %v", err)
 		return webhook, err
 	}
 
@@ -116,7 +108,6 @@ func (g *GitHubIntegration) readWebhookFile(dataDir, filename string) (WebhookPa
 func (g *GitHubIntegration) parseTimestamp(ts string) int64 {
 	timestamp, err := strconv.ParseInt(ts, 10, 64)
 	if err != nil {
-		g.logger.Errorf("parseTimestamp: failed to parse timestamp: %v", err)
 		return 0
 	}
 	return timestamp
@@ -124,7 +115,6 @@ func (g *GitHubIntegration) parseTimestamp(ts string) int64 {
 
 // GetInstallationConfig 从存储中读取所有安装配置信息
 func (g *GitHubIntegration) GetInstallationConfig() (map[int64]*Installation, error) {
-	g.logger.Infof("开始获取安装配置: %s", configDir)
 	// 确保目录存在
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return nil, fmt.Errorf("创建配置目录失败: %w", err)
@@ -146,13 +136,11 @@ func (g *GitHubIntegration) GetInstallationConfig() (map[int64]*Installation, er
 
 		data, err := os.ReadFile(filepath.Join(configDir, file.Name()))
 		if err != nil {
-			g.logger.Errorf("读取配置文件失败 %s: %v", file.Name(), err)
 			continue
 		}
 
 		var config InstallationConfig
 		if err := json.Unmarshal(data, &config); err != nil {
-			g.logger.Errorf("解析配置文件失败 %s: %v", file.Name(), err)
 			continue
 		}
 

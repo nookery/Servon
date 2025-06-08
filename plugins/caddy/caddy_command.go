@@ -1,7 +1,7 @@
 package caddy
 
 import (
-	"servon/core"
+	"servon/components/command_util"
 
 	"github.com/spf13/cobra"
 )
@@ -17,7 +17,7 @@ func (c *Caddy) NewInstallCommand() *cobra.Command {
 }
 
 func (c *Caddy) NewProxyCommand() *cobra.Command {
-	cmd := c.NewCommand(core.CommandOptions{
+	cmd := c.NewCommand(command_util.CommandOptions{
 		Use:   "proxy",
 		Short: "代理命令",
 		Run: func(cmd *cobra.Command, args []string) {

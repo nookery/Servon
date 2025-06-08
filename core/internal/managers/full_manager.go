@@ -3,7 +3,7 @@ package managers
 import (
 	"fmt"
 	"servon/components/events"
-	"servon/core/internal/managers/github"
+	"servon/components/github"
 )
 
 type FullManager struct {
@@ -31,7 +31,7 @@ type FullManager struct {
 
 func NewManager(eventBus events.IEventBus) *FullManager {
 	dataManager := DefaultDataManager
-	githubIntegration := github.NewGitHubIntegration(eventBus, dataManager.GetLogsRootFolder())
+	githubIntegration := github.NewGitHubIntegration(eventBus)
 	softManager := NewSoftManager(dataManager.GetLogsRootFolder())
 	gitManager := NewGitManager(softManager)
 	downloadManager := NewDownloadManager(softManager)

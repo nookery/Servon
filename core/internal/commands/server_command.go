@@ -4,7 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"servon/core/internal/managers"
-	"servon/core/internal/utils"
+	"servon/components/web_server_util"
 	"strconv"
 	"time"
 
@@ -19,7 +19,7 @@ var (
 )
 
 // GetServerCommand 获取服务器管理命令
-func GetServerCommand(web *utils.WebServer, manager *managers.FullManager) *cobra.Command {
+func GetServerCommand(web *web_server_util.WebServer, manager *managers.FullManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
 		Short: "启动服务器",
@@ -33,7 +33,7 @@ func GetServerCommand(web *utils.WebServer, manager *managers.FullManager) *cobr
 }
 
 // MakeStartCommand 创建启动命令
-func MakeStartCommand(web *utils.WebServer, manager *managers.FullManager) *cobra.Command {
+func MakeStartCommand(web *web_server_util.WebServer, manager *managers.FullManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "启动服务器",
@@ -94,7 +94,7 @@ func MakeStartCommand(web *utils.WebServer, manager *managers.FullManager) *cobr
 }
 
 // MakeStopCommand 创建停止命令
-func MakeStopCommand(web *utils.WebServer) *cobra.Command {
+func MakeStopCommand(web *web_server_util.WebServer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stop",
 		Short: "停止服务器",
@@ -111,7 +111,7 @@ func MakeStopCommand(web *utils.WebServer) *cobra.Command {
 }
 
 // MakeRestartCommand 创建重启命令
-func MakeRestartCommand(web *utils.WebServer) *cobra.Command {
+func MakeRestartCommand(web *web_server_util.WebServer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "restart",
 		Short: "重启服务器",
@@ -150,7 +150,7 @@ func MakeRestartCommand(web *utils.WebServer) *cobra.Command {
 }
 
 // MakeDevCommand 创建开发命令
-func MakeDevCommand(web *utils.WebServer) *cobra.Command {
+func MakeDevCommand(web *web_server_util.WebServer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dev",
 		Short: "启动开发服务器",

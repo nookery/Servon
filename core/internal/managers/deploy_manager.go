@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"servon/components/events"
+	"servon/components/git_util"
+	"servon/components/github"
+	"servon/components/log_util"
 	"servon/core/internal/managers/deployers"
-	"servon/core/internal/managers/github"
 	"servon/core/internal/utils"
 
 	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -25,9 +27,9 @@ type DeployManager struct {
 	// eventBus 用于处理事件的发布与订阅
 	eventBus events.IEventBus
 	// logger 用于记录部署过程的日志
-	logger *utils.LogUtil
+	logger *log_util.LogUtil
 	// gitUtil 用于处理Git操作
-	gitUtil     *utils.GitUtil
+	gitUtil     *git_util.GitUtil
 	fileUtil    *utils.FileUtil
 	stringUtil  *utils.StringUtil
 	github      *github.GitHubIntegration
@@ -40,8 +42,8 @@ type DeployManager struct {
 func NewDeployManager(eventBus events.IEventBus, github *github.GitHubIntegration, logsDir string, tempDir string, projectsDir string) (*DeployManager, error) {
 	dm := &DeployManager{
 		eventBus:    eventBus,
-		logger:      utils.NewTopicLogUtil(logsDir, "deploy"),
-		gitUtil:     utils.NewGitUtil(utils.NewLogUtil(logsDir)),
+		logger:      log_util.NewTopicLogUtil(logsDir, "deploy"),
+		gitUtil:     git_util.NewGitUtil(log_util.NewLogUtil(logsDir)),
 		fileUtil:    utils.DefaultFileUtil,
 		github:      github,
 		logsDir:     logsDir,

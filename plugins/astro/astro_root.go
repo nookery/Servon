@@ -3,6 +3,7 @@ package astro
 import (
 	"fmt"
 	"path/filepath"
+	"servon/components/log_util"
 	"servon/core"
 )
 
@@ -35,7 +36,7 @@ func (d *AstroDeployer) GetName() string {
 	return "astro"
 }
 
-func (d *AstroDeployer) Deploy(projectName string, workDir string, targetDir string, logger *core.LogUtil) error {
+func (d *AstroDeployer) Deploy(projectName string, workDir string, targetDir string, logger *log_util.LogUtil) error {
 	logger.Info("开始部署 Astro 项目，工作目录：" + workDir)
 	logger.Info("开始部署 Astro 项目，目标目录：" + targetDir)
 	logger.Info("开始部署 Astro 项目，项目名称：" + projectName)
@@ -105,7 +106,7 @@ func (d *AstroDeployer) Deploy(projectName string, workDir string, targetDir str
 	return nil
 }
 
-func (d *AstroDeployer) Build(workDir string, logger *core.LogUtil) error {
+func (d *AstroDeployer) Build(workDir string, logger *log_util.LogUtil) error {
 	logger.Info("开始构建 Astro 项目，工作目录：" + workDir)
 	// 确保保存路径存在
 	if err := d.MakeDir(workDir); err != nil {

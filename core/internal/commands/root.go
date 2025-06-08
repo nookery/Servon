@@ -1,14 +1,17 @@
 package commands
 
 import (
-	"servon/core/internal/utils"
+	"servon/components/log_util"
+	"servon/components/shell_util"
+	"servon/components/string_util"
+	"servon/components/command_util"
 )
 
-var logger = utils.DefaultLogUtil
-var shell = utils.DefaultShellUtil
-var stringUtil = utils.DefaultStringUtil
+var logger = log_util.DefaultLogUtil
+var shell = shell_util.DefaultShellUtil
+var stringUtil = string_util.DefaultStringUtil
 
-var NewCommand = utils.NewCommand
+var NewCommand = command_util.NewCommand
 var RunShell = shell.RunShell
 var PrintKeyValue = logger.PrintKeyValue
 var PrintKeyValues = logger.PrintKeyValues
@@ -23,4 +26,4 @@ var PrintErrorf = logger.Errorf
 var PrintList = logger.List
 var PrintTitle = logger.Title
 
-type CommandOptions = utils.CommandOptions
+type CommandOptions = command_util.CommandOptions

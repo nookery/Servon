@@ -1,11 +1,12 @@
 package providers
 
 import (
+	"servon/components/command_util"
 	"servon/core/internal/utils"
 )
 
 type UtilProvider struct {
-	*utils.CommandUtil
+	*command_util.CommandUtil
 	*utils.FileUtil
 	*utils.DevUtil
 	*utils.StringUtil
@@ -14,7 +15,7 @@ type UtilProvider struct {
 
 func NewUtilProvider() *UtilProvider {
 	return &UtilProvider{
-		CommandUtil: utils.DefaultCommandUtil,
+		CommandUtil: command_util.DefaultCommandUtil,
 		FileUtil:    utils.DefaultFileUtil,
 		DevUtil:     utils.DefaultDevUtil,
 		StringUtil:  utils.DefaultStringUtil,

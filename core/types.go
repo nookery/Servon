@@ -1,15 +1,16 @@
 package core
 
 import (
+	"servon/components/command_util"
+	"servon/components/github"
+	"servon/components/log_util"
 	"servon/core/internal/contract"
 	"servon/core/internal/managers"
 	"servon/core/internal/managers/deployers"
-	"servon/core/internal/managers/github"
 	"servon/core/internal/models"
-	"servon/core/internal/utils"
 )
 
-type CommandOptions = utils.CommandOptions
+type CommandOptions = command_util.CommandOptions
 type CronTask = managers.CronTask
 type ValidationError = managers.ValidationError
 type ValidationErrors = managers.ValidationErrors
@@ -27,4 +28,4 @@ type Project = contract.Project
 
 type Deployer = deployers.Deployer
 
-type LogUtil = utils.LogUtil
+type LogUtil = log_util.LogUtil

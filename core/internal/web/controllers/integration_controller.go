@@ -3,8 +3,8 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"servon/components/github"
 	"servon/core/internal/managers"
-	"servon/core/internal/managers/github"
 
 	"github.com/gin-gonic/gin"
 )
