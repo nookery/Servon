@@ -1,13 +1,14 @@
-package commands
+package ip
 
 import (
-	"servon/core/managers"
+	"servon/components/network_util"
+	"servon/core"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
-var NetworkManager = managers.DefaultNetworkManager
+var NetworkUtil = network_util.DefaultNetworkUtil
 
 var IPCmd = &cobra.Command{
 	Use:   "ip",
@@ -26,7 +27,7 @@ var localCmd = &cobra.Command{
 	Use:   "local",
 	Short: "Show local IP addresses",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ipConfig, err := NetworkManager.GetIPConfig()
+		ipConfig, err := NetworkUtil.GetIPConfig()
 		if err != nil {
 			return err
 		}
@@ -46,7 +47,7 @@ var publicCmd = &cobra.Command{
 	Use:   "public",
 	Short: "Show public IP addresses",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ipConfig, err := NetworkManager.GetIPConfig()
+		ipConfig, err := NetworkUtil.GetIPConfig()
 		if err != nil {
 			return err
 		}
@@ -65,7 +66,7 @@ var interfacesCmd = &cobra.Command{
 	Use:   "interfaces",
 	Short: "Show network interfaces information",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ipConfig, err := NetworkManager.GetIPConfig()
+		ipConfig, err := NetworkUtil.GetIPConfig()
 		if err != nil {
 			return err
 		}
@@ -80,4 +81,9 @@ var interfacesCmd = &cobra.Command{
 		}
 		return nil
 	},
+}
+
+// Setup 注册ip插件到应用
+func Setup(app *core.App) {
+	app.GetRootCommand().AddCommand(IPCmd)
 }
