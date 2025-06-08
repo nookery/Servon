@@ -1,27 +1,27 @@
 #!/bin/bash
 
 # 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
+RED='\033[0;31m'      # 红色文字
+GREEN='\033[0;32m'    # 绿色文字
+YELLOW='\033[1;33m'   # 黄色文字
+BLUE='\033[0;34m'     # 蓝色文字
 NC='\033[0m' # No Color
 
 # 打印带颜色的消息
 print_info() {
-    printf "%b[INFO]%b %s\n" "${BLUE}" "${NC}" "$1"
+    printf "%b🔍 %s%b\n" "${BLUE}" "$1" "${NC}"
 }
 
 print_success() {
-    printf "%b[SUCCESS]%b %s\n" "${GREEN}" "${NC}" "$1"
+    printf "%b✅ %s%b\n" "${GREEN}" "$1" "${NC}"
 }
 
 print_error() {
-    printf "%b[ERROR]%b %s\n" "${RED}" "${NC}" "$1"
+    printf "%b❌ %s%b\n" "${RED}" "$1" "${NC}"
 }
 
 print_warning() {
-    printf "%b[WARNING]%b %s\n" "${YELLOW}" "${NC}" "$1"
+    printf "%b⚠️ %s%b\n" "${YELLOW}" "$1" "${NC}"
 }
 
 # 错误处理函数
@@ -66,22 +66,28 @@ check_system() {
     
     # 检查操作系统
     OS=$(uname -s)
-    if [ "$OS" != "Linux" ]; then
-        print_error "This script only supports Linux"
-        exit 1
-    fi
-
-    # 检查是否为 Ubuntu
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" != "ubuntu" ]; then
-            print_error "This script only supports Ubuntu. Your system ($ID) is not supported."
+    case "$OS" in
+        Linux)
+            # 检查是否为 Ubuntu
+            if [ -f /etc/os-release ]; then
+                . /etc/os-release
+                if [ "$ID" != "ubuntu" ]; then
+                    print_error "This script only supports Ubuntu on Linux. Your system ($ID) is not supported."
+                    exit 1
+                fi
+            else
+                print_error "Cannot determine Linux distribution. This script only supports Ubuntu."
+                exit 1
+            fi
+            ;;
+        Darwin)
+            print_info "Detected macOS system"
+            ;;
+        *)
+            print_error "This script only supports Linux (Ubuntu) and macOS. Your system ($OS) is not supported."
             exit 1
-        fi
-    else
-        print_error "Cannot determine Linux distribution. This script only supports Ubuntu."
-        exit 1
-    fi
+            ;;
+    esac
 
     # 检查必要的命令
     for cmd in curl; do
@@ -90,6 +96,19 @@ check_system() {
             exit 1
         fi
     done
+
+    # 在 macOS 上检查 shasum，在 Linux 上检查 sha256sum
+    if [ "$OS" = "Darwin" ]; then
+        if ! command -v "shasum" > /dev/null 2>&1; then
+            print_error "shasum is required but not installed"
+            exit 1
+        fi
+    else
+        if ! command -v "sha256sum" > /dev/null 2>&1; then
+            print_error "sha256sum is required but not installed"
+            exit 1
+        fi
+    fi
 
     # 如果当前用户是 root，则不需要检查 sudo
     if [ "$(id -u)" -ne 0 ]; then
@@ -107,7 +126,19 @@ create_install_dir() {
     print_info "Creating installation directory..."
     
     # 为不同的操作系统设置不同的安装路径
-    INSTALL_DIR="/usr/local/servon"
+    local os=$(uname -s)
+    case "$os" in
+        Darwin)
+            INSTALL_DIR="/usr/local/servon"
+            ;;
+        Linux)
+            INSTALL_DIR="/usr/local/servon"
+            ;;
+        *)
+            print_error "Unsupported operating system: $os"
+            exit 1
+            ;;
+    esac
 
     # 创建安装目录
     run_with_sudo mkdir -p "$INSTALL_DIR"
@@ -127,6 +158,7 @@ detect_arch() {
     case $arch in
         x86_64)  echo "amd64" ;;
         aarch64) echo "arm64" ;;
+        arm64)   echo "arm64" ;;  # macOS M1/M2 芯片
         *)       echo "unsupported" ;;
     esac
 }
@@ -135,11 +167,18 @@ detect_arch() {
 detect_os() {
     local os
     os=$(uname -s | tr '[:upper:]' '[:lower:]')
-    if [ "$os" != "linux" ]; then
-        print_error "Unsupported operating system: $os"
-        exit 1
-    fi
-    echo "linux"
+    case "$os" in
+        linux)
+            echo "linux"
+            ;;
+        darwin)
+            echo "darwin"
+            ;;
+        *)
+            print_error "Unsupported operating system: $os"
+            exit 1
+            ;;
+    esac
 }
 
 # 获取最新版本
@@ -210,9 +249,18 @@ download_latest() {
 
     # 验证校验和
     print_info "Verifying download..."
-    if ! (cd /tmp && sha256sum -c "servon-${os}-${arch}.sha256"); then
-        print_error "Checksum verification failed"
-        exit 1
+    if [ "$os" = "darwin" ]; then
+        # macOS 使用 shasum
+        if ! (cd /tmp && shasum -a 256 -c "servon-${os}-${arch}.sha256"); then
+            print_error "Checksum verification failed"
+            exit 1
+        fi
+    else
+        # Linux 使用 sha256sum
+        if ! (cd /tmp && sha256sum -c "servon-${os}-${arch}.sha256"); then
+            print_error "Checksum verification failed"
+            exit 1
+        fi
     fi
 
     print_success "Downloaded and verified Servon ${version}"
@@ -280,4 +328,4 @@ main() {
 }
 
 # 运行主函数
-main "$@" 
+main "$@"

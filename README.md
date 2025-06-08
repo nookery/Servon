@@ -1,90 +1,91 @@
-# Servon - 服务器管理工具
+# Servon - Server Management Tool
 
 [![Coffic](https://img.shields.io/badge/Coffic-green)](https://coffic.cn)
 [![Maintainer](https://img.shields.io/badge/Maintainer-blue)](https://github.com/nookery)
+[![中文文档](https://img.shields.io/badge/中文文档-orange)](README-CN.md)
 [![MAKEFILE](https://img.shields.io/badge/MAKEFILE-gray)](README-MAKEFILE.md)
 [![Plugins](https://img.shields.io/badge/Plugins-red)](README-PLUGINS.md)
 [![Update](https://img.shields.io/badge/Update-orange)](README-UPDATE.md)
 
-Servon 是一个多功能的服务器管理工具，提供项目部署、软件安装以及可视化管理面板等功能。
+Servon is a multi-functional server management tool that provides project deployment, software installation, and visual management panel features.
 
-当前尚处于开发阶段，功能可能不稳定，请谨慎使用。
+Currently in development stage, features may be unstable, please use with caution.
 
-## 功能特性
+## Features
 
-- 项目部署（`servon deploy`）
-  - 支持多种项目类型的快速部署
-  - 自动配置运行环境
-  - 部署过程可视化
+- Project Deployment (`servon deploy`)
+  - Support for rapid deployment of multiple project types
+  - Automatic runtime environment configuration
+  - Deployment process visualization
 
-- 软件管理（`servon install`）
-  - 一键安装常用服务器软件（如 Caddy、Nginx 等）
-  - 自动配置和优化
-  - 版本管理
+- Software Management (`servon install`)
+  - One-click installation of common server software (such as Caddy, Nginx, etc.)
+  - Automatic configuration and optimization
+  - Version management
 
-- 可视化管理面板（`servon serve`）
-  - 系统资源监控（CPU、内存、磁盘使用情况）
-  - 网站管理（创建、配置、部署）
-  - Docker 容器管理
-  - 直观的 Web 操作界面
+- Visual Management Panel (`servon serve`)
+  - System resource monitoring (CPU, memory, disk usage)
+  - Website management (create, configure, deploy)
+  - Docker container management
+  - Intuitive Web operation interface
 
-## 快速安装
+## Quick Installation
 
-### 方法 1：一键安装（推荐）
+### Method 1: One-click Installation (Recommended)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | bash
 ```
 
-### 方法 2：手动安装
+### Method 2: Manual Installation
 
-从 [GitHub Releases](https://github.com/nookery/servon/releases) 页面下载适合您系统的预编译二进制文件：
+Download the pre-compiled binary file suitable for your system from the [GitHub Releases](https://github.com/nookery/servon/releases) page:
 
 ```bash
-# 下载二进制文件（以 Linux amd64 为例）
+# Download binary file (Linux amd64 example)
 curl -LO https://github.com/nookery/servon/releases/latest/download/servon-linux-amd64
 chmod +x servon-linux-amd64
 sudo mv servon-linux-amd64 /usr/local/bin/servon
 ```
 
-## 使用方法
+## Usage
 
-### 命令行界面
+### Command Line Interface
 
-- 启动管理面板：`servon serve`
-  - 选项：
-    - `-p, --port`: 指定端口号（默认：8080）
+- Start management panel: `servon serve`
+  - Options:
+    - `-p, --port`: Specify port number (default: 8080)
 
-- 查看系统信息：`servon info`
+- View system information: `servon info`
 
-  - 选项：
-    - `-f, --format`: 输出格式（formatted|json|plain）
+  - Options:
+    - `-f, --format`: Output format (formatted|json|plain)
 
-- 实时监控：`servon monitor`
+- Real-time monitoring: `servon monitor`
 
-  - 选项：
-    - `-i, --interval`: 监控间隔（秒）
+  - Options:
+    - `-i, --interval`: Monitoring interval (seconds)
 
-- 查看版本：`servon version`
+- View version: `servon version`
 
-### Web 界面
+### Web Interface
 
-启动服务后，访问 `http://localhost:8080` 即可使用 Web 管理界面。
+After starting the service, visit `http://localhost:8080` to use the Web management interface.
 
-## 系统要求
+## System Requirements
 
-- 操作系统：Linux、macOS
-- 建议内存：>= 512MB
-- 磁盘空间：>= 200MB
+- Operating System: Linux, macOS
+- Recommended Memory: >= 512MB
+- Disk Space: >= 200MB
 
-## 构建说明
+## Build Instructions
 
-本项目使用 Makefile 管理构建流程，查看 [Makefile](Makefile) 了解更多。
+This project uses Makefile to manage the build process, see [Makefile](Makefile) for more details.
 
-## 贡献
+## Contributing
 
-欢迎提交 Pull Request 或创建 Issue！
+Welcome to submit Pull Requests or create Issues!
 
-## 许可证
+## License
 
 MIT License
