@@ -1,9 +1,9 @@
-package managers
+package contract
 
 import logger1 "servon/components/logger"
 
-// Deployer 定义了部署器的接口
-type Deployer interface {
+// SuperDeployer 定义了部署器的接口
+type SuperDeployer interface {
 	// Deploy 部署项目
 	Deploy(projectName string, workDir string, targetDir string, logger *logger1.LogUtil) error
 

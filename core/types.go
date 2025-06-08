@@ -26,6 +26,6 @@ type WebhookPayload = github.WebhookPayload
 type OSType = managers.OSType
 type Project = contract.Project
 
-type Deployer = managers.Deployer
+type Deployer = contract.SuperDeployer
 
 type LogUtil = logger.LogUtil
