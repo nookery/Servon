@@ -10,7 +10,6 @@ import (
 	"servon/components/events"
 	"servon/components/git_util"
 	"servon/components/github"
-	logger1 "servon/components/logger"
 	"servon/components/utils"
 	"servon/core/contract"
 
@@ -26,8 +25,6 @@ import (
 type DeployManager struct {
 	// eventBus 用于处理事件的发布与订阅
 	eventBus events.IEventBus
-	// logger 用于记录部署过程的日志
-	logger *logger1.LogUtil
 	// gitUtil 用于处理Git操作
 	gitUtil     *git_util.GitUtil
 	fileUtil    *utils.FileUtil
@@ -42,7 +39,6 @@ type DeployManager struct {
 func NewDeployManager(eventBus events.IEventBus, github *github.GitHubIntegration, logsDir string, tempDir string, projectsDir string) (*DeployManager, error) {
 	dm := &DeployManager{
 		eventBus:    eventBus,
-		logger:      logger1.NewTopicLogUtil(logsDir, "deploy"),
 		gitUtil:     git_util.NewGitUtil(),
 		fileUtil:    utils.DefaultFileUtil,
 		github:      github,
@@ -62,19 +58,19 @@ func NewDeployManager(eventBus events.IEventBus, github *github.GitHubIntegratio
 func (m *DeployManager) handleGitPushEvent(event events.Event) {
 	deployData, ok := event.Data.(map[string]interface{})
 	if !ok {
-		m.logger.ErrorMessage("无效的部署数据格式")
+		fmt.Println("无效的部署数据格式")
 		return
 	}
 
 	repo, ok := deployData["repository"].(string)
 	if !ok {
-		m.logger.ErrorMessage("缺少仓库信息")
+		fmt.Println("缺少仓库信息")
 		return
 	}
 
 	// 执行部署操作
 	if err := m.DeployProject(repo); err != nil {
-		m.logger.Errorf("错误: 仓库 %s 部署失败: %v", repo, err)
+		fmt.Printf("错误: 仓库 %s 部署失败: %v\n", repo, err)
 
 		// 发布部署失败事件
 		m.eventBus.Publish(events.Event{
@@ -87,7 +83,7 @@ func (m *DeployManager) handleGitPushEvent(event events.Event) {
 		return
 	}
 
-	m.logger.Infof("仓库 %s 部署成功完成", repo)
+	fmt.Printf("仓库 %s 部署成功完成\n", repo)
 	// 发布部署成功事件
 	m.eventBus.Publish(events.Event{
 		Type: events.DeployComplete,
@@ -111,44 +107,49 @@ func (m *DeployManager) DeployProject(repoURL string) error {
 
 	// 创建临时工作目录
 	workDir := filepath.Join(m.tempDir, "deploy", fmt.Sprintf("%s_%s", projectName, deployID))
-	m.logger.Infof("创建临时工作目录: %s", workDir)
+	fmt.Printf("创建临时工作目录: %s\n", workDir)
 
 	if err := os.MkdirAll(workDir, 0755); err != nil {
-		m.logger.LogAndReturnErrorf("创建工作目录失败: %v", err)
+		fmt.Printf("创建工作目录失败: %v\n", err)
+		return fmt.Errorf("创建工作目录失败: %v", err)
 	}
 	defer func() {
-		m.logger.Infof("清理临时工作目录: %s", workDir)
+		fmt.Printf("清理临时工作目录: %s\n", workDir)
 		os.RemoveAll(workDir)
 	}()
 
 	// 拉取代码
-	m.logger.Infof("开始从仓库拉取代码: %s", repoURL)
+	fmt.Printf("开始从仓库拉取代码: %s\n", repoURL)
 	if err := m.gitClone(repoURL, workDir); err != nil {
-		return m.logger.LogAndReturnErrorf("拉取代码失败: %v", err)
+		fmt.Printf("拉取代码失败: %v\n", err)
+		return fmt.Errorf("拉取代码失败: %v", err)
 	}
 
 	// 检测项目类型
 	projectType := utils.DefaultProjectUtil.DetectProjectType(workDir)
-	m.logger.Infof("检测到项目类型: %s", projectType)
+	fmt.Printf("检测到项目类型: %s\n", projectType)
 
 	if projectType == "unknown" {
-		return m.logger.LogAndReturnErrorf("未检测到项目类型，部署失败")
+		fmt.Printf("未检测到项目类型，部署失败\n")
+		return fmt.Errorf("未检测到项目类型，部署失败")
 	}
 
 	// 根据项目类型选择合适的部署器
 	deployer := m.getDeployer(projectType)
 	if deployer == nil {
-		return m.logger.LogAndReturnErrorf("未找到合适的部署器")
+		fmt.Printf("未找到合适的部署器\n")
+		return fmt.Errorf("未找到合适的部署器")
 	}
 
-	m.logger.Infof("使用部署器: %s", deployer.GetName())
+	fmt.Printf("使用部署器: %s\n", deployer.GetName())
 
 	// 执行部署
-	if err := deployer.Deploy(projectName, workDir, targetDir, m.logger); err != nil {
-		return m.logger.LogAndReturnErrorf("部署失败: %v", err)
+	if err := deployer.Deploy(projectName, workDir, targetDir); err != nil {
+		fmt.Printf("部署失败: %v\n", err)
+		return fmt.Errorf("部署失败: %v", err)
 	}
 
-	m.logger.Infof("部署成功")
+	fmt.Println("部署成功")
 
 	return nil
 }
@@ -163,86 +164,92 @@ func (m *DeployManager) gitClone(repo, workDir string) error {
 	if !strings.HasPrefix(repo, "https://") && !strings.HasPrefix(repo, "git@") {
 		repo = "https://github.com/" + repo
 	}
-	m.logger.Infof("规范化仓库地址: %s -> %s", originalRepo, repo)
+	fmt.Printf("规范化仓库地址: %s -> %s\n", originalRepo, repo)
 
 	// 检查工作目录
 	if _, err := os.Stat(workDir); os.IsNotExist(err) {
-		m.logger.Infof("工作目录不存在，创建: %s", workDir)
+		fmt.Printf("工作目录不存在，创建: %s\n", workDir)
 		if err := os.MkdirAll(workDir, 0755); err != nil {
-			return m.logger.LogAndReturnErrorf("创建工作目录失败: %v", err)
+			fmt.Printf("创建工作目录失败: %v\n", err)
+			return fmt.Errorf("创建工作目录失败: %v", err)
 		}
 	}
 
 	for i := 0; i < maxRetries; i++ {
 		if i > 0 {
-			m.logger.Infof("第 %d 次重试克隆仓库...", i+1)
+			fmt.Printf("第 %d 次重试克隆仓库...\n", i+1)
 			time.Sleep(time.Second * time.Duration(i+1))
 		}
 
-		m.logger.Infof("开始获取 GitHub 认证信息...")
+		fmt.Println("开始获取 GitHub 认证信息...")
 		auth, err := m.getGitHubAuth(repo)
 		if err != nil {
 			lastErr = fmt.Errorf("获取GitHub认证信息失败: %v", err)
-			m.logger.Errorf("认证失败详情: %v", lastErr)
+			fmt.Printf("认证失败详情: %v\n", lastErr)
 			continue
 		}
 
 		if auth == nil {
-			m.logger.Warnf("获取到的认证信息为空，将尝试无认证克隆")
+			fmt.Println("获取到的认证信息为空，将尝试无认证克隆")
 		} else {
-			m.logger.Infof("成功获取认证信息 - 用户名: %s, Token长度: %d",
+			fmt.Printf("成功获取认证信息 - 用户名: %s, Token长度: %d\n",
 				auth.Username, len(auth.Password))
 		}
 
-		m.logger.Infof("开始克隆仓库 %s 到 %s", repo, workDir)
+		fmt.Printf("开始克隆仓库 %s 到 %s\n", repo, workDir)
 		err = m.gitUtil.CloneRepo(repo, "main", workDir, auth)
 		if err == nil {
-			m.logger.Infof("仓库克隆成功: %s", repo)
+			fmt.Printf("仓库克隆成功: %s\n", repo)
 			// 验证克隆结果
 			if files, err := os.ReadDir(workDir); err == nil {
-				m.logger.Infof("克隆目录内容: %d 个文件/目录", len(files))
+				fmt.Printf("克隆目录内容: %d 个文件/目录\n", len(files))
 			}
 			return nil
 		}
 
 		lastErr = err
-		m.logger.Errorf("克隆失败 (尝试 %d/%d): %v", i+1, maxRetries, err)
+		fmt.Printf("克隆失败 (尝试 %d/%d): %v\n", i+1, maxRetries, err)
 	}
 
-	return m.logger.LogAndReturnErrorf("克隆仓库失败（已重试%d次）- 最后错误: %v", maxRetries, lastErr)
+	fmt.Printf("克隆仓库失败（已重试%d次）- 最后错误: %v\n", maxRetries, lastErr)
+	return fmt.Errorf("克隆仓库失败（已重试%d次）- 最后错误: %v", maxRetries, lastErr)
 }
 
 // getGitHubAuth 获取GitHub认证信息
 func (m *DeployManager) getGitHubAuth(repo string) (*githttp.BasicAuth, error) {
 	if m.github == nil {
-		return nil, m.logger.LogAndReturnErrorf("GitHub集成未初始化")
+		fmt.Println("GitHub集成未初始化")
+		return nil, fmt.Errorf("GitHub集成未初始化")
 	}
 
-	m.logger.Infof("准备获取仓库认证令牌: %s", repo)
+	fmt.Printf("准备获取仓库认证令牌: %s\n", repo)
 
 	// 检查仓库格式
 	repoName := repo
 	if strings.HasPrefix(repo, "https://github.com/") {
 		repoName = strings.TrimPrefix(repo, "https://github.com/")
 	}
-	m.logger.Infof("处理后的仓库名称: %s", repoName)
+	fmt.Printf("处理后的仓库名称: %s\n", repoName)
 
 	// 验证仓库名称格式
 	parts := strings.Split(repoName, "/")
 	if len(parts) != 2 {
-		return nil, m.logger.LogAndReturnErrorf("无效的仓库名称格式: %s，应为 'owner/repo' 格式", repoName)
+		fmt.Printf("无效的仓库名称格式: %s，应为 'owner/repo' 格式\n", repoName)
+		return nil, fmt.Errorf("无效的仓库名称格式: %s，应为 'owner/repo' 格式", repoName)
 	}
-	m.logger.Infof("仓库所有者: %s, 仓库名称: %s", parts[0], parts[1])
+	fmt.Printf("仓库所有者: %s, 仓库名称: %s\n", parts[0], parts[1])
 
 	token, err := m.github.GetInstallationToken(repoName)
 	if err != nil {
-		return nil, m.logger.LogAndReturnErrorf("获取安装令牌失败: %v", err)
+		fmt.Printf("获取安装令牌失败: %v\n", err)
+		return nil, fmt.Errorf("获取安装令牌失败: %v", err)
 	}
 
 	if token == "" {
-		return nil, m.logger.LogAndReturnErrorf("获取到的token为空")
+		fmt.Println("获取到的token为空")
+		return nil, fmt.Errorf("获取到的token为空")
 	}
-	m.logger.Infof("成功获取安装令牌 (长度: %d)", len(token))
+	fmt.Printf("成功获取安装令牌 (长度: %d)\n", len(token))
 
 	auth := &githttp.BasicAuth{
 		Username: "x-access-token",
@@ -251,23 +258,25 @@ func (m *DeployManager) getGitHubAuth(repo string) (*githttp.BasicAuth, error) {
 
 	// 验证认证信息完整性
 	if auth.Username == "" || auth.Password == "" {
-		return nil, m.logger.LogAndReturnErrorf("认证信息不完整: username=%v, token_length=%d",
+		fmt.Printf("认证信息不完整: username=%v, token_length=%d\n",
+			auth.Username != "", len(auth.Password))
+		return nil, fmt.Errorf("认证信息不完整: username=%v, token_length=%d",
 			auth.Username != "", len(auth.Password))
 	}
 
-	m.logger.Infof("认证信息构建成功")
+	fmt.Println("认证信息构建成功")
 	return auth, nil
 }
 
 // AddDeployer 添加新的部署器
 func (m *DeployManager) AddDeployer(deployer contract.SuperDeployer) {
-	m.logger.Infof("添加新的部署器: %T", deployer)
+	fmt.Printf("添加新的部署器: %T\n", deployer)
 	m.deployers = append(m.deployers, deployer)
 }
 
 // RemoveDeployer 移除指定类型的部署器
 func (m *DeployManager) RemoveDeployer(deployerType string) {
-	m.logger.Infof("移除部署器: %s", deployerType)
+	fmt.Printf("移除部署器: %s\n", deployerType)
 	newDeployers := make([]contract.SuperDeployer, 0)
 	for _, d := range m.deployers {
 		if fmt.Sprintf("%T", d) != deployerType {
@@ -284,7 +293,7 @@ func (m *DeployManager) GetDeployers() []contract.SuperDeployer {
 
 // ClearDeployers 清空所有部署器
 func (m *DeployManager) ClearDeployers() {
-	m.logger.Info("清空所有部署器")
+	fmt.Println("清空所有部署器")
 	m.deployers = make([]contract.SuperDeployer, 0)
 }
 
