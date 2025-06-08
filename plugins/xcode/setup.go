@@ -50,9 +50,6 @@ var setupCmd = &cobra.Command{
 				showProvisioningProfiles(verbose)
 			}
 		}
-
-		// 显示开发路线图
-		showDevelopmentRoadmap("setup")
 	},
 }
 
