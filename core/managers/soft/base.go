@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"os"
 	"servon/components/log_util"
-	"servon/components/utils"
+	"servon/components/shell_util"
+
 	"servon/core/contract"
 	"strconv"
 )
@@ -17,7 +18,7 @@ type Manager struct {
 	Services  map[string]contract.SuperService
 	LogDir    string
 	LogUtil   *log_util.LogUtil
-	ShellUtil *utils.ShellUtil
+	ShellUtil *shell_util.ShellUtil
 	*ProxyManager
 	*GatewayManager
 	*AptManager
@@ -32,7 +33,7 @@ func NewManager(logDir string) *Manager {
 		Gateways:  make(map[string]contract.SuperGateway),
 		LogDir:    logDir,
 		LogUtil:   log_util.NewTopicLogUtil(logDir, "soft"),
-		ShellUtil: utils.NewShellUtil(),
+		ShellUtil: shell_util.NewShellUtil(),
 	}
 
 	sm.ProxyManager = &ProxyManager{Manager: sm}

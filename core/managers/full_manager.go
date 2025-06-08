@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"servon/components/events"
 	"servon/components/github"
+	"servon/components/user"
 )
 
 type FullManager struct {
@@ -21,7 +22,7 @@ type FullManager struct {
 	*BasicInfoManager
 	*NetworkManager
 	*PortManager
-	*UserManager
+	*user.UserManager
 	*TaskManager
 	*ProcessManager
 	*LogManager
@@ -63,7 +64,7 @@ func NewManager(eventBus events.IEventBus) *FullManager {
 		NetworkManager:         NewNetworkManager(),
 		PortManager:            NewPortManager(),
 		TaskManager:            DefaultTaskManager,
-		UserManager:            NewUserManager(),
+		UserManager:            user.NewUserManager(),
 		ProcessManager:         DefaultProcessManager,
 		GitHubIntegration:      githubIntegration,
 		LogManager:             DefaultLogManager,

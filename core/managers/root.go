@@ -1,11 +1,12 @@
 package managers
 
 import (
+	"servon/components/shell_util"
 	"servon/components/utils"
 )
 
 var logger = utils.DefaultLogUtil
-var shell = utils.DefaultShellUtil
+var shell = shell_util.DefaultShellUtil
 
 var PrintInfo = logger.Infof
 var PrintErrorf = logger.Errorf

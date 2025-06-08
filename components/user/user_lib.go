@@ -1,4 +1,4 @@
-package managers
+package user
 
 import (
 	"bufio"
@@ -28,12 +28,10 @@ type User struct {
 
 // GetUserList 获取系统用户列表
 func (u *UserManager) GetUserList() ([]User, error) {
-	PrintInfo("获取用户列表")
-
 	// 使用 os/user 包读取 /etc/passwd
 	file, err := os.Open("/etc/passwd")
 	if err != nil {
-		return nil, PrintAndReturnErrorf("打开 /etc/passwd 失败: %v", err)
+		return nil, err
 	}
 	defer file.Close()
 
@@ -76,10 +74,9 @@ func (u *UserManager) GetUserList() ([]User, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, PrintAndReturnErrorf("读取用户列表失败: %v", err)
+		return nil, err
 	}
 
-	PrintSuccessf("获取用户列表成功")
 	return users, nil
 }
 

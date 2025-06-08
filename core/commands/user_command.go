@@ -2,14 +2,14 @@ package commands
 
 import (
 	"fmt"
-	"servon/core/managers"
+	"servon/components/user"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 // GetUserRootCommand 获取用户管理命令
-func GetUserRootCommand(u *managers.UserManager) *cobra.Command {
+func GetUserRootCommand(u *user.UserManager) *cobra.Command {
 	rootCmd := NewCommand(CommandOptions{
 		Use:   "user",
 		Short: "用户管理",
@@ -23,7 +23,7 @@ func GetUserRootCommand(u *managers.UserManager) *cobra.Command {
 }
 
 // GetUserListCommand 获取用户列表命令
-func GetUserListCommand(u *managers.UserManager) *cobra.Command {
+func GetUserListCommand(u *user.UserManager) *cobra.Command {
 	return NewCommand(CommandOptions{
 		Use:   "list",
 		Short: "获取用户列表",
@@ -46,7 +46,7 @@ func GetUserListCommand(u *managers.UserManager) *cobra.Command {
 }
 
 // CreateUserCommand 创建用户命令
-func CreateUserCommand(u *managers.UserManager) *cobra.Command {
+func CreateUserCommand(u *user.UserManager) *cobra.Command {
 	return NewCommand(CommandOptions{
 		Use:   "create",
 		Short: "创建用户",
@@ -66,7 +66,7 @@ func CreateUserCommand(u *managers.UserManager) *cobra.Command {
 }
 
 // DeleteUserCommand 删除用户命令
-func DeleteUserCommand(u *managers.UserManager) *cobra.Command {
+func DeleteUserCommand(u *user.UserManager) *cobra.Command {
 	return NewCommand(CommandOptions{
 		Use:     "delete",
 		Short:   "删除用户",
