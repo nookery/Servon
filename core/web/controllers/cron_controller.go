@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"servon/components/cron_util"
 	"servon/core/managers"
 	"strconv"
 
@@ -30,7 +31,7 @@ func (c *CronController) HandleListCronTasks(ctx *gin.Context) {
 
 // HandleCreateCronTask 处理创建定时任务的请求
 func (c *CronController) HandleCreateCronTask(ctx *gin.Context) {
-	var task managers.CronTask
+	var task cron_util.CronTask
 	if err := ctx.ShouldBindJSON(&task); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据: " + err.Error()})
 		return
@@ -52,7 +53,7 @@ func (c *CronController) HandleUpdateCronTask(ctx *gin.Context) {
 		return
 	}
 
-	var task managers.CronTask
+	var task cron_util.CronTask
 	if err := ctx.ShouldBindJSON(&task); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据: " + err.Error()})
 		return

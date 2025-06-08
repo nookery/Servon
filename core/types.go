@@ -2,6 +2,7 @@ package core
 
 import (
 	"servon/components/command_util"
+	"servon/components/cron_util"
 	"servon/components/github"
 	"servon/components/log_util"
 	"servon/core/contract"
@@ -11,9 +12,9 @@ import (
 )
 
 type CommandOptions = command_util.CommandOptions
-type CronTask = managers.CronTask
-type ValidationError = managers.ValidationError
-type ValidationErrors = managers.ValidationErrors
+type CronTask = cron_util.CronTask
+type ValidationError = cron_util.ValidationError
+type ValidationErrors = cron_util.ValidationErrors
 type Task = models.Task
 
 type SoftwareInfo = contract.SoftwareInfo
