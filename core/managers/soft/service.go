@@ -7,7 +7,7 @@ import (
 
 // ServiceManager 服务管理相关功能
 type ServiceManager struct {
-	*Manager
+	*SoftManager
 }
 
 // RegisterService 注册后台服务软件

@@ -7,7 +7,7 @@ import (
 
 // GatewayManager 网关软件管理相关功能
 type GatewayManager struct {
-	*Manager
+	*SoftManager
 }
 
 // RegisterGateway 注册网关软件

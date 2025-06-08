@@ -4,7 +4,7 @@ import "fmt"
 
 // ProxyManager 代理软件管理相关功能
 type ProxyManager struct {
-	*Manager
+	*SoftManager
 }
 
 // GetProxySoftwares 获取所有的代理软件

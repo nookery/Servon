@@ -12,7 +12,6 @@ import (
 	"servon/components/github"
 	"servon/components/log_util"
 	"servon/components/utils"
-	"servon/core/managers/deployers"
 
 	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 )
@@ -36,7 +35,7 @@ type DeployManager struct {
 	logsDir     string
 	tempDir     string
 	projectsDir string
-	deployers   []deployers.Deployer
+	deployers   []Deployer
 }
 
 func NewDeployManager(eventBus events.IEventBus, github *github.GitHubIntegration, logsDir string, tempDir string, projectsDir string) (*DeployManager, error) {
@@ -49,7 +48,7 @@ func NewDeployManager(eventBus events.IEventBus, github *github.GitHubIntegratio
 		logsDir:     logsDir,
 		tempDir:     tempDir,
 		projectsDir: projectsDir,
-		deployers:   []deployers.Deployer{},
+		deployers:   []Deployer{},
 	}
 
 	// 订阅Git Push事件
@@ -260,7 +259,7 @@ func (m *DeployManager) getGitHubAuth(repo string) (*githttp.BasicAuth, error) {
 }
 
 // AddDeployer 添加新的部署器
-func (m *DeployManager) AddDeployer(deployer deployers.Deployer) {
+func (m *DeployManager) AddDeployer(deployer Deployer) {
 	m.logger.Infof("添加新的部署器: %T", deployer)
 	m.deployers = append(m.deployers, deployer)
 }
@@ -268,7 +267,7 @@ func (m *DeployManager) AddDeployer(deployer deployers.Deployer) {
 // RemoveDeployer 移除指定类型的部署器
 func (m *DeployManager) RemoveDeployer(deployerType string) {
 	m.logger.Infof("移除部署器: %s", deployerType)
-	newDeployers := make([]deployers.Deployer, 0)
+	newDeployers := make([]Deployer, 0)
 	for _, d := range m.deployers {
 		if fmt.Sprintf("%T", d) != deployerType {
 			newDeployers = append(newDeployers, d)
@@ -278,18 +277,18 @@ func (m *DeployManager) RemoveDeployer(deployerType string) {
 }
 
 // GetDeployers 获取所有部署器
-func (m *DeployManager) GetDeployers() []deployers.Deployer {
+func (m *DeployManager) GetDeployers() []Deployer {
 	return m.deployers
 }
 
 // ClearDeployers 清空所有部署器
 func (m *DeployManager) ClearDeployers() {
 	m.logger.Info("清空所有部署器")
-	m.deployers = make([]deployers.Deployer, 0)
+	m.deployers = make([]Deployer, 0)
 }
 
 // getDeployer 根据项目类型选择合适的部署器
-func (m *DeployManager) getDeployer(projectType string) deployers.Deployer {
+func (m *DeployManager) getDeployer(projectType string) Deployer {
 	for _, deployer := range m.deployers {
 		if deployer.GetName() == projectType {
 			return deployer

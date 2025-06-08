@@ -12,8 +12,8 @@ import (
 	"strconv"
 )
 
-// Manager 基础软件管理功能
-type Manager struct {
+// SoftManager 基础软件管理功能
+type SoftManager struct {
 	Softwares map[string]contract.Software
 	Gateways  map[string]contract.SuperGateway
 	Services  map[string]contract.SuperService
@@ -28,8 +28,8 @@ type Manager struct {
 }
 
 // NewManager 创建新的软件管理器
-func NewManager(logDir string) *Manager {
-	sm := &Manager{
+func NewManager(logDir string) *SoftManager {
+	sm := &SoftManager{
 		Softwares: make(map[string]contract.Software),
 		Gateways:  make(map[string]contract.SuperGateway),
 		LogDir:    logDir,
@@ -37,17 +37,17 @@ func NewManager(logDir string) *Manager {
 		ShellUtil: shell_util.NewShellUtil(),
 	}
 
-	sm.ProxyManager = &ProxyManager{Manager: sm}
-	sm.GatewayManager = &GatewayManager{Manager: sm}
+	sm.ProxyManager = &ProxyManager{SoftManager: sm}
+	sm.GatewayManager = &GatewayManager{SoftManager: sm}
 	sm.AptManager = &soft_util.AptManager{}
 	sm.DpkgManager = &soft_util.DpkgManager{}
-	sm.ServiceManager = &ServiceManager{Manager: sm}
+	sm.ServiceManager = &ServiceManager{SoftManager: sm}
 	sm.LogUtil.Info("初始化软件管理器")
 	return sm
 }
 
 // GetSoftware 获取软件
-func (p *Manager) GetSoftware(name string) (contract.SuperSoft, error) {
+func (p *SoftManager) GetSoftware(name string) (contract.SuperSoft, error) {
 	software, ok := p.Softwares[name]
 	if !ok {
 		return nil, fmt.Errorf("软件 %s 未注册", name)
@@ -56,13 +56,13 @@ func (p *Manager) GetSoftware(name string) (contract.SuperSoft, error) {
 }
 
 // HasSoftware 判断软件是否存在
-func (p *Manager) HasSoftware(name string) bool {
+func (p *SoftManager) HasSoftware(name string) bool {
 	_, ok := p.Softwares[name]
 	return ok
 }
 
 // Install 安装软件
-func (c *Manager) Install(name string) error {
+func (c *SoftManager) Install(name string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		registeredSoftwares := make([]string, 0, len(c.Softwares))
@@ -77,7 +77,7 @@ func (c *Manager) Install(name string) error {
 }
 
 // UninstallSoftware 卸载软件
-func (c *Manager) UninstallSoftware(name string) error {
+func (c *SoftManager) UninstallSoftware(name string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return fmt.Errorf("软件 %s 未注册", name)
@@ -86,7 +86,7 @@ func (c *Manager) UninstallSoftware(name string) error {
 }
 
 // StartSoftware 启动软件
-func (c *Manager) StartSoftware(name string) error {
+func (c *SoftManager) StartSoftware(name string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return fmt.Errorf("软件 %s 未注册", name)
@@ -95,7 +95,7 @@ func (c *Manager) StartSoftware(name string) error {
 }
 
 // StopSoftware 停止软件
-func (c *Manager) StopSoftware(name string) error {
+func (c *SoftManager) StopSoftware(name string) error {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return fmt.Errorf("软件 %s 未注册", name)
@@ -104,7 +104,7 @@ func (c *Manager) StopSoftware(name string) error {
 }
 
 // GetSoftwareStatus 获取软件状态
-func (c *Manager) GetSoftwareStatus(name string) (map[string]string, error) {
+func (c *SoftManager) GetSoftwareStatus(name string) (map[string]string, error) {
 	software, ok := c.Softwares[name]
 	if !ok {
 		return nil, fmt.Errorf("软件 %s 未注册", name)
@@ -114,7 +114,7 @@ func (c *Manager) GetSoftwareStatus(name string) (map[string]string, error) {
 }
 
 // RegisterSoftware 注册普通软件
-func (s *Manager) RegisterSoftware(name string, software contract.Software) error {
+func (s *SoftManager) RegisterSoftware(name string, software contract.Software) error {
 	if _, exists := s.Softwares[name]; exists {
 		return fmt.Errorf("软件 %s 已注册", name)
 	}
@@ -123,7 +123,7 @@ func (s *Manager) RegisterSoftware(name string, software contract.Software) erro
 }
 
 // GetAllSoftware 获取所有软件
-func (c *Manager) GetAllSoftware() []string {
+func (c *SoftManager) GetAllSoftware() []string {
 	softwareNames := make([]string, 0, len(c.Softwares))
 	for name := range c.Softwares {
 		softwareNames = append(softwareNames, name)
@@ -134,7 +134,7 @@ func (c *Manager) GetAllSoftware() []string {
 }
 
 // 检查环境变量中的代理设置
-func (p *Manager) checkEnvProxy() bool {
+func (p *SoftManager) checkEnvProxy() bool {
 	proxyEnvVars := []string{
 		"http_proxy",
 		"HTTP_PROXY",
@@ -153,7 +153,7 @@ func (p *Manager) checkEnvProxy() bool {
 }
 
 // 检查系统代理设置
-func (p *Manager) checkSystemProxy() bool {
+func (p *SoftManager) checkSystemProxy() bool {
 	// 创建一个完整的请求对象，包含必要的URL
 	req, err := http.NewRequest("GET", "https://github.com", nil)
 	if err != nil {
@@ -169,7 +169,7 @@ func (p *Manager) checkSystemProxy() bool {
 }
 
 // 检查默认 HTTP 客户端的代理设置
-func (p *Manager) checkHTTPClientProxy() bool {
+func (p *SoftManager) checkHTTPClientProxy() bool {
 	transport, ok := http.DefaultClient.Transport.(*http.Transport)
 	if !ok {
 		return false

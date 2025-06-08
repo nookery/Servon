@@ -7,7 +7,6 @@ import (
 	"servon/components/log_util"
 	"servon/core/contract"
 	"servon/core/managers"
-	"servon/core/managers/deployers"
 	"servon/core/models"
 )
 
@@ -27,6 +26,6 @@ type WebhookPayload = github.WebhookPayload
 type OSType = managers.OSType
 type Project = contract.Project
 
-type Deployer = deployers.Deployer
+type Deployer = managers.Deployer
 
 type LogUtil = log_util.LogUtil
