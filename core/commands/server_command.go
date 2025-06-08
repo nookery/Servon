@@ -138,7 +138,7 @@ func MakeRestartCommand(web *web_server.WebServer) *cobra.Command {
 				os.Exit(1)
 			}
 
-			logger.Success("服务器已重启")
+			logger.Success("服务器已重启 -> http://" + web.GetHost() + ":" + web.GetPortString())
 		},
 	}
 

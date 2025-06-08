@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Header from './Header.vue'
-import Sidebar from './Sidebar.vue'
+import Sidebar from './SideBar.vue'
 import { useLayoutStore } from '../stores/layout'
 
 const layoutStore = useLayoutStore()

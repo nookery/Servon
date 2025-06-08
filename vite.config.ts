@@ -21,7 +21,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'core/internal/web/static/dist',
+    outDir: 'core/web/static/dist',
     assetsDir: 'assets',
     emptyOutDir: false,
     rollupOptions: {

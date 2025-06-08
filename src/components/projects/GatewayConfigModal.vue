@@ -24,6 +24,8 @@ const fileInfo = ref<FileInfo>({
     path: `gateways/${props.gateway}/config`,
     size: props.config.length,
     isDir: false,
+    isSymlink: false,
+    linkTarget: '',
     modTime: new Date().toISOString(),
     mode: '0644',
     owner: 'root',

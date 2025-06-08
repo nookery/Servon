@@ -6,7 +6,6 @@ import GitHubConfig from './GitHubConfig.vue'
 
 const currentTab = ref('repos')
 const githubLogsRef = ref<InstanceType<typeof GitHubLogs> | null>(null)
-const webhookLogsRef = ref<InstanceType<typeof GitHubLogs> | null>(null)
 </script>
 
 <template>

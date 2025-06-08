@@ -19,5 +19,8 @@ export const request = {
     },
     async post<T>(url: string, config?: any): Promise<T> {
         return axiosInstance.post(url, config)
+    },
+    async put<T>(url: string, config?: any): Promise<T> {
+        return axiosInstance.put(url, config)
     }
 } 

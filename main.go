@@ -19,6 +19,7 @@ import (
 	"servon/plugins/ping"
 	"servon/plugins/pm2"
 	"servon/plugins/pnpm"
+	"servon/plugins/port"
 	"servon/plugins/supervisor"
 	"servon/plugins/xcode"
 	"servon/plugins/yarn"
@@ -40,6 +41,7 @@ func main() {
 	ping.Setup(app)
 	pm2.Setup(app)
 	pnpm.Setup(app)
+	port.Setup(app)
 	supervisor.Setup(app)
 	xcode.Setup(app)
 	yarn.Setup(app)
