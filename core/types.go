@@ -4,10 +4,10 @@ import (
 	"servon/components/command_util"
 	"servon/components/github"
 	"servon/components/log_util"
-	"servon/core/internal/contract"
-	"servon/core/internal/managers"
-	"servon/core/internal/managers/deployers"
-	"servon/core/internal/models"
+	"servon/core/contract"
+	"servon/core/managers"
+	"servon/core/managers/deployers"
+	"servon/core/models"
 )
 
 type CommandOptions = command_util.CommandOptions

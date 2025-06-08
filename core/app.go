@@ -6,8 +6,8 @@ import (
 	"servon/components"
 	"servon/components/events"
 	"servon/components/log_util"
-	"servon/core/internal/managers"
-	"servon/core/internal/providers"
+	"servon/core/managers"
+	"servon/core/providers"
 )
 
 type App struct {
