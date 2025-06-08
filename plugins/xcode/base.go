@@ -239,7 +239,7 @@ func getAvailableSchemes(workDir string, verbose bool) ([]string, string, string
 func showAvailableSchemes(workDir string, verbose bool) {
 	schemes, projectFile, _, err := getAvailableSchemes(workDir, verbose)
 	if err != nil {
-		color.Error.Printf("❌ %s\n", err.Error())
+		color.Warnf("❌ %s\n", err.Error())
 		return
 	}
 

@@ -44,7 +44,7 @@ var codesignCmd = &cobra.Command{
 		}
 
 		// 显示应用信息
-		showAppInfo(appPath)
+		xcode_util.DefaultXcodeUtil.ShowAppInfo(appPath)
 
 		// 执行代码签名
 		err := performCodesign(appPath, signingIdentity, verbose)
@@ -228,47 +228,6 @@ func searchAndSuggestAppPaths(scheme string) {
 	} else {
 		color.Info.Println("💡 建议: 请先运行构建命令: go run main.go xcode build")
 	}
-}
-
-// showAppInfo 显示应用信息
-func showAppInfo(appPath string) {
-	color.Green.Println("🎯 应用程序信息:")
-	fmt.Printf("   应用路径: %s\n", appPath)
-
-	// 读取 Info.plist
-	infoPath := filepath.Join(appPath, "Contents/Info.plist")
-	if _, err := os.Stat(infoPath); err == nil {
-		if version := xcode_util.DefaultXcodeUtil.GetCommandOutput("plutil", "-p", infoPath); version != "" {
-			lines := strings.Split(version, "\n")
-			for _, line := range lines {
-				if strings.Contains(line, "CFBundleShortVersionString") {
-					parts := strings.Split(line, `"`)
-					if len(parts) >= 4 {
-						fmt.Printf("   应用版本: %s\n", parts[3])
-					}
-				} else if strings.Contains(line, "CFBundleVersion") {
-					parts := strings.Split(line, `"`)
-					if len(parts) >= 4 {
-						fmt.Printf("   构建版本: %s\n", parts[3])
-					}
-				} else if strings.Contains(line, "CFBundleIdentifier") {
-					parts := strings.Split(line, `"`)
-					if len(parts) >= 4 {
-						fmt.Printf("   Bundle ID: %s\n", parts[3])
-					}
-				}
-			}
-		}
-		// 从应用路径中提取应用名称
-		appName := filepath.Base(appPath)
-		if strings.HasSuffix(appName, ".app") {
-			appName = strings.TrimSuffix(appName, ".app")
-		}
-		fmt.Printf("   应用名称: %s\n", appName)
-	} else {
-		color.Yellow.Println("   ⚠️  无法读取应用信息")
-	}
-	fmt.Println()
 }
 
 // performCodesign 执行代码签名
