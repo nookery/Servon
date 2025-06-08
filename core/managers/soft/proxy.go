@@ -3,7 +3,9 @@ package soft
 import "fmt"
 
 // ProxyManager 代理软件管理相关功能
-type ProxyManager struct{}
+type ProxyManager struct {
+	*Manager
+}
 
 // GetProxySoftwares 获取所有的代理软件
 func (p *ProxyManager) GetProxySoftwares() []string {
