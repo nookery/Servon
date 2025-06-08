@@ -270,7 +270,6 @@ func (m *DeployManager) getGitHubAuth(repo string) (*githttp.BasicAuth, error) {
 
 // AddDeployer 添加新的部署器
 func (m *DeployManager) AddDeployer(deployer contract.SuperDeployer) {
-	fmt.Printf("添加新的部署器: %T\n", deployer)
 	m.deployers = append(m.deployers, deployer)
 }
 
