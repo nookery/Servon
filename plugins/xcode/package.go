@@ -169,7 +169,7 @@ func checkApplication(buildPath, scheme string) (string, error) {
 	}
 
 	// 显示应用信息
-	showAppInfo(appPath, scheme, "universal")
+	showAppInfo(appPath)
 
 	// 检测架构
 	detectArchitecture(appPath)

@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"servon/components/xcode_util"
 	"strings"
 
@@ -16,85 +15,45 @@ import (
 var codesignCmd = &cobra.Command{
 	Use:   "codesign",
 	Short: "对 macOS 应用进行代码签名",
-	Long:  color.Success.Render("\r\n对 macOS 应用程序进行代码签名，支持多架构应用和 Sparkle 框架的各个组件"),
+	Long:  color.Success.Render("\r\n对 macOS 应用程序进行代码签名，只需提供应用路径和签名身份"),
 	Run: func(cmd *cobra.Command, args []string) {
-		scheme, _ := cmd.Flags().GetString("scheme")
-		buildPath, _ := cmd.Flags().GetString("build-path")
-		arch, _ := cmd.Flags().GetString("arch")
+		appPath, _ := cmd.Flags().GetString("path")
 		signingIdentity, _ := cmd.Flags().GetString("identity")
 		verbose, _ := cmd.Flags().GetBool("verbose")
 
 		// 显示环境信息
-		showCodesignEnvironmentInfo(scheme, buildPath, arch, signingIdentity, verbose)
+		showCodesignEnvironmentInfo(appPath, signingIdentity, verbose)
 
 		// 检查必需的参数
-		if scheme == "" {
-			scheme = detectScheme()
-			if scheme == "" {
-				color.Error.Println("❌ 错误: 未设置 SCHEME 且无法自动检测")
-				showAvailableSchemes("", verbose)
-				os.Exit(1)
-			}
+		if appPath == "" {
+			color.Warnln("❌ 错误: 未指定应用路径")
+			color.Info.Println("💡 使用示例: servon xcode codesign --path ./MyApp.app --identity \"Developer ID Application: Your Name\"")
+			os.Exit(1)
 		}
 
 		if signingIdentity == "" {
-			color.Error.Println("❌ 错误: 未设置代码签名身份")
+			color.Warnln("❌ 错误: 未设置代码签名身份")
 			showAvailableIdentities()
 			os.Exit(1)
 		}
 
-		// 设置默认值
-		if buildPath == "" {
-			buildPath = "./temp"
+		// 检查应用是否存在
+		if _, err := os.Stat(appPath); os.IsNotExist(err) {
+			color.Error.Printf("❌ 应用程序不存在: %s\n", appPath)
+			os.Exit(1)
 		}
 
-		// 如果未指定架构，签名所有架构
-		var architectures []string
-		if arch == "" {
-			architectures = []string{"x86_64", "arm64"}
-			color.Info.Println("🔐 未指定架构，将对所有支持的架构进行签名: x86_64, arm64")
-		} else {
-			architectures = []string{arch}
+		// 显示应用信息
+		showAppInfo(appPath)
+
+		// 执行代码签名
+		err := performCodesign(appPath, signingIdentity, verbose)
+		if err != nil {
+			color.Error.Printf("❌ 代码签名失败: %s\n", err.Error())
+			os.Exit(1)
 		}
 
-		// 为每个架构执行代码签名
-		var signedApps []string
-		for _, currentArch := range architectures {
-			// 构建应用路径
-			appPath := buildAppPathWithArch(buildPath, scheme, currentArch)
-
-			// 检查应用是否存在
-			if _, err := os.Stat(appPath); os.IsNotExist(err) {
-				color.Warn.Printf("⚠️  应用程序不存在 (%s): %s\n", currentArch, appPath)
-				continue
-			}
-
-			// 显示应用信息
-			showAppInfo(appPath, scheme, currentArch)
-
-			// 执行代码签名
-			err := performCodesign(appPath, signingIdentity, verbose, currentArch)
-			if err != nil {
-				color.Error.Printf("❌ 代码签名失败 (%s): %s\n", currentArch, err.Error())
-				os.Exit(1)
-			}
-
-			color.Success.Printf("✅ %s 架构代码签名成功完成！\n", currentArch)
-			signedApps = append(signedApps, fmt.Sprintf("%s (%s)", appPath, currentArch))
-		}
-
-		if len(signedApps) == 0 {
-			color.Warnln("❌ 未找到任何可签名的应用程序")
-			searchAndSuggestAppPaths(scheme)
-			os.Exit(0)
-		}
-
-		// 显示签名结果
-		color.Success.Println("🎉 所有架构代码签名成功完成！")
-		color.Green.Println("📦 已签名的应用程序:")
-		for _, app := range signedApps {
-			color.Green.Printf("   %s\n", app)
-		}
+		color.Success.Printf("✅ 代码签名成功完成: %s\n", appPath)
 
 		// 显示开发路线图
 		showDevelopmentRoadmap("codesign")
@@ -102,79 +61,16 @@ var codesignCmd = &cobra.Command{
 }
 
 func init() {
-	codesignCmd.Flags().StringP("scheme", "s", "", "应用方案名称")
-	codesignCmd.Flags().StringP("build-path", "b", "./temp", "构建输出路径")
-	codesignCmd.Flags().StringP("arch", "a", "", "目标架构 (不指定则签名所有架构: x86_64, arm64; 可选: universal, x86_64, arm64)")
+	codesignCmd.Flags().StringP("path", "p", "", "应用程序路径 (.app 文件)")
 	codesignCmd.Flags().StringP("identity", "i", "", "代码签名身份")
 	codesignCmd.Flags().BoolP("verbose", "v", false, "显示详细签名日志")
 }
 
 // showCodesignEnvironmentInfo 显示代码签名环境信息
-func showCodesignEnvironmentInfo(scheme, buildPath, arch, signingIdentity string, verbose bool) {
-	color.Blue.Println("===========================================")
-	color.Blue.Println("         代码签名环境信息                ")
-	color.Blue.Println("===========================================")
-	fmt.Println()
-
-	// 系统信息
-	color.Green.Println("📱 系统信息:")
-	fmt.Printf("   操作系统: %s %s\n", runtime.GOOS, runtime.GOARCH)
-	if hostname, err := os.Hostname(); err == nil {
-		fmt.Printf("   主机名称: %s\n", hostname)
-	}
-	if user := os.Getenv("USER"); user != "" {
-		fmt.Printf("   当前用户: %s\n", user)
-	}
-	fmt.Printf("   当前时间: %s\n", xcode_util.DefaultXcodeUtil.GetCommandOutput("date", "+%Y-%m-%d %H:%M:%S"))
-	fmt.Println()
-
-	// Xcode 信息
-	color.Green.Println("🔨 Xcode 开发环境:")
-	if xcodeVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcodebuild", "-version"); xcodeVersion != "" {
-		lines := strings.Split(xcodeVersion, "\n")
-		if len(lines) >= 1 {
-			fmt.Printf("   Xcode 版本: %s\n", lines[0])
-		}
-		if len(lines) >= 2 {
-			fmt.Printf("   构建版本: %s\n", lines[1])
-		}
-	}
-	if sdkPath := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcrun", "--show-sdk-path"); sdkPath != "" {
-		fmt.Printf("   SDK 路径: %s\n", sdkPath)
-	}
-	if devDir := xcode_util.DefaultXcodeUtil.GetCommandOutput("xcode-select", "-p"); devDir != "" {
-		fmt.Printf("   开发者目录: %s\n", devDir)
-	}
-	fmt.Println()
-
-	// Swift 信息
-	color.Green.Println("🚀 Swift 编译器:")
-	if swiftVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("swift", "--version"); swiftVersion != "" {
-		lines := strings.Split(swiftVersion, "\n")
-		if len(lines) >= 1 {
-			fmt.Printf("   Swift 版本: %s\n", strings.TrimSpace(lines[0]))
-		}
-	}
-	fmt.Println()
-
-	// Git 信息
-	color.Green.Println("📝 Git 版本控制:")
-	if gitVersion := xcode_util.DefaultXcodeUtil.GetCommandOutput("git", "--version"); gitVersion != "" {
-		fmt.Printf("   Git 版本: %s\n", gitVersion)
-	}
-	if branch := xcode_util.DefaultXcodeUtil.GetCommandOutput("git", "branch", "--show-current"); branch != "" {
-		fmt.Printf("   当前分支: %s\n", branch)
-	}
-	if commit := xcode_util.DefaultXcodeUtil.GetCommandOutput("git", "log", "-1", "--pretty=format:%h - %s (%an, %ar)"); commit != "" {
-		fmt.Printf("   最新提交: %s\n", commit)
-	}
-	fmt.Println()
-
+func showCodesignEnvironmentInfo(appPath, signingIdentity string, verbose bool) {
 	// 签名环境变量
 	color.Green.Println("🌍 签名环境变量:")
-	fmt.Printf("   应用方案: %s\n", scheme)
-	fmt.Printf("   构建路径: %s\n", buildPath)
-	fmt.Printf("   目标架构: %s\n", arch)
+	fmt.Printf("   应用路径: %s\n", appPath)
 	fmt.Printf("   签名身份: %s\n", signingIdentity)
 	fmt.Printf("   详细日志: %t\n", verbose)
 	if cwd, err := os.Getwd(); err == nil {
@@ -185,8 +81,6 @@ func showCodesignEnvironmentInfo(scheme, buildPath, arch, signingIdentity string
 
 // showAvailableIdentities 显示可用的代码签名证书
 func showAvailableIdentities() {
-	color.Yellow.Println("正在检查可用的代码签名证书...")
-
 	cmd := exec.Command("security", "find-identity", "-v", "-p", "codesigning")
 	output, err := cmd.Output()
 	if err != nil {
@@ -231,7 +125,7 @@ func showAvailableIdentities() {
 
 	fmt.Println()
 	color.Yellow.Println("💡 使用示例:")
-	color.Cyan.Println(`   go run main.go xcode codesign --identity "Developer ID Application: Your Name (XXXXXXXXXX)"`)
+	color.Cyan.Println(`   servon xcode codesign --identity "Developer ID Application: Your Name (XXXXXXXXXX)"`)
 	fmt.Println()
 	color.Yellow.Println("📋 证书类型说明:")
 	fmt.Println("   🟢 Developer ID Application: 用于 Mac App Store 外分发，可被所有用户安装")
@@ -337,10 +231,9 @@ func searchAndSuggestAppPaths(scheme string) {
 }
 
 // showAppInfo 显示应用信息
-func showAppInfo(appPath, scheme, arch string) {
+func showAppInfo(appPath string) {
 	color.Green.Println("🎯 应用程序信息:")
 	fmt.Printf("   应用路径: %s\n", appPath)
-	fmt.Printf("   目标架构: %s\n", arch)
 
 	// 读取 Info.plist
 	infoPath := filepath.Join(appPath, "Contents/Info.plist")
@@ -366,7 +259,12 @@ func showAppInfo(appPath, scheme, arch string) {
 				}
 			}
 		}
-		fmt.Printf("   应用名称: %s\n", scheme)
+		// 从应用路径中提取应用名称
+		appName := filepath.Base(appPath)
+		if strings.HasSuffix(appName, ".app") {
+			appName = strings.TrimSuffix(appName, ".app")
+		}
+		fmt.Printf("   应用名称: %s\n", appName)
 	} else {
 		color.Yellow.Println("   ⚠️  无法读取应用信息")
 	}
@@ -374,9 +272,9 @@ func showAppInfo(appPath, scheme, arch string) {
 }
 
 // performCodesign 执行代码签名
-func performCodesign(appPath, signingIdentity string, verbose bool, arch string) error {
+func performCodesign(appPath, signingIdentity string, verbose bool) error {
 	color.Blue.Println("===========================================")
-	color.Yellow.Printf("🔐 开始代码签名过程 (%s)...\n", arch)
+	color.Yellow.Println("🔐 开始代码签名过程...")
 	color.Blue.Println("===========================================")
 	fmt.Println()
 
