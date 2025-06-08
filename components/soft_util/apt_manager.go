@@ -1,4 +1,4 @@
-package soft
+package soft_util
 
 import (
 	"encoding/json"
@@ -21,8 +21,31 @@ type AptPackage struct {
 	IsInstalled   bool      `json:"is_installed"`
 }
 
+// ShellUtil 定义了执行shell命令的接口
+type ShellUtil interface {
+	RunShell(command string, args ...string) (error, string)
+	RunShellWithSudo(command string, args ...string) (error, string)
+}
+
+// LogUtil 定义了日志记录的接口
+type LogUtil interface {
+	Info(message string)
+	Warn(message string)
+	LogAndReturnErrorf(format string, args ...interface{}) error
+}
+
+// AptManager 管理APT包操作
 type AptManager struct {
-	*Manager
+	ShellUtil ShellUtil
+	LogUtil   LogUtil
+}
+
+// NewAptManager 创建一个新的APT管理器实例
+func NewAptManager(shellUtil ShellUtil, logUtil LogUtil) *AptManager {
+	return &AptManager{
+		ShellUtil: shellUtil,
+		LogUtil:   logUtil,
+	}
 }
 
 // AptUpdate 更新软件包索引

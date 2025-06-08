@@ -6,6 +6,7 @@ import (
 	"os"
 	"servon/components/log_util"
 	"servon/components/shell_util"
+	"servon/components/soft_util"
 
 	"servon/core/contract"
 	"strconv"
@@ -21,7 +22,7 @@ type Manager struct {
 	ShellUtil *shell_util.ShellUtil
 	*ProxyManager
 	*GatewayManager
-	*AptManager
+	*soft_util.AptManager
 	*DpkgManager
 	*ServiceManager
 }
@@ -38,7 +39,7 @@ func NewManager(logDir string) *Manager {
 
 	sm.ProxyManager = &ProxyManager{Manager: sm}
 	sm.GatewayManager = &GatewayManager{Manager: sm}
-	sm.AptManager = &AptManager{Manager: sm}
+	sm.AptManager = &soft_util.AptManager{}
 	sm.DpkgManager = &DpkgManager{Manager: sm}
 	sm.ServiceManager = &ServiceManager{Manager: sm}
 	sm.LogUtil.Info("初始化软件管理器")
