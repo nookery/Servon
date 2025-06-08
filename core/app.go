@@ -1,39 +1,41 @@
 package core
 
 import (
-	"fmt"
 	"path/filepath"
-	"servon/core/internal/events"
-	"servon/core/internal/managers"
-	"servon/core/internal/providers"
+
+	"servon/components"
+	"servon/components/events"
+	"servon/components/logger"
+	"servon/core/managers"
+	"servon/core/providers"
 )
 
 type App struct {
-	eventBus *events.EventBus
+	eventBus events.IEventBus
 
 	*providers.WebProvider
 	*providers.ManagerProvider
 	*providers.CommandProvider
 	*providers.UtilProvider
+
+	AppLogger *logger.LogUtil
 }
 
-// New 创建Core实例
+// New 创建App实例
 func New() *App {
-	eventBus, err := events.NewEventBus(filepath.Join(DataRootFolder, "events"))
-	if err != nil {
-		panic(fmt.Sprintf("Failed to create event bus: %v", err))
-	}
+	eventBus := components.EventBus
 
 	manager := managers.NewManager(eventBus)
 	webProvider := providers.NewWebProvider(manager, DefaultHost, DefaultPort)
 
-	core := &App{
+	app := &App{
 		eventBus:        eventBus,
 		WebProvider:     webProvider,
-		ManagerProvider: providers.NewManagerProvider(eventBus),
+		ManagerProvider: providers.NewManagerProvider(eventBus, manager),
 		CommandProvider: providers.NewCommandProvider(manager, webProvider.Server),
 		UtilProvider:    providers.NewUtilProvider(),
+		AppLogger:       logger.NewLogUtil(filepath.Join(DataRootFolder, "logs")),
 	}
 
-	return core
+	return app
 }

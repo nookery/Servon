@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import Alert from '../components/Alert.vue'
 
 interface CronTask {
     id: number
@@ -23,7 +22,6 @@ const emit = defineEmits<{
     (e: 'cancel'): void
 }>()
 
-const formError = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 const showCronHelp = ref(false)
 
@@ -148,9 +146,6 @@ const handleSubmit = () => {
             <textarea v-model="task.description" class="textarea textarea-bordered" rows="3">
             </textarea>
         </div>
-
-        <!-- 通用错误信息显示区域 -->
-        <Alert v-if="formError" type="error" :message="formError" class="mb-4" />
 
         <div class="modal-action">
             <button type="button" class="btn" @click="emit('cancel')">取消</button>

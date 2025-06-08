@@ -3,7 +3,6 @@ package pm2
 import (
 	"fmt"
 	"servon/core"
-	"strings"
 )
 
 func Setup(app *core.App) {
@@ -29,46 +28,55 @@ func NewPm2(app *core.App) core.SuperSoft {
 
 // Install 安装 pm2
 func (p *Pm2) Install() error {
-	p.Infof("正在安装 pm2...")
+	fmt.Println("正在安装 pm2...")
 
 	// 检查 nodejs 是否已安装
-	if err := p.RunShell("node", "--version"); err != nil {
+	err, _ := p.RunShell("node", "--version")
+	if err != nil {
 		errMsg := "请先安装 NodeJS"
-		return p.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
 	// 检查 npm 是否已安装
-	if err := p.RunShell("npm", "--version"); err != nil {
+	err, _ = p.RunShell("npm", "--version")
+	if err != nil {
 		errMsg := "请先安装 npm"
-		return p.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
-	if err := p.RunShell("npm", "install", "-g", "pm2"); err != nil {
+	err, _ = p.RunShell("npm", "install", "-g", "pm2")
+	if err != nil {
 		errMsg := fmt.Sprintf("安装 pm2 失败: %v", err)
-		return p.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
-	p.Success("pm2 安装完成")
+	fmt.Println("pm2 安装完成")
 	return nil
 }
 
 // Uninstall 卸载 pm2
 func (p *Pm2) Uninstall() error {
-	p.Infof("正在卸载 pm2...")
+	fmt.Println("正在卸载 pm2...")
 
-	if err := p.RunShell("npm", "uninstall", "-g", "pm2"); err != nil {
+	err, _ := p.RunShell("npm", "uninstall", "-g", "pm2")
+	if err != nil {
 		errMsg := fmt.Sprintf("卸载 pm2 失败: %v", err)
-		return p.LogAndReturnErrorf("%s", errMsg)
+		fmt.Printf("%s\n", errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
-	p.Success("pm2 卸载完成")
+	fmt.Println("pm2 卸载完成")
 	return nil
 }
 
 // GetStatus 获取 pm2 状态
 func (p *Pm2) GetStatus() (map[string]string, error) {
 	// 检查 nodejs 是否已安装
-	if _, err := p.RunShellWithOutput("node", "--version"); err != nil {
+	err, _ := p.RunShellWithOutput("node", "--version")
+	if err != nil {
 		return map[string]string{
 			"status":  "nodejs_not_installed",
 			"version": "",
@@ -76,7 +84,8 @@ func (p *Pm2) GetStatus() (map[string]string, error) {
 	}
 
 	// 检查 npm 是否已安装
-	if _, err := p.RunShellWithOutput("npm", "--version"); err != nil {
+	err, _ = p.RunShellWithOutput("npm", "--version")
+	if err != nil {
 		return map[string]string{
 			"status":  "npm_not_installed",
 			"version": "",
@@ -85,8 +94,8 @@ func (p *Pm2) GetStatus() (map[string]string, error) {
 
 	// 获取 pm2 版本
 	version := ""
-	if output, err := p.RunShellWithOutput("pm2", "--version"); err == nil {
-		version = strings.TrimSpace(output)
+	err, _ = p.RunShellWithOutput("pm2", "--version")
+	if err != nil {
 		return map[string]string{
 			"status":  "installed",
 			"version": version,
@@ -104,11 +113,11 @@ func (p *Pm2) GetInfo() core.SoftwareInfo {
 }
 
 func (p *Pm2) Start() error {
-	p.Infof("pm2 无需启动服务")
+	fmt.Println("pm2 无需启动服务")
 	return nil
 }
 
 func (p *Pm2) Stop() error {
-	p.Infof("pm2 无需停止服务")
+	fmt.Println("pm2 无需停止服务")
 	return nil
 }

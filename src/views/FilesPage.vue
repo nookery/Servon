@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PageContainer from '../layouts/PageContainer.vue'
 import FileManager from '../components/files/FileManager.vue'
-import type { SortBy, SortOrder } from '../models/FileInfo'
+import type { SortBy, SortOrder } from '../types/FileInfo'
 
 const route = useRoute()
 const router = useRouter()
@@ -34,7 +34,3 @@ onMounted(() => {
             v-model:sort-by="currentSort" v-model:sort-order="sortOrder" />
     </PageContainer>
 </template>
-
-<style>
-@import 'remixicon/fonts/remixicon.css';
-</style>

@@ -38,6 +38,13 @@ export function useToast() {
 
         show(message: string) {
             toastState.add(message, 'info')
+        },
+
+        /**
+         * 显示警告提示
+         */
+        warning(message: string) {
+            toastState.add(message, 'warning')
         }
     }
 } 

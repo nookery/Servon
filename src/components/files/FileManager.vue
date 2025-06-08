@@ -4,7 +4,7 @@ import FileEditor from './FileEditor.vue'
 import PageContainer from '../../layouts/PageContainer.vue'
 import { fileAPI } from '../../api/file_api'
 import RenameFileDialog from './RenameFileDialog.vue'
-import type { FileInfo, SortBy, SortOrder } from '../../models/FileInfo'
+import type { FileInfo, SortBy, SortOrder } from '../../types/FileInfo'
 import IconButton from '../IconButton.vue'
 import { useConfirm } from '../../composables/useConfirm'
 import CreateFileDialog from './CreateFileDialog.vue'
@@ -110,6 +110,7 @@ function navigateTo(index: number) {
 
 // 其他辅助函数保持不变
 function getFileIcon(file: FileInfo) {
+    if (file.isSymlink) return 'ri-link'
     if (file.isDir) return 'ri-folder-fill'
     const ext = file.name.split('.').pop()?.toLowerCase()
     switch (ext) {
@@ -137,6 +138,12 @@ function formatFileSize(size: number) {
 }
 
 async function openFile(file: FileInfo) {
+    if (file.isSymlink) {
+        // 如果是软链接，导航到链接目标
+        navigateToLinkTarget(file)
+        return
+    }
+
     if (file.isDir) {
         loadFiles(file.path)
     } else {
@@ -276,6 +283,49 @@ onBeforeUnmount(() => {
 onMounted(() => {
     loadFilesWithClear(props.initialPath)
 })
+
+async function copyFile(file: FileInfo) {
+    try {
+        const baseName = file.name.split('.')
+        const ext = baseName.length > 1 ? baseName.pop() : ''
+        const newName = `${baseName.join('.')} - 副本${ext ? '.' + ext : ''}`
+        const newPath = `${currentPath.value}/${newName}`
+
+        await fileAPI.copyFile(file.path, newPath)
+        loadFiles(currentPath.value)
+    } catch (err: any) {
+        error.value = err.response?.data?.error || err.message || '复制失败'
+        setTimeout(() => {
+            error.value = null
+        }, 5000)
+    }
+}
+
+function navigateToLinkTarget(file: FileInfo) {
+    if (!file.isSymlink || !file.linkTarget) return
+
+    // 如果是绝对路径，直接导航
+    if (file.linkTarget.startsWith('/')) {
+        loadFiles(file.linkTarget)
+    } else {
+        // 如果是相对路径，需要计算绝对路径
+        const basePath = file.path.substring(0, file.path.lastIndexOf('/'))
+        let absolutePath = basePath
+
+        // 简单处理相对路径
+        if (file.linkTarget.startsWith('./')) {
+            absolutePath += file.linkTarget.substring(1)
+        } else if (file.linkTarget.startsWith('../')) {
+            // 处理 '../' 情况，这里简化处理
+            const parts = basePath.split('/')
+            absolutePath = parts.slice(0, parts.length - 1).join('/') + file.linkTarget.substring(2)
+        } else {
+            absolutePath += '/' + file.linkTarget
+        }
+
+        loadFiles(absolutePath)
+    }
+}
 </script>
 
 <template>
@@ -423,6 +473,10 @@ onMounted(() => {
                             <i :class="getFileIcon(file)" class="text-lg"></i>
                             <span class="cursor-pointer" @click="openFile(file)">
                                 {{ file.name }}
+                                <span v-if="file.isSymlink" class="badge badge-sm badge-info ml-1"
+                                    :title="`软链接 → ${file.linkTarget}`">
+                                    链接
+                                </span>
                             </span>
                         </td>
                         <td>{{ file.mode }}</td>
@@ -439,6 +493,13 @@ onMounted(() => {
                                 </button>
                                 <button v-if="!file.isDir" class="btn btn-xs join-item" @click="downloadFile(file)">
                                     <i class="ri-download-line"></i>
+                                </button>
+                                <button v-if="!file.isDir" class="btn btn-xs join-item" @click="copyFile(file)">
+                                    <i class="ri-file-copy-line"></i>
+                                </button>
+                                <button v-if="file.isSymlink" class="btn btn-xs join-item"
+                                    @click="navigateToLinkTarget(file)" title="跳转到链接目标">
+                                    <i class="ri-link-m"></i>
                                 </button>
                             </div>
                         </td>
@@ -467,8 +528,6 @@ onMounted(() => {
 </template>
 
 <style>
-@import 'remixicon/fonts/remixicon.css';
-
 .breadcrumbs a {
     text-decoration: none !important;
 }

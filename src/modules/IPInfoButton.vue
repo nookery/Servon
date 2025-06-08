@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { systemAPI } from '../api/info'
-import type { IPInfo } from '../models/IpInfo'
+import type { IPInfo } from '../types/IpInfo'
 import IPInfoDisplay from '../modules/IPInfoDisplay.vue'
 import IconButton from '../components/IconButton.vue'
 

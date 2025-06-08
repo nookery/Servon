@@ -12,7 +12,3 @@ const currentPath = ref('/data')
             :show-toolbar="true" :show-pagination="true" :show-shortcuts="true" :read-only="false" />
     </PageContainer>
 </template>
-
-<style>
-@import 'remixicon/fonts/remixicon.css';
-</style>

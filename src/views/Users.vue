@@ -65,16 +65,12 @@ onMounted(() => {
 </script>
 
 <template>
-    <PageContainer title="用户管理">
+    <PageContainer title="用户管理" :error="error">
         <template #header>
             <div class="flex justify-end mb-4">
                 <button class="btn btn-primary" @click="showCreateModal = true">
                     创建用户
                 </button>
-            </div>
-
-            <div v-if="error" class="alert alert-error mb-4">
-                {{ error }}
             </div>
         </template>
 

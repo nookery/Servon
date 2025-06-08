@@ -10,10 +10,19 @@ generate:
 # 构建整个项目
 # LDFLAGS 可以从命令行传入，用于注入版本信息
 build: generate
+	make build-frontend
+	make build-backend
+
+# 构建后端
+# LDFLAGS 可以从命令行传入，用于注入版本信息
+build-backend:
+	go build -ldflags "$(LDFLAGS)" -o temp/servon
+
+# 构建前端
+build-frontend:
 	pnpm install
 	pnpm build
-	go build -ldflags "$(LDFLAGS)" -o temp/servon
 
 # 供 air 使用
 air: 
-	SKIP_GENERATE=1 make build
+	SKIP_GENERATE=1 make build-backend

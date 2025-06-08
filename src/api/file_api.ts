@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { FileInfo, SortBy, SortOrder } from '../models/FileInfo'
+import type { FileInfo, SortBy, SortOrder } from '../types/FileInfo'
 
 export const fileAPI = {
     // 获取文件列表
@@ -50,4 +50,11 @@ export const fileAPI = {
     // 批量删除文件
     batchDeleteFiles: (paths: string[]) =>
         axios.post('/web_api/files/batch-delete', { paths }),
+
+    copyFile(sourcePath: string, targetPath: string) {
+        return axios.post('/web_api/files/copy', {
+            source: sourcePath,
+            target: targetPath
+        })
+    }
 }

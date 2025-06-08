@@ -14,14 +14,14 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/web_api': {
-        target: process.env.VITE_API_TARGET || 'http://127.0.0.1:7654',
+        target: process.env.VITE_API_TARGET || 'http://127.0.0.1:9754',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/web_api/, '/web_api'),
       },
     },
   },
   build: {
-    outDir: 'core/internal/web/static/dist',
+    outDir: 'core/web/static/dist',
     assetsDir: 'assets',
     emptyOutDir: false,
     rollupOptions: {

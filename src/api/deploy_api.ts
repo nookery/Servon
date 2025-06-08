@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { DeployLog } from '../models/Deploy'
+import type { DeployLog } from '../types/Deploy'
 
 // 获取所有部署日志
 export async function getDeployLogs() {

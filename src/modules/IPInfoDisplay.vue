@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IPInfo } from '../models/IpInfo'
+import type { IPInfo } from '../types/IpInfo'
 
 defineProps<{
     ipInfo: IPInfo | null

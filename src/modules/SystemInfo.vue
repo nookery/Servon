@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import Alert from '../components/Alert.vue'
 import { systemAPI } from '../api/info'
 interface SystemBasicInfo {
     hostname: string
@@ -31,8 +30,6 @@ onMounted(async () => {
     <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
             <h2 class="card-title">系统信息</h2>
-
-            <Alert v-if="error" type="error" :message="error" />
 
             <div v-if="systemInfo" class="overflow-x-auto">
                 <table class="table table-zebra">

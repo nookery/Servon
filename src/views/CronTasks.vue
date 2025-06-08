@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import Alert from '../components/Alert.vue'
 import CronTaskForm from '../modules/CronTaskForm.vue'
 import PageContainer from '../layouts/PageContainer.vue'
 import { type CronTask, getTasks, createTask, updateTask, deleteTask, toggleTask } from '../api/cronTasks'
@@ -115,15 +114,13 @@ onMounted(fetchTasks)
 </script>
 
 <template>
-    <PageContainer title="定时任务管理">
+    <PageContainer title="定时任务管理" :error="error">
         <template #header>
             <div class="flex justify-between items-center mb-6">
                 <button class="btn btn-primary btn-md" @click="showModal = true">
                     <i class="ri-add-line"></i>新建任务
                 </button>
             </div>
-
-            <Alert v-if="error" type="error" :message="error" />
         </template>
 
         <!-- 任务列表 -->

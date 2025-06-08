@@ -1,6 +1,6 @@
 import axios from 'axios'
-import type { FileInfo } from '../models/FileInfo'
-import type { GitHubRepo, GitHubSetupParams, WebhookData } from '../models/GitHubTypes'
+import type { FileInfo } from '../types/FileInfo'
+import type { GitHubRepo, GitHubSetupParams, WebhookData } from '../types/GitHubTypes'
 
 export async function getAuthorizedRepos(): Promise<GitHubRepo[]> {
     const res = await axios.get('/web_api/integrations/github/repos')

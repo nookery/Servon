@@ -3,8 +3,8 @@ testdata_dir = "testdata"
 tmp_dir = "temp"
 
 [build]
-  args_bin = []
-  bin = "./temp/servon server start --dev"
+  args_bin = ["server", "restart"]
+  bin = "./temp/servon"
   cmd = "make air"
   delay = 1000
   exclude_dir = ["assets", "temp", "vendor", "testdata"]
