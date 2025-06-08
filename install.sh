@@ -1,5 +1,26 @@
 #!/bin/bash
 
+# Servon 安装脚本
+# 
+# 使用方法:
+#   curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | bash
+#
+# 环境变量:
+#   GITHUB_TOKEN    - GitHub Personal Access Token，用于提高 API 速率限制
+#   SERVON_VERSION  - 指定要安装的版本，例如 v1.0.0（跳过 API 调用）
+#
+# 示例:
+#   # 使用认证安装最新版本
+#   GITHUB_TOKEN=your_token bash install.sh
+#
+#   # 安装指定版本
+#   SERVON_VERSION=v1.0.0 bash install.sh
+#
+#   # 在 GitHub Actions 中使用
+#   env:
+#     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#   run: curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | bash
+
 # 颜色定义
 RED='\033[0;31m'      # 红色文字
 GREEN='\033[0;32m'    # 绿色文字
@@ -181,11 +202,27 @@ detect_os() {
     esac
 }
 
-# 获取最新版本
+# 获取最新版本（支持 GitHub Token 认证）
 get_latest_version() {
-    # 保存 API 响应到变量中
-    local api_response
-    api_response=$(curl -s -w "\n%{http_code}" https://api.github.com/repos/nookery/Servon/releases/latest)
+    local api_url="https://api.github.com/repos/nookery/Servon/releases/latest"
+    
+    # 检查是否提供了 GitHub Token
+    if [ -n "$GITHUB_TOKEN" ]; then
+        print_info "Using authenticated GitHub API request"
+        # 使用认证请求
+        local api_response
+        api_response=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "User-Agent: Servon-Installer" \
+            "$api_url")
+    else
+        print_warning "Using unauthenticated GitHub API request (rate limited to 60/hour)"
+        print_info "Tip: Set GITHUB_TOKEN environment variable for higher rate limits"
+        # 使用未认证请求
+        local api_response
+        api_response=$(curl -s -w "\n%{http_code}" "$api_url")
+    fi
+    
     local status_code=$(echo "$api_response" | tail -n1)
     local response_body=$(echo "$api_response" | sed '$d')
 
@@ -193,6 +230,17 @@ get_latest_version() {
     if [ "$status_code" != "200" ]; then
         print_error "Failed to fetch latest version. HTTP Status: $status_code"
         print_error "API Response: $response_body"
+        
+        # 如果是速率限制错误，提供解决建议
+        if echo "$response_body" | grep -q "rate limit exceeded"; then
+            print_error "GitHub API rate limit exceeded!"
+            print_info "Solutions:"
+            print_info "1. Set GITHUB_TOKEN environment variable for authentication"
+            print_info "2. Wait and retry later (resets every hour)"
+            print_info "3. Use direct download with specific version"
+            print_info "   Example: SERVON_VERSION=v1.0.0 bash install.sh"
+        fi
+        
         return 1
     fi
 
@@ -211,15 +259,22 @@ get_latest_version() {
 
 # 下载最新版本
 download_latest() {
-    print_info "Downloading latest version..."
-    
     local version
-    version=$(get_latest_version)
-    if [ -z "$version" ]; then
-        print_error "Failed to get latest version"
-        exit 1
+    
+    # 检查是否指定了版本
+    if [ -n "$SERVON_VERSION" ]; then
+        version="$SERVON_VERSION"
+        print_info "Using specified version: $version"
+    else
+        print_info "Fetching latest version from GitHub API..."
+        version=$(get_latest_version)
+        if [ -z "$version" ]; then
+            print_error "Failed to get latest version"
+            print_info "You can specify a version manually: SERVON_VERSION=v1.0.0 bash install.sh"
+            exit 1
+        fi
+        print_success "Found latest version: $version"
     fi
-    print_success "Found version: $version"
 
     local arch os
     arch=$(detect_arch)

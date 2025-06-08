@@ -1,0 +1,192 @@
+name: Example - Using Servon in GitHub Actions
+
+# 这是一个示例工作流，展示如何在 GitHub Actions 中正确使用 Servon
+# 避免 GitHub API 速率限制问题
+
+on:
+  workflow_dispatch:  # 手动触发用于测试
+  # push:
+  #   branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
+
+jobs:
+  # 方法一：使用 GitHub Token 认证（推荐）
+  install-with-token:
+    name: Install with GitHub Token
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Servon (Authenticated)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -fsSL \
+            --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            --header 'user-agent: Example-Workflow' \
+            'https://raw.githubusercontent.com/nookery/servon/main/install.sh' | bash
+      
+      - name: Verify Installation
+        run: |
+          servon --help
+          servon version
+
+  # 方法二：指定版本安装（跳过 API 调用）
+  install-specific-version:
+    name: Install Specific Version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Servon (Specific Version)
+        env:
+          SERVON_VERSION: v1.0.0  # 替换为实际版本
+        run: |
+          curl -fsSL 'https://raw.githubusercontent.com/nookery/servon/main/install.sh' | bash
+      
+      - name: Verify Installation
+        run: |
+          servon --help
+          servon version
+
+  # 方法三：使用缓存优化
+  install-with-cache:
+    name: Install with Cache
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache Servon Binary
+        id: cache-servon
+        uses: actions/cache@v3
+        with:
+          path: ~/.local/bin/servon
+          key: servon-${{ runner.os }}-${{ runner.arch }}-latest
+          restore-keys: |
+            servon-${{ runner.os }}-${{ runner.arch }}-
+      
+      - name: Install Servon
+        if: steps.cache-servon.outputs.cache-hit != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -fsSL \
+            --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            --header 'user-agent: Example-Workflow' \
+            'https://raw.githubusercontent.com/nookery/servon/main/install.sh' | bash
+          
+          # 复制到缓存目录
+          mkdir -p ~/.local/bin
+          cp /usr/local/bin/servon ~/.local/bin/
+      
+      - name: Add to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Verify Installation
+        run: |
+          servon --help
+          servon version
+
+  # 方法四：使用 GitHub CLI
+  install-with-gh-cli:
+    name: Install with GitHub CLI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Servon using GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 获取最新版本
+          VERSION=$(gh release view --repo nookery/servon --json tagName --jq '.tagName')
+          echo "Installing Servon $VERSION"
+          
+          # 检测系统架构
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m)
+          case $ARCH in
+              x86_64) ARCH="amd64" ;;
+              aarch64|arm64) ARCH="arm64" ;;
+          esac
+          
+          # 下载二进制文件
+          gh release download $VERSION --repo nookery/servon \
+            --pattern "servon-${OS}-${ARCH}" --dir /tmp
+          
+          # 安装
+          sudo mv "/tmp/servon-${OS}-${ARCH}" /usr/local/bin/servon
+          sudo chmod +x /usr/local/bin/servon
+      
+      - name: Verify Installation
+        run: |
+          servon --help
+          servon version
+
+  # 方法五：带重试机制的安装
+  install-with-retry:
+    name: Install with Retry Mechanism
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Servon (with retry)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 重试函数
+          install_servon() {
+            curl -fsSL \
+              --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+              --header 'user-agent: Example-Workflow' \
+              'https://raw.githubusercontent.com/nookery/servon/main/install.sh' | bash
+          }
+          
+          # 最多重试 3 次
+          for i in {1..3}; do
+            echo "Attempt $i to install Servon..."
+            if install_servon; then
+              echo "Servon installed successfully on attempt $i"
+              break
+            else
+              echo "Attempt $i failed"
+              if [ $i -eq 3 ]; then
+                echo "All attempts failed, using fallback method"
+                # 降级到直接下载特定版本
+                VERSION="v1.0.0"  # 替换为实际版本
+                OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+                ARCH=$(uname -m)
+                case $ARCH in
+                    x86_64) ARCH="amd64" ;;
+                    aarch64|arm64) ARCH="arm64" ;;
+                esac
+                
+                curl -L -o servon \
+                  "https://github.com/nookery/servon/releases/download/${VERSION}/servon-${OS}-${ARCH}"
+                chmod +x servon
+                sudo mv servon /usr/local/bin/
+                echo "Fallback installation completed"
+              else
+                echo "Waiting 30 seconds before retry..."
+                sleep 30
+              fi
+            fi
+          done
+      
+      - name: Verify Installation
+        run: |
+          servon --help
+          servon version
+
+  # 跨平台测试
+  cross-platform-install:
+    name: Cross Platform Install
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install Servon
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -fsSL \
+            --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            --header 'user-agent: Example-Workflow' \
+            'https://raw.githubusercontent.com/nookery/servon/main/install.sh' | bash
+      
+      - name: Verify Installation
+        run: |
+          servon --help
+          servon version
