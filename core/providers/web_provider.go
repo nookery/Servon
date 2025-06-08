@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"servon/components/web_server_util"
+	"servon/components/web_server"
 	"servon/core/managers"
 	"servon/core/models"
 	"servon/core/web/routers"
@@ -11,16 +11,16 @@ import (
 )
 
 type WebProvider struct {
-	Server *web_server_util.WebServer
+	Server *web_server.WebServer
 	config *models.WebConfig
 }
 
 func NewWebProvider(manager *managers.FullManager, host string, port int) *WebProvider {
-	serverConfig := web_server_util.WebServerConfig{
+	serverConfig := web_server.WebServerConfig{
 		Host: host,
 		Port: port,
 	}
-	server := web_server_util.NewWebServer(serverConfig)
+	server := web_server.NewWebServer(serverConfig)
 	config := &models.WebConfig{
 		Host: host,
 		Port: port,

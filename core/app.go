@@ -37,7 +37,5 @@ func New() *App {
 		AppLogger:       logger.NewLogUtil(filepath.Join(DataRootFolder, "logs")),
 	}
 
-	app.AppLogger.Success("App 初始化完成")
-
 	return app
 }
