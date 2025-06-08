@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"servon/components/log_util"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -14,28 +13,16 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
-// GitUtil 提供Git操作相关的功能，如果提供了logger，则使用logger记录日志，否则不记录日志
-type GitUtil struct {
-	logger *log_util.LogUtil
-}
+// GitUtil 提供Git操作相关的功能
+type GitUtil struct{}
 
 // NewGitUtil 创建新的Git工具实例
-func NewGitUtil(logger *log_util.LogUtil) *GitUtil {
-	return &GitUtil{
-		logger: logger,
-	}
+func NewGitUtil() *GitUtil {
+	return &GitUtil{}
 }
 
 // CloneRepo 克隆代码仓库
 func (g *GitUtil) CloneRepo(url, branch, targetDir string, auth *http.BasicAuth) error {
-	if g.logger != nil {
-		g.logger.Infof("开始克隆仓库\n")
-		g.logger.Infof("URL: %s\n", url)
-		g.logger.Infof("分支: %s\n", branch)
-		g.logger.Infof("目标目录: %s\n", targetDir)
-		g.logger.Infof("使用认证: %v\n", auth != nil)
-	}
-
 	if auth != nil {
 		// 确保URL使用HTTPS格式
 		if !strings.HasPrefix(url, "https://") {
@@ -49,9 +36,6 @@ func (g *GitUtil) CloneRepo(url, branch, targetDir string, auth *http.BasicAuth)
 			auth.Username,
 			auth.Password,
 			urlParts[1])
-		if g.logger != nil {
-			g.logger.Infof("使用认证URL克隆\n")
-		}
 	}
 
 	// 确保目标目录存在
@@ -73,15 +57,9 @@ func (g *GitUtil) CloneRepo(url, branch, targetDir string, auth *http.BasicAuth)
 	// 执行克隆
 	_, err := git.PlainClone(targetDir, false, cloneOptions)
 	if err != nil {
-		if g.logger != nil {
-			g.logger.Errorf("克隆失败: %v\n", err)
-		}
 		return fmt.Errorf("克隆仓库失败: %v", err)
 	}
 
-	if g.logger != nil {
-		g.logger.Successf("仓库克隆成功\n")
-	}
 	return nil
 }
 
@@ -179,18 +157,7 @@ func (g *GitUtil) PullLatest(repoPath string, auth *http.BasicAuth) error {
 
 	err = w.Pull(pullOptions)
 	if err != nil && err != git.NoErrAlreadyUpToDate {
-		if g.logger != nil {
-			g.logger.Errorf("拉取失败: %v\n", err)
-		}
 		return fmt.Errorf("拉取代码失败: %v", err)
-	}
-
-	if g.logger != nil {
-		if err == git.NoErrAlreadyUpToDate {
-			g.logger.Info("代码已是最新")
-		} else {
-			g.logger.Success("代码拉取成功")
-		}
 	}
 
 	return nil

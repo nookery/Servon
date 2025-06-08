@@ -4,7 +4,7 @@ import (
 	"servon/components/command_util"
 	"servon/components/cron_util"
 	"servon/components/github"
-	"servon/components/log_util"
+	"servon/components/logger"
 	"servon/core/contract"
 	"servon/core/managers"
 	"servon/core/models"
@@ -28,4 +28,4 @@ type Project = contract.Project
 
 type Deployer = managers.Deployer
 
-type LogUtil = log_util.LogUtil
+type LogUtil = logger.LogUtil

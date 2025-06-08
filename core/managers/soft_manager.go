@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"servon/components/log_util"
+	logger1 "servon/components/logger"
 	"servon/components/shell_util"
 	"servon/components/soft_util"
 
@@ -18,7 +18,7 @@ type SoftManager struct {
 	Gateways  map[string]contract.SuperGateway
 	Services  map[string]contract.SuperService
 	LogDir    string
-	LogUtil   *log_util.LogUtil
+	LogUtil   *logger1.LogUtil
 	ShellUtil *shell_util.ShellUtil
 	*ProxyManager
 	*GatewayManager
@@ -33,7 +33,7 @@ func NewSoftManager(logDir string) *SoftManager {
 		Softwares: make(map[string]contract.Software),
 		Gateways:  make(map[string]contract.SuperGateway),
 		LogDir:    logDir,
-		LogUtil:   log_util.NewTopicLogUtil(logDir, "soft"),
+		LogUtil:   logger1.NewTopicLogUtil(logDir, "soft"),
 		ShellUtil: shell_util.NewShellUtil(),
 	}
 

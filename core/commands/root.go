@@ -1,13 +1,13 @@
 package commands
 
 import (
-	"servon/components/log_util"
+	"servon/components/command_util"
+	logger1 "servon/components/logger"
 	"servon/components/shell_util"
 	"servon/components/string_util"
-	"servon/components/command_util"
 )
 
-var logger = log_util.DefaultLogUtil
+var logger = logger1.DefaultLogUtil
 var shell = shell_util.DefaultShellUtil
 var stringUtil = string_util.DefaultStringUtil
 
