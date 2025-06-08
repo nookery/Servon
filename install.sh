@@ -8,6 +8,7 @@
 # 环境变量:
 #   GITHUB_TOKEN    - GitHub Personal Access Token，用于提高 API 速率限制
 #   SERVON_VERSION  - 指定要安装的版本，例如 v1.0.0（跳过 API 调用）
+#   DEBUG          - 启用调试模式，显示详细的API响应信息
 #
 # 示例:
 #   # 使用认证安装最新版本
@@ -20,6 +21,9 @@
 #   env:
 #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #   run: curl -fsSL https://raw.githubusercontent.com/nookery/servon/main/install.sh | bash
+#
+#   # 启用调试模式
+#   DEBUG=1 bash install.sh
 
 # 颜色定义
 RED='\033[0;31m'      # 红色文字
@@ -208,7 +212,6 @@ get_latest_version() {
     
     # 检查是否提供了 GitHub Token
     if [ -n "$GITHUB_TOKEN" ]; then
-        print_info "Using authenticated GitHub API request"
         # 使用认证请求
         local api_response
         api_response=$(curl -s -w "\n%{http_code}" \
@@ -216,8 +219,6 @@ get_latest_version() {
             -H "User-Agent: Servon-Installer" \
             "$api_url")
     else
-        print_warning "Using unauthenticated GitHub API request (rate limited to 60/hour)"
-        print_info "Tip: Set GITHUB_TOKEN environment variable for higher rate limits"
         # 使用未认证请求
         local api_response
         api_response=$(curl -s -w "\n%{http_code}" "$api_url")
@@ -226,19 +227,26 @@ get_latest_version() {
     local status_code=$(echo "$api_response" | tail -n1)
     local response_body=$(echo "$api_response" | sed '$d')
 
+    # 调试信息：显示响应的前几行
+    if [ -n "$DEBUG" ]; then
+        print_info "Debug: HTTP Status Code: $status_code" >&2
+        print_info "Debug: Response body (first 200 chars): $(echo "$response_body" | head -c 200)..." >&2
+    fi
+
     # 检查 HTTP 状态码
     if [ "$status_code" != "200" ]; then
-        print_error "Failed to fetch latest version. HTTP Status: $status_code"
-        print_error "API Response: $response_body"
+        print_error "Failed to fetch latest version. HTTP Status: $status_code" >&2
+        print_error "API Response: $response_body" >&2
         
         # 如果是速率限制错误，提供解决建议
         if echo "$response_body" | grep -q "rate limit exceeded"; then
-            print_error "GitHub API rate limit exceeded!"
-            print_info "Solutions:"
-            print_info "1. Set GITHUB_TOKEN environment variable for authentication"
-            print_info "2. Wait and retry later (resets every hour)"
-            print_info "3. Use direct download with specific version"
-            print_info "   Example: SERVON_VERSION=v1.0.0 bash install.sh"
+            print_error "GitHub API rate limit exceeded!" >&2
+            print_info "Solutions:" >&2
+            print_info "1. Set GITHUB_TOKEN environment variable for authentication" >&2
+            print_info "2. Wait and retry later (resets every hour)" >&2
+            print_info "3. Use direct download with specific version" >&2
+            print_info "   Visit https://github.com/nookery/Servon/releases to find the latest version" >&2
+            print_info "   Example: SERVON_VERSION=v1.0.0 bash install.sh" >&2
         fi
         
         return 1
@@ -246,11 +254,24 @@ get_latest_version() {
 
     # 尝试获取版本号
     local version
-    version=$(echo "$response_body" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    # 使用更精确的JSON解析，避免匹配到错误内容
+    version=$(echo "$response_body" | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' | sed -E 's/.*"([^"]+)"/\1/')
+    
+    # 如果第一种方法失败，尝试备用解析方法
+    if [ -z "$version" ]; then
+        version=$(echo "$response_body" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)
+    fi
+    
+    # 验证版本号格式（应该是v开头的版本号或纯数字版本号）
+    if [ -n "$version" ] && ! echo "$version" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+'; then
+        print_warning "Parsed version '$version' doesn't match expected format" >&2
+        print_error "API Response: $response_body" >&2
+        version=""
+    fi
     
     if [ -z "$version" ]; then
-        print_error "No version tag found in the API response"
-        print_error "API Response: $response_body"
+        print_error "No valid version tag found in the API response" >&2
+        print_error "API Response: $response_body" >&2
         return 1
     fi
 
@@ -270,7 +291,6 @@ download_latest() {
         version=$(get_latest_version)
         if [ -z "$version" ]; then
             print_error "Failed to get latest version"
-            print_info "You can specify a version manually: SERVON_VERSION=v1.0.0 bash install.sh"
             exit 1
         fi
         print_success "Found latest version: $version"
