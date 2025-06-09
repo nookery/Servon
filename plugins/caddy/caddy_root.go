@@ -20,7 +20,7 @@ func Setup(app *core.App) {
 }
 
 func (c *Caddy) NewCaddyCommand(app *core.App) *cobra.Command {
-	rootCmd := app.NewCommand(command_util.CommandOptions{
+	rootCmd := command_util.NewCommand(command_util.CommandOptions{
 		Use:   "caddy",
 		Short: "Caddy 管理命令",
 	})

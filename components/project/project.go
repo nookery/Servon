@@ -1,5 +1,5 @@
 // Package project_util 提供项目检测和管理功能
-package project_util
+package project
 
 import (
 	"os"

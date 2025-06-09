@@ -17,7 +17,7 @@ func (c *Caddy) NewInstallCommand() *cobra.Command {
 }
 
 func (c *Caddy) NewProxyCommand() *cobra.Command {
-	cmd := c.NewCommand(command_util.CommandOptions{
+	cmd := command_util.NewCommand(command_util.CommandOptions{
 		Use:   "proxy",
 		Short: "代理命令",
 		Run: func(cmd *cobra.Command, args []string) {
