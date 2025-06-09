@@ -10,8 +10,12 @@ import (
 	"time"
 )
 
-// Stop 停止服务器
-func (ws *WebServer) Stop() error {
+// stop 停止服务器
+func (ws *WebServer) stop() error {
+	if ws.config.Verbose && ws.logger != nil {
+		ws.logger.Infof("🛑 开始关闭服务器...")
+	}
+
 	if ws.server != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()

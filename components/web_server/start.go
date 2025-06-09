@@ -35,6 +35,11 @@ func (ws *WebServer) start() error {
 
 // RunInBackground 在后台运行服务器（作为独立进程）
 func (ws *WebServer) RunInBackground() error {
+	return ws.RunInBackgroundWithOptions(false)
+}
+
+// RunInBackgroundWithOptions 在后台运行服务器（支持跳过端口检查）
+func (ws *WebServer) RunInBackgroundWithOptions(skipPortCheck bool) error {
 	// 如果未设置端口，则使用默认端口
 	if ws.config.Port == 0 {
 		if ws.config.Verbose && ws.logger != nil {
@@ -66,13 +71,15 @@ func (ws *WebServer) RunInBackground() error {
 		}
 	}
 
-	// 检查服务器是否已经在运行
-	if pid, err := findProcessByPortWithVerbose(ws.config.Port, ws.config.Verbose, ws.logger); err == nil && pid > 0 {
-		return fmt.Errorf("服务器已在运行中 (PID: %d)\n提示：如需重启，请使用 'restart' 命令", pid)
+	// 检查服务器是否已经在运行（除非跳过端口检查）
+	if !skipPortCheck {
+		if pid, err := findProcessByPortWithVerbose(ws.config.Port, ws.config.Verbose, ws.logger); err == nil && pid > 0 {
+			return fmt.Errorf("服务器已在运行中 (PID: %d)\n提示：如需重启，请使用 'restart' 命令", pid)
+		}
 	}
 
 	// 设置守护进程的上下文
-	cntxt := &daemon.Context{
+	ctx := &daemon.Context{
 		PidFileName: PID_FILE,
 		PidFilePerm: 0644,
 		LogFileName: LOG_FILE,
@@ -85,16 +92,19 @@ func (ws *WebServer) RunInBackground() error {
 	if ws.config.Verbose && ws.logger != nil {
 		ws.logger.Infof("🌐 正在将服务器作为守护进程运行...")
 	}
-	d, err := cntxt.Reborn()
+	d, err := ctx.Reborn()
 	if err != nil {
 		return fmt.Errorf("创建守护进程失败: %v", err)
 	}
 	if d != nil {
+		if ws.config.Verbose && ws.logger != nil {
+			ws.logger.Infof("🌐 服务器已作为守护进程运行，PID: %d", d.Pid)
+		}
 		return nil // 父进程退出
 	}
 
 	// 子进程继续执行
-	defer cntxt.Release()
+	defer ctx.Release()
 
 	// 启动服务器
 	if err := ws.start(); err != nil {
@@ -107,5 +117,5 @@ func (ws *WebServer) RunInBackground() error {
 	<-quit
 
 	// 优雅关闭
-	return ws.Stop()
+	return ws.stop()
 }
