@@ -22,6 +22,7 @@ import (
 	"servon/plugins/port"
 	"servon/plugins/server"
 	"servon/plugins/supervisor"
+	"servon/plugins/user"
 	"servon/plugins/xcode"
 	"servon/plugins/yarn"
 )
@@ -44,6 +45,7 @@ func main() {
 	pnpm.Setup(app)
 	port.Setup(app)
 	supervisor.Setup(app)
+	user.Setup(app)
 	xcode.Setup(app)
 	yarn.Setup(app)
 	server.Setup(app)

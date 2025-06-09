@@ -3,7 +3,6 @@ testdata_dir = "testdata"
 tmp_dir = "temp"
 
 [build]
-args_bin = ["server", "restart", "-v"]
 bin = "./temp/servon"
 cmd = "make air"
 delay = 1000

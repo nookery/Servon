@@ -1,6 +1,6 @@
 module servon
 
-go 1.22
+go 1.23.0
 
 toolchain go1.23.6
 
@@ -54,7 +54,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gookit/color v1.5.4
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/joho/godotenv v1.5.1
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
@@ -78,7 +77,8 @@ require (
 	golang.org/x/arch v0.13.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/term v0.32.0
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

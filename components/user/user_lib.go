@@ -28,6 +28,90 @@ type User struct {
 
 // GetUserList 获取系统用户列表
 func (u *UserManager) GetUserList() ([]User, error) {
+	// 检测操作系统类型
+	if u.isMacOS() {
+		return u.getUserListMacOS()
+	} else {
+		return u.getUserListLinux()
+	}
+}
+
+// isMacOS 检测是否为macOS系统
+func (u *UserManager) isMacOS() bool {
+	_, err := os.Stat("/System/Library/CoreServices/SystemVersion.plist")
+	return err == nil
+}
+
+// getUserListMacOS 获取macOS系统用户列表
+func (u *UserManager) getUserListMacOS() ([]User, error) {
+	// 使用dscl命令获取用户列表
+	err, output := RunShellWithOutput("dscl", ".", "list", "/Users")
+	if err != nil {
+		return nil, fmt.Errorf("获取用户列表失败: %v", err)
+	}
+
+	var users []User
+	usernames := strings.Split(strings.TrimSpace(output), "\n")
+
+	for _, username := range usernames {
+		if username == "" {
+			continue
+		}
+
+		// 获取用户详细信息
+		userInfo, err := u.getUserInfoMacOS(username)
+		if err != nil {
+			continue // 跳过无法获取信息的用户
+		}
+
+		users = append(users, *userInfo)
+	}
+
+	return users, nil
+}
+
+// getUserInfoMacOS 获取macOS用户详细信息
+func (u *UserManager) getUserInfoMacOS(username string) (*User, error) {
+	// 获取用户主目录
+	err, homeDir := RunShellWithOutput("dscl", ".", "read", "/Users/"+username, "NFSHomeDirectory")
+	if err != nil {
+		return nil, err
+	}
+	homeDir = strings.TrimPrefix(strings.TrimSpace(homeDir), "NFSHomeDirectory: ")
+
+	// 获取用户Shell
+	err, shell := RunShellWithOutput("dscl", ".", "read", "/Users/"+username, "UserShell")
+	if err != nil {
+		shell = "/bin/bash" // 默认shell
+	} else {
+		shell = strings.TrimPrefix(strings.TrimSpace(shell), "UserShell: ")
+	}
+
+	// 获取用户组信息
+	groups, _ := u.getUserGroups(username)
+
+	// 获取用户创建时间（通过 home 目录创建时间估算）
+	createTime := u.getUserCreateTime(homeDir)
+
+	// 获取最后登录时间
+	lastLogin := u.getLastLogin(username)
+
+	// 检查是否有 sudo 权限
+	sudo := u.hasSudoPermission(username)
+
+	return &User{
+		Username:   username,
+		Groups:     groups,
+		Shell:      shell,
+		HomeDir:    homeDir,
+		CreateTime: createTime,
+		LastLogin:  lastLogin,
+		Sudo:       sudo,
+	}, nil
+}
+
+// getUserListLinux 获取Linux系统用户列表
+func (u *UserManager) getUserListLinux() ([]User, error) {
 	// 使用 os/user 包读取 /etc/passwd
 	file, err := os.Open("/etc/passwd")
 	if err != nil {
