@@ -16,6 +16,7 @@ var (
 	host    string
 	apiOnly bool
 	devMode bool
+	verbose bool
 )
 
 // GetServerCommand 获取服务器管理命令
@@ -42,9 +43,11 @@ func MakeStartCommand(web *web_server.WebServer, manager *managers.FullManager) 
 			host, _ := cmd.Flags().GetString("host")
 			apiOnly, _ := cmd.Flags().GetBool("api-only")
 			devMode, _ := cmd.Flags().GetBool("dev")
+			verbose, _ := cmd.Flags().GetBool("verbose")
 
 			web.SetPort(port)
 			web.SetHost(host)
+			web.SetVerbose(verbose)
 
 			if devMode {
 				logger.Infof("开发环境，先关闭服务器")
@@ -85,10 +88,11 @@ func MakeStartCommand(web *web_server.WebServer, manager *managers.FullManager) 
 		},
 	}
 
-	cmd.Flags().IntVarP(&port, "port", "p", 9754, "服务器监听端口")
+	cmd.Flags().IntVarP(&port, "port", "p", 0, "服务器监听端口")
 	cmd.Flags().StringVar(&host, "host", "127.0.0.1", "服务器监听地址")
 	cmd.Flags().BoolVar(&apiOnly, "api-only", false, "仅启动API服务")
 	cmd.Flags().BoolVar(&devMode, "dev", false, "启用开发模式")
+	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "启用详细日志模式，显示端口检查和进程查找的详细信息")
 
 	return cmd
 }
@@ -99,13 +103,17 @@ func MakeStopCommand(web *web_server.WebServer) *cobra.Command {
 		Use:   "stop",
 		Short: "停止服务器",
 		Run: func(cmd *cobra.Command, args []string) {
+			verbose, _ := cmd.Flags().GetBool("verbose")
+			web.SetVerbose(verbose)
+
 			if err := web.StopBackground(); err != nil {
 				logger.Error(err)
 				os.Exit(1)
 			}
-
 		},
 	}
+
+	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "启用详细日志模式，显示停止过程的详细信息")
 
 	return cmd
 }
@@ -143,7 +151,7 @@ func MakeRestartCommand(web *web_server.WebServer) *cobra.Command {
 	}
 
 	// 添加与 start 命令相同的标志
-	cmd.Flags().IntVarP(&port, "port", "p", 9754, "服务器监听端口")
+	cmd.Flags().IntVarP(&port, "port", "p", 0, "服务器监听端口")
 	cmd.Flags().StringVar(&host, "host", "127.0.0.1", "服务器监听地址")
 
 	return cmd
@@ -182,7 +190,7 @@ func MakeDevCommand(web *web_server.WebServer) *cobra.Command {
 	}
 
 	// 添加与 start 命令相同的标志
-	cmd.Flags().IntVarP(&port, "port", "p", 9754, "服务器监听端口")
+	cmd.Flags().IntVarP(&port, "port", "p", 0, "服务器监听端口")
 	cmd.Flags().StringVar(&host, "host", "127.0.0.1", "服务器监听地址")
 
 	return cmd
