@@ -47,7 +47,8 @@ func Start() {
 		Verbose: true,
 		// Logger 字段为 nil，将使用默认内部 logger
 	}
-	ws1 := NewWebServer(config1)
+	ws1 := NewWebServer()
+	ws1.SetConfig(config1)
 	fmt.Printf("WebServer 1 使用的 Logger 类型: %T\n", ws1.GetLogger())
 
 	fmt.Println("\n=== 使用自定义 Logger ===")
@@ -59,7 +60,8 @@ func Start() {
 		Verbose: true,
 		Logger:  customLogger, // 使用自定义 logger
 	}
-	ws2 := NewWebServer(config2)
+	ws2 := NewWebServer()
+	ws2.SetConfig(config2)
 	fmt.Printf("WebServer 2 使用的 Logger 类型: %T\n", ws2.GetLogger())
 
 	fmt.Println("\n=== 运行时更换 Logger ===")

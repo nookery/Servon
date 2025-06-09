@@ -26,7 +26,7 @@ func New() *App {
 	eventBus := components.EventBus
 
 	manager := managers.NewManager(eventBus)
-	webProvider := providers.NewWebProvider(manager, DefaultHost, DefaultPort)
+	webProvider := providers.NewWebProvider(manager)
 
 	app := &App{
 		eventBus:        eventBus,

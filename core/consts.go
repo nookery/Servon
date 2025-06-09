@@ -9,8 +9,6 @@ import (
 var DataRootFolder = getDataRootFolder()
 
 const LoggerFolder = "/logs"
-const DefaultHost = "0.0.0.0"
-const DefaultPort = 8080
 
 func getDataRootFolder() string {
 	// 使用 dev_util 组件检测是否为开发模式

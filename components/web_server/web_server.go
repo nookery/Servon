@@ -16,9 +16,11 @@ type WebServer struct {
 }
 
 // NewWebServer 创建新的Web服务器实例
-func NewWebServer(config WebServerConfig) *WebServer {
+func NewWebServer() *WebServer {
 	// 设置为发布模式以禁用调试日志
 	gin.SetMode(gin.ReleaseMode)
+
+	config := DefaultConfig
 
 	// 如果没有提供自定义 logger，使用默认 logger
 	var logger Logger
