@@ -20,8 +20,12 @@ build-backend:
 
 # 构建前端
 build-frontend:
-	pnpm install
-	pnpm build
+	cd plugins/server/ui  && pnpm install
+	cd plugins/server/ui && pnpm build
+
+dev:
+	make build-backend
+	cd plugins/server/ui && npm run dev
 
 # 供 air 使用
 air: 

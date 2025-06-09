@@ -1,0 +1,33 @@
+{
+  "name": "servon",
+  "private": true,
+  "version": "0.1.22",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@remixicon/vue": "^4.6.0",
+    "@tailwindcss/vite": "^4.0.8",
+    "axios": "^1.7.9",
+    "monaco-editor": "^0.52.2",
+    "pinia": "^3.0.1",
+    "remixicon": "^4.6.0",
+    "tailwindcss": "^4.0.8",
+    "uuid": "^11.1.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "@types/vue-router": "^2.0.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
+    "daisyui": "5.0.0-beta.6",
+    "typescript": "~5.6.3",
+    "vite": "^6.1.1",
+    "vue-tsc": "^2.2.2"
+  }
+}

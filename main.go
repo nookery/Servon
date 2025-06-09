@@ -20,6 +20,7 @@ import (
 	"servon/plugins/pm2"
 	"servon/plugins/pnpm"
 	"servon/plugins/port"
+	"servon/plugins/server"
 	"servon/plugins/supervisor"
 	"servon/plugins/xcode"
 	"servon/plugins/yarn"
@@ -45,6 +46,7 @@ func main() {
 	supervisor.Setup(app)
 	xcode.Setup(app)
 	yarn.Setup(app)
+	server.Setup(app)
 
 	if err := app.GetRootCommand().Execute(); err != nil {
 		color.Red("Error: %v\n", err)

@@ -13,7 +13,6 @@ import (
 type App struct {
 	eventBus events.IEventBus
 
-	*providers.WebProvider
 	*providers.ManagerProvider
 	*providers.CommandProvider
 	*providers.UtilProvider
@@ -26,13 +25,11 @@ func New() *App {
 	eventBus := components.EventBus
 
 	manager := managers.NewManager(eventBus)
-	webProvider := providers.NewWebProvider(manager)
 
 	app := &App{
 		eventBus:        eventBus,
-		WebProvider:     webProvider,
 		ManagerProvider: providers.NewManagerProvider(eventBus, manager),
-		CommandProvider: providers.NewCommandProvider(manager, webProvider.Server),
+		CommandProvider: providers.NewCommandProvider(manager),
 		UtilProvider:    providers.NewUtilProvider(),
 		AppLogger:       logger.NewLogUtil(filepath.Join(DataRootFolder, "logs")),
 	}
